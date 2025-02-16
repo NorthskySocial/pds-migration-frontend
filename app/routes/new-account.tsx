@@ -33,7 +33,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
 
-  await new Promise((res) => setTimeout(res, 1000));
+  // await new Promise((res) => setTimeout(res, 1000)); // Uncomment to demo loading state
 
   let res = {
     ok: true,

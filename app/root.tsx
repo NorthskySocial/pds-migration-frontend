@@ -21,8 +21,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <ScrollRestoration />
         <Scripts />
+        <ScrollRestoration />
       </body>
     </html>
   );
@@ -34,7 +34,7 @@ export default function App() {
       <Container>
         <VStack
           margin="0 auto"
-          maxWidth={"300px"}
+          maxWidth={"350px"}
           height={"100vh"}
           justifyContent={"space-evenly"}
           alignItems={"center"}

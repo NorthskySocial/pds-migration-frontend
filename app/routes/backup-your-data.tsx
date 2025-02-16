@@ -10,15 +10,26 @@ import {
   Box,
   Container,
 } from "@chakra-ui/react";
+import { redirect, useFetcher } from "react-router";
 import { Checkbox } from "~/components/ui/checkbox";
 
 export function loader() {
   return { name: "northwoods.social" };
 }
 
-export default function Home({ loaderData }: Route.ComponentProps) {
+export async function clientAction({ request }) {
+  const data = await request.formData();
+  const submitted = data.has("submit");
+
+  if (submitted) {
+    return redirect("new-account");
+  }
+}
+
+export default function BackupNotice({ loaderData }: Route.ComponentProps) {
+  const fetcher = useFetcher();
   return (
-    <>
+    <fetcher.Form>
       <Heading size="3xl" letterSpacing="tight">
         <Highlight query="your Data">Backup your data</Highlight>
       </Heading>
@@ -39,7 +50,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <Checkbox required>
         I have backed up my data or do not wish to before migrating.
       </Checkbox>
-      <Button>Continue</Button>
-    </>
+      <Button type="submit" name="submit">
+        Continue
+      </Button>
+    </fetcher.Form>
   );
 }
