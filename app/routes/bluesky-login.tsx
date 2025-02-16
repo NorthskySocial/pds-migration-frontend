@@ -14,15 +14,13 @@ export default function BlueskyConnect({ loaderData }: Route.ComponentProps) {
         <Highlight query="to Bluesky">Login to Bluesky</Highlight>
       </Heading>
       <Text fontSize="md" textAlign={"center"}>
-        <p>
-          Please provide us with the following information so we can migrate
-          your data.
-        </p>
-        <p>
-          Bluesky will e-mail you as part of this process, so{" "}
-          <strong>ensure your e-mail address is verified</strong> before
-          starting migration.
-        </p>
+        Please provide us with the following information so we can migrate your
+        data.
+      </Text>
+      <Text fontSize="md" textAlign={"center"}>
+        Bluesky will e-mail you as part of this process, so{" "}
+        <strong>ensure your e-mail address is verified</strong> before starting
+        migration.
       </Text>
       <Field required label="Bluesky login">
         <Input name="bsky-handle" placeholder="username.bsky.social" />
