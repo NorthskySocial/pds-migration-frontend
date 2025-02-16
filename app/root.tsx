@@ -10,39 +10,44 @@ import type { Route } from "./+types/root";
 import { Provider } from "~/components/ui/provider";
 import { Container, VStack } from "@chakra-ui/react";
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export default function App() {
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        {/* All `meta` exports on all routes will render here */}
         <Meta />
+
+        {/* All `link` exports on all routes will render here */}
         <Links />
       </head>
       <body>
-        {children}
-        <Scripts />
+        {/* Child routes render here */}
+        <Provider>
+          <Container>
+            <VStack
+              margin="0 auto"
+              maxWidth={"350px"}
+              height={"100vh"}
+              justifyContent={"space-evenly"}
+              alignItems={"center"}
+            >
+              <Outlet />
+            </VStack>
+          </Container>
+        </Provider>
+
+        {/* Manages scroll position for client-side transitions */}
+        {/* If you use a nonce-based content security policy for scripts, you must provide the `nonce` prop. Otherwise, omit the nonce prop as shown here. */}
         <ScrollRestoration />
+
+        {/* Script tags go here */}
+        {/* If you use a nonce-based content security policy for scripts, you must provide the `nonce` prop. Otherwise, omit the nonce prop as shown here. */}
+        <Scripts />
       </body>
     </html>
-  );
-}
-
-export default function App() {
-  return (
-    <Provider>
-      <Container>
-        <VStack
-          margin="0 auto"
-          maxWidth={"350px"}
-          height={"100vh"}
-          justifyContent={"space-evenly"}
-          alignItems={"center"}
-        >
-          <Outlet />
-        </VStack>
-      </Container>
-    </Provider>
   );
 }
 

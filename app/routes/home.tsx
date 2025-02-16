@@ -33,8 +33,8 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
 
   return redirect(
     isNewAccount
-      ? `new-account?code=${inviteCode}`
-      : `backup-your-data?code=${inviteCode}`
+      ? `/new-account?code=${inviteCode}`
+      : `/backup-your-data?code=${inviteCode}`
   );
 }
 
@@ -69,7 +69,7 @@ export default function Home() {
         </Field>
 
         <Box maxW={"md"}>
-          <Checkbox name="agree-to-tos" required>
+          <Checkbox name="agree-to-tos">
             I agree to the Northsky Terms of Service
           </Checkbox>
         </Box>

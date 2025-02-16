@@ -10,26 +10,30 @@ import {
   Box,
   Container,
 } from "@chakra-ui/react";
-import { redirect, useFetcher } from "react-router";
+import {
+  redirect,
+  useFetcher,
+  type ClientActionFunctionArgs,
+} from "react-router";
 import { Checkbox } from "~/components/ui/checkbox";
 
 export function loader() {
   return { name: "northwoods.social" };
 }
 
-export async function clientAction({ request }) {
+export async function clientAction({ request }: ClientActionFunctionArgs) {
   const data = await request.formData();
   const submitted = data.has("submit");
-
+  console.log(submitted);
   if (submitted) {
-    return redirect("new-account");
+    return redirect("/new-account");
   }
 }
 
 export default function BackupNotice({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   return (
-    <fetcher.Form>
+    <fetcher.Form method="post">
       <Heading size="3xl" letterSpacing="tight">
         <Highlight query="your Data">Backup your data</Highlight>
       </Heading>

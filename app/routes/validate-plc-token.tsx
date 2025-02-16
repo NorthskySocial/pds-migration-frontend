@@ -18,7 +18,7 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
   const submitted = data.has("submit");
 
   if (submitted) {
-    return redirect("migrate");
+    return redirect("/migrate");
   }
 }
 

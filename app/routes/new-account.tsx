@@ -67,8 +67,9 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
     };
   }
 
+  console.log(submitted, res);
   if (submitted && res.ok) {
-    return redirect("connect-bluesky");
+    return redirect("/connect-bluesky");
   }
 
   return res;
@@ -131,9 +132,9 @@ export default function NewAccount() {
       <br />
       <Field
         required
-        invalid={fetcher.data?.error_code === 2}
+        invalid={fetcher.data?.error_password_length}
         label="Password"
-        errorText={fetcher.data?.error}
+        errorText={fetcher.data?.error_password_length}
       >
         <PasswordInput
           name="password"
@@ -149,10 +150,10 @@ export default function NewAccount() {
         required
         label="Repeat password"
         invalid={
-          fetcher.data?.error_code === 1 ||
+          fetcher.data?.error_password_match ||
           (pass !== passVerify && passVerify.length > 0)
         }
-        errorText={"Passwords do not match"}
+        errorText={fetcher.data?.error_password_match}
       >
         <PasswordInput
           name="password-repeat"
