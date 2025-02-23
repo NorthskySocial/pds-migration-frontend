@@ -1,17 +1,23 @@
-import { defineConfig } from "vite";
 import { reactRouter } from "@react-router/dev/vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
 
-// https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
+  build: {
+    rollupOptions: isSsrBuild
+      ? {
+          input: "./workers/app.ts",
+        }
+      : undefined,
+  },
   plugins: [
-    reactRouter(),
-    tsconfigPaths(),
     cloudflareDevProxy({
       getLoadContext({ context }) {
         return { cloudflare: context.cloudflare };
       },
     }),
+    reactRouter(),
+    tsconfigPaths(),
   ],
-});
+}));

@@ -3,7 +3,6 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "workers/handler.ts",
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
@@ -38,6 +37,7 @@
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0",
     "vite": "^6.1.0",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^5.1.4",
+    "wrangler": "^3.109.2"
   }
 }
