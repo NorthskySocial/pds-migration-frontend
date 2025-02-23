@@ -1,5 +1,5 @@
 workers_dev = true
-name = "northwoods-migration-tool"
+name = "northsky-migration-tool"
 compatibility_date = "2025-02-23"
 main = "./build/server/index.js"
 assets = { directory = "./build/client/" }
