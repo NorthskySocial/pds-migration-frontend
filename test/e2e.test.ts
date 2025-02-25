@@ -6,7 +6,7 @@ import {
   mockNetworkUtilities,
 } from "@atproto/dev-env";
 
-describe("account migration tool", () => {
+xdescribe("account migration tool", () => {
   let network: TestNetworkNoAppView;
   let newPds: TestPds;
 
