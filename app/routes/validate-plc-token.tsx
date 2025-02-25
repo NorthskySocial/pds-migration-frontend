@@ -10,7 +10,7 @@ import {
 } from "react-router";
 
 export function loader() {
-  return { name: "northwoods.social" };
+  return { name: "northsky.social" };
 }
 
 export async function clientAction({ request }: ClientActionFunctionArgs) {

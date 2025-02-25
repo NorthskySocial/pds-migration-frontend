@@ -7,7 +7,6 @@ import {
   Input,
   Button,
   Spinner,
-  HStack,
 } from "@chakra-ui/react";
 import { Field } from "~/components/ui/field";
 import { InputGroup } from "~/components/ui/input-group";
@@ -22,8 +21,10 @@ import {
   type ClientActionFunctionArgs,
 } from "react-router";
 
+const { MIGRATOR_HOSTNAME } = import.meta.env;
+
 export function loader() {
-  return { name: "northwoods.social" };
+  return { name: "northsky.social" };
 }
 
 export async function clientAction({ request }: ClientActionFunctionArgs) {
@@ -67,7 +68,6 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
     };
   }
 
-  console.log(submitted, res);
   if (submitted && res.ok) {
     return redirect("/connect-bluesky");
   }
@@ -83,8 +83,13 @@ export default function NewAccount() {
 
   return (
     <fetcher.Form method="post">
-      <Heading size="3xl" letterSpacing="tight">
-        <Highlight query="New Account">Reserve New Account</Highlight>
+      <Heading size="3xl" textAlign={"center"} letterSpacing="tight">
+        <Highlight
+          styles={{ bg: "secondary", color: "brand.bg" }}
+          query="New Account"
+        >
+          Reserve New Account
+        </Highlight>
       </Heading>
       <Text fontSize="md" textAlign={"center"}>
         Bluesky should have just sent you an e-mail to your inbox. Input that
@@ -98,13 +103,13 @@ export default function NewAccount() {
         errorText={!fetcher.data?.ok && fetcher.data?.handle_available}
         helperText={
           fetcher.data?.handle_available &&
-          `Congrats! 🎉 ${fetcher.data?.handle.toLowerCase()}.northwoods.social is available!`
+          `Congrats! 🎉 ${fetcher.data?.handle.toLowerCase()}.northsky.social is available!`
         }
       >
         <InputGroup
           width="100%"
           startElement="@"
-          endElement={".northwoods.social"}
+          endElement={".northsky.social"}
         >
           <Input
             name="handle"

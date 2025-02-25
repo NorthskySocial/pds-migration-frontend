@@ -9,6 +9,8 @@ import {
 import type { Route } from "./+types/root";
 import { Provider } from "~/components/ui/provider";
 import { Container, VStack } from "@chakra-ui/react";
+import "@fontsource-variable/museomoderno/index.css";
+import "@fontsource-variable/geist/index.css";
 
 export default function App() {
   return (
@@ -26,7 +28,7 @@ export default function App() {
       <body>
         {/* Child routes render here */}
         <Provider>
-          <Container>
+          <Container bgColor="brand.bg">
             <VStack
               margin="0 auto"
               maxWidth={"350px"}

@@ -10,7 +10,7 @@ import {
 } from "react-router";
 
 export function loader() {
-  return { name: "northwoods.social" };
+  return { name: "northsky.social" };
 }
 
 export async function clientAction({ request }: ClientActionFunctionArgs) {
@@ -51,7 +51,7 @@ export default function Migrate({ loaderData }: Route.ComponentProps) {
             username and password.
           </Text>
           <Button name="submit" type="submit">
-            Login to Northwoods
+            Login to Northsky
           </Button>
         </>
       );
@@ -70,9 +70,7 @@ export default function Migrate({ loaderData }: Route.ComponentProps) {
           />
           <Text fontSize="md" textAlign={"center"}>
             Please reach out to our support team,{" "}
-            <a href="mailto:support@northwoods.social">
-              support@northwoods.social
-            </a>
+            <a href="mailto:support@northsky.social">support@northsky.social</a>
             .
           </Text>
         </>

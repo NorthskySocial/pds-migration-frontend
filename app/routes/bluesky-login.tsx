@@ -4,7 +4,7 @@ import { Field } from "~/components/ui/field";
 import { PasswordInput } from "~/components/ui/password-input";
 
 export function loader() {
-  return { name: "northwoods.social" };
+  return { name: "northsky.social" };
 }
 
 export default function BlueskyConnect({ loaderData }: Route.ComponentProps) {

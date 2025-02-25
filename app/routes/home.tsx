@@ -17,13 +17,18 @@ import {
 import { Checkbox } from "~/components/ui/checkbox";
 import { Field } from "~/components/ui/field";
 
+const hostname = import.meta.env.PDS_HOSTNAME ?? "northsky.social";
+const inviteRegex = new RegExp(
+  `^${hostname.replace(/\./g, "-")}-[a-z0-9]{5}-[a-z0-9]{5}$`
+);
+
 export async function clientAction({ request }: ClientActionFunctionArgs) {
   const data = await request.formData();
   const isNewAccount = data.has("create");
   const inviteCode = data.get("invite-code");
   const confirmedTOS = data.get("agree-to-tos") === "on";
 
-  const inviteCodeValid = true; // @TODO connect to invite code service
+  const inviteCodeValid = inviteRegex.test(inviteCode as string);
 
   if (!confirmedTOS)
     return { ok: false, error: "Please agree to the Terms Of Service" };

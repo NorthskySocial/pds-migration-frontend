@@ -1,0 +1,11 @@
+services:
+  backend:
+    image: northsky-migrator-backend:latest
+    environment:
+      - ENDPOINT=http://localhost
+    ports:
+      - 9090:9090
+  # db:
+  #   image: postgres:latest
+  #   environment:
+  #     - POSTGRES_PASSWORD=toasty
