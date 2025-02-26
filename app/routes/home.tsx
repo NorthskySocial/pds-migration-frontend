@@ -9,23 +9,21 @@ import {
   Button,
   Box,
 } from "@chakra-ui/react";
-import {
-  redirect,
-  useFetcher,
-  type ClientActionFunctionArgs,
-} from "react-router";
+import { redirect, useFetcher } from "react-router";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Field } from "~/components/ui/field";
+import { getSession, commitSession } from "../sessions.server";
 
 const hostname = import.meta.env.PDS_HOSTNAME ?? "northsky.social";
 const inviteRegex = new RegExp(
   `^${hostname.replace(/\./g, "-")}-[a-z0-9]{5}-[a-z0-9]{5}$`
 );
 
-export async function clientAction({ request }: ClientActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
   const isNewAccount = data.has("create");
-  const inviteCode = data.get("invite-code");
+  const inviteCode = data.get("invite-code") as string;
   const confirmedTOS = data.get("agree-to-tos") === "on";
 
   const inviteCodeValid = inviteRegex.test(inviteCode as string);
@@ -36,11 +34,13 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
   if (!inviteCode || !inviteCodeValid)
     return { ok: false, error: "Please enter a valid invite code" };
 
-  return redirect(
-    isNewAccount
-      ? `/new-account?code=${inviteCode}`
-      : `/backup-your-data?code=${inviteCode}`
-  );
+  session.set("inviteCode", inviteCode);
+
+  return redirect(isNewAccount ? `/new-account` : `/backup-your-data`, {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
 }
 
 export default function Home() {

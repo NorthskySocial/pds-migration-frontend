@@ -29,7 +29,7 @@
     "use-local-storage-state": "^19.5.0"
   },
   "devDependencies": {
-    "@atproto/api": "^0.14.4",
+    "@atproto/api": "^0.14.6",
     "@atproto/dev-env": "^0.3.93",
     "@eslint/js": "^9.19.0",
     "@react-router/dev": "^7.2",

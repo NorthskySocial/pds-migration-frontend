@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/new-account";
 import {
   Heading,
   Highlight,
@@ -15,30 +15,27 @@ import {
   PasswordStrengthMeter,
 } from "~/components/ui/password-input";
 import { passwordStrength } from "check-password-strength";
-import {
-  redirect,
-  useFetcher,
-  type ClientActionFunctionArgs,
-} from "react-router";
+import { redirect, useFetcher } from "react-router";
+import { getSession, commitSession } from "../sessions.server";
 
-const { MIGRATOR_HOSTNAME } = import.meta.env;
+const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
 
 export function loader() {
   return { name: "northsky.social" };
 }
 
-export async function clientAction({ request }: ClientActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
   const pw = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
-  const handle = ((data.get("handle") as string) ?? "").toLowerCase();
+  const handle_new = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
-
-  // await new Promise((res) => setTimeout(res, 1000)); // Uncomment to demo loading state
+  const did = session.get("did");
 
   let res = {
     ok: true,
-    handle,
+    handle: handle_new,
     error_password_match: "",
     error_password_length: "",
     handle_available: null as null | boolean,
@@ -60,16 +57,86 @@ export async function clientAction({ request }: ClientActionFunctionArgs) {
     };
   }
 
-  // @TODO check handle availability
-  if (handle.length > 0) {
+  if (handle_new.length > 0) {
+    const handle_available = await fetch(
+      `${PDS_HOSTNAME}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_new}`
+    )
+      .then<{ message: string; error: string } & { did: string }>((r) =>
+        r.json()
+      )
+      .then((d) => d.message === "Unable to resolve handle" || d.did === did);
+
     res = {
       ...res,
-      handle_available: true,
+      handle_available,
     };
   }
 
   if (submitted && res.ok) {
-    return redirect("/connect-bluesky");
+    session.set("userId_new", handle_new);
+
+    const token = session.get("serviceToken");
+
+    if (!token) {
+      session.flash("error", "Invalid service token");
+
+      // Redirect back to the login page with errors.
+      return redirect("/connect-bluesky", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
+    const inviteCode = session.get("inviteCode");
+
+    if (!inviteCode) {
+      session.flash("error", "Invalid invite code");
+
+      // Redirect back to the login page with errors.
+      return redirect("/", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
+    const email = session.get("email");
+
+    const createAccountRes = await fetch(`${MIGRATOR_BACKEND}/create-account`, {
+      method: "post",
+      body: JSON.stringify({
+        pds_host: PDS_HOSTNAME,
+        handle: handle_new,
+        password: pw,
+        email,
+        token,
+        did,
+        invite_code: inviteCode,
+      }),
+    });
+
+    if (!createAccountRes.ok) {
+      const { message } = await createAccountRes.json<{ message: string }>();
+
+      session.flash("error", message);
+
+      // Redirect back to the login page with errors.
+      return redirect("/", {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      });
+    }
+
+    // GET USER TOKEN BY LOGGING IN HERE
+    session.set("newPdsUserToken", "TOKEN");
+
+    return redirect("/migrate", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
   }
 
   return res;

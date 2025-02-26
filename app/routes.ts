@@ -7,4 +7,5 @@ export default [
   route("connect-bluesky", "routes/bluesky-login.tsx"),
   route("validate-plc-token", "routes/validate-plc-token.tsx"),
   route("migrate", "routes/migration-progress.tsx"),
+  route("done", "routes/done.tsx"),
 ] satisfies RouteConfig;

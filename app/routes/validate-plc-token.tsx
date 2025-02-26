@@ -1,24 +1,55 @@
-import type { Route } from "./+types/home";
-import { Heading, Highlight, Text, Input, Button } from "@chakra-ui/react";
+import type { Route } from "./+types/validate-plc-token";
+import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Field } from "~/components/ui/field";
 import { PasswordInput } from "~/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
-import {
-  redirect,
-  useFetcher,
-  type ClientActionFunctionArgs,
-} from "react-router";
+import { redirect, useFetcher } from "react-router";
 
 export function loader() {
   return { name: "northsky.social" };
 }
+const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
 
-export async function clientAction({ request }: ClientActionFunctionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const data = await request.formData();
   const submitted = data.has("submit");
+  const plcToken = data.get("plc-token") as string;
 
   if (submitted) {
-    return redirect("/migrate");
+    // activate new account
+    fetch(`${MIGRATOR_BACKEND}/activate-account`, {
+      method: "post",
+      body: JSON.stringify({
+        pds_host: PDS_HOSTNAME,
+        handle: "<<new_handle>>",
+        password: "<<new_password>>",
+      }),
+    });
+
+    // deactivate old account
+    fetch(`${MIGRATOR_BACKEND}/deactivate-account`, {
+      method: "post",
+      body: JSON.stringify({
+        pds_host: "<<old_host>>",
+        handle: "<<old_handle>>",
+        password: "<<old_password>>",
+      }),
+    });
+
+    // deactivate old account
+    fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
+      method: "post",
+      body: JSON.stringify({
+        new_pds_host: PDS_HOSTNAME,
+        new_handle: "<<new_handle>>",
+        new_password: "<<new_password>>",
+        old_pds_host: "<<old_host>>",
+        old_handle: "<<old_handle>>",
+        old_password: "<<old_password>>",
+        plc_signing_token: plcToken,
+      }),
+    });
+    return redirect("/done");
   }
 }
 
