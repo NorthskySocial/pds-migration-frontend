@@ -13,6 +13,11 @@ type SessionData = {
 
 type SessionFlashData = {
   error: string;
+  progress?: {
+    stageTitle: string;
+    stageDescription: string;
+    stageIdx: number;
+  };
 };
 
 const { getSession, commitSession, destroySession } =

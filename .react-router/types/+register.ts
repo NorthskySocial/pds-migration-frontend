@@ -13,4 +13,5 @@ type Params = {
   "/connect-bluesky": {};
   "/validate-plc-token": {};
   "/migrate": {};
+  "/done": {};
 };
