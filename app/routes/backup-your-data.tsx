@@ -51,7 +51,7 @@ export default function BackupNotice({ loaderData }: Route.ComponentProps) {
         Once you have archived your data, press Continue to proceed with
         Migration
       </Text>
-      <Checkbox required>
+      <Checkbox name="confirm" required>
         I have backed up my data or do not wish to before migrating.
       </Checkbox>
       <Button type="submit" name="submit">

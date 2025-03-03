@@ -14,7 +14,7 @@ import { Checkbox } from "~/components/ui/checkbox";
 import { Field } from "~/components/ui/field";
 import { getSession, commitSession } from "../sessions.server";
 
-const hostname = import.meta.env.PDS_HOSTNAME ?? "northsky.social";
+const hostname = import.meta.env.PDS_HOSTNAME ?? "localhost";
 const inviteRegex = new RegExp(
   `^${hostname.replace(/\./g, "-")}-[a-z0-9]{5}-[a-z0-9]{5}$`
 );

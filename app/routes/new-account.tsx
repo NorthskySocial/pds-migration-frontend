@@ -17,6 +17,7 @@ import {
 import { passwordStrength } from "check-password-strength";
 import { redirect, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
+import AtpAgent, { Agent } from "@atproto/api";
 
 const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
 
@@ -59,7 +60,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (handle_new.length > 0) {
     const handle_available = await fetch(
-      `${PDS_HOSTNAME}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_new}`
+      `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${handle_new}`
     )
       .then<{ message: string; error: string } & { did: string }>((r) =>
         r.json()
@@ -130,7 +131,12 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     // GET USER TOKEN BY LOGGING IN HERE
-    session.set("newPdsUserToken", "TOKEN");
+    const agent = new AtpAgent({ service: "http://localhost:7789" });
+    const { data } = await agent.login({
+      identifier: "alice.northsky.social",
+      password: pw,
+    });
+    session.set("newPdsUserToken", data.accessJwt);
 
     return redirect("/migrate", {
       headers: {

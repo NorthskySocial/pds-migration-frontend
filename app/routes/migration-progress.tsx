@@ -32,7 +32,8 @@ export async function action({ request }: Route.ActionArgs) {
   const old_pds = session.get("old_pds");
   const old_handle = session.get("userId_old");
   const new_handle = session.get("userId_new");
-  const userToken = session.get("newPdsUserToken");
+  const token = session.get("serviceToken");
+  const newToken = session.get("newPdsUserToken");
 
   const progress = session.get("progress") || defaultProgress;
 
@@ -67,7 +68,7 @@ export async function action({ request }: Route.ActionArgs) {
         body: JSON.stringify({
           pds_host: old_pds,
           handle: old_handle,
-          password: "<<old_password>>",
+          token,
         }),
       });
 
@@ -93,7 +94,7 @@ export async function action({ request }: Route.ActionArgs) {
         body: JSON.stringify({
           pds_host: PDS_HOSTNAME,
           handle: new_handle,
-          password: "<<new_password>>",
+          token: newToken,
         }),
       });
 
@@ -119,7 +120,7 @@ export async function action({ request }: Route.ActionArgs) {
         body: JSON.stringify({
           pds_host: PDS_HOSTNAME,
           handle: new_handle,
-          password: "<<new_password>>",
+          token: newToken,
         }),
       });
 
@@ -143,10 +144,11 @@ export async function action({ request }: Route.ActionArgs) {
         body: JSON.stringify({
           new_pds_host: PDS_HOSTNAME,
           new_handle: new_handle,
-          new_password: "<<new_password>>",
+          // new_password: "<<new_password>>",
           old_pds_host: old_pds,
           old_handle: old_handle,
-          old_password: "<<old_password>>",
+          // old_password: "<<old_password>>",
+          token,
         }),
       });
 
@@ -170,7 +172,7 @@ export async function action({ request }: Route.ActionArgs) {
         body: JSON.stringify({
           pds_host: PDS_HOSTNAME,
           handle: new_handle,
-          password: "<<new_password>>",
+          token: newToken,
         }),
       });
 
@@ -195,10 +197,11 @@ export async function action({ request }: Route.ActionArgs) {
         body: JSON.stringify({
           new_pds_host: PDS_HOSTNAME,
           new_handle: new_handle,
-          new_password: "<<new_password>>",
+          // new_password: "<<new_password>>",
           old_pds_host: old_pds,
           old_handle: old_handle,
-          old_password: "<<old_password>>",
+          // old_password: "<<old_password>>",
+          token,
         }),
       });
 
@@ -223,7 +226,7 @@ export async function action({ request }: Route.ActionArgs) {
         body: JSON.stringify({
           pds_host: old_pds,
           handle: old_handle,
-          password: "<<old_password>>",
+          token,
         }),
       });
 
@@ -273,7 +276,9 @@ export default function Migrate({ loaderData }: Route.ComponentProps) {
   // Immediately submit to go to next step
   useEffect(() => {
     (async () => {
-      await submit(null, { action: "/migrate", method: "get" });
+      setTimeout(async () => {
+        await submit(null, { action: "/migrate", method: "post" });
+      }, 2000);
     })();
   }, [submit]);
 
@@ -291,7 +296,11 @@ export default function Migrate({ loaderData }: Route.ComponentProps) {
       <Text fontSize="md" textAlign={"center"}>
         Your data is being moved to our servers
       </Text>
-      <img alt="A clock by artist Katie Tightpussy" src={clock_art} />
+      <img
+        alt="A clock by artist Katie Tightpussy"
+        src={clock_art}
+        className="katie-clock"
+      />
       {error ? (
         <h1>{error}</h1>
       ) : (
