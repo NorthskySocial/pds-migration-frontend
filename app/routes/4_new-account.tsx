@@ -8,24 +8,25 @@ import {
   Button,
   Spinner,
 } from "@chakra-ui/react";
-import { Field } from "~/components/ui/field";
-import { InputGroup } from "~/components/ui/input-group";
+import { Field } from "@/components/ui/field";
+import { InputGroup } from "@/components/ui/input-group";
 import {
   PasswordInput,
   PasswordStrengthMeter,
-} from "~/components/ui/password-input";
+} from "@/components/ui/password-input";
 import { passwordStrength } from "check-password-strength";
 import { redirect, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
-import AtpAgent, { Agent } from "@atproto/api";
-
-const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
+import AtpAgent from "@atproto/api";
 
 export function loader() {
   return { name: "northsky.social" };
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  const { MIGRATOR_BACKEND = "http://localhost:9090", PDS_HOSTNAME } =
+    import.meta.env;
+  console.log("PAGE 4");
   const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
   const pw = (data.get("password") as string) ?? "";
@@ -76,19 +77,6 @@ export async function action({ request }: Route.ActionArgs) {
   if (submitted && res.ok) {
     session.set("userId_new", handle_new);
 
-    const token = session.get("serviceToken");
-
-    if (!token) {
-      session.flash("error", "Invalid service token");
-
-      // Redirect back to the login page with errors.
-      return redirect("/connect-bluesky", {
-        headers: {
-          "Set-Cookie": await commitSession(session),
-        },
-      });
-    }
-
     const inviteCode = session.get("inviteCode");
 
     if (!inviteCode) {
@@ -103,22 +91,23 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     const email = session.get("email");
+    console.log(email);
 
     const createAccountRes = await fetch(`${MIGRATOR_BACKEND}/create-account`, {
       method: "post",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         pds_host: PDS_HOSTNAME,
         handle: handle_new,
         password: pw,
         email,
-        token,
         did,
         invite_code: inviteCode,
       }),
     });
-
+    console.log(createAccountRes);
     if (!createAccountRes.ok) {
-      const { message } = await createAccountRes.json<{ message: string }>();
+      const message = createAccountRes.statusText;
 
       session.flash("error", message);
 
@@ -136,6 +125,7 @@ export async function action({ request }: Route.ActionArgs) {
       identifier: "alice.northsky.social",
       password: pw,
     });
+    console.log("here", data);
     session.set("newPdsUserToken", data.accessJwt);
 
     return redirect("/migrate", {

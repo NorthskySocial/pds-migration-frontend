@@ -1,17 +1,17 @@
 // React Router generated types for route:
-// routes/done.tsx
+// routes/5_validate-plc-token.tsx
 
 import type * as T from "react-router/route-module"
 
 import type { Info as Parent0 } from "../../+types/root.js"
 
-type Module = typeof import("../done.js")
+type Module = typeof import("../5_validate-plc-token.js")
 
 export type Info = {
   parents: [Parent0],
-  id: "routes/done"
-  file: "routes/done.tsx"
-  path: "done"
+  id: "routes/5_validate-plc-token"
+  file: "routes/5_validate-plc-token.tsx"
+  path: "validate-plc-token"
   params: {} & { [key: string]: string | undefined }
   module: Module
   loaderData: T.CreateLoaderData<Module>

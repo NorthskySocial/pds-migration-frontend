@@ -1,16 +1,16 @@
 // React Router generated types for route:
-// routes/backup-your-data.tsx
+// routes/2_backup-your-data.tsx
 
 import type * as T from "react-router/route-module"
 
 import type { Info as Parent0 } from "../../+types/root.js"
 
-type Module = typeof import("../backup-your-data.js")
+type Module = typeof import("../2_backup-your-data.js")
 
 export type Info = {
   parents: [Parent0],
-  id: "routes/backup-your-data"
-  file: "routes/backup-your-data.tsx"
+  id: "routes/2_backup-your-data"
+  file: "routes/2_backup-your-data.tsx"
   path: "backup-your-data"
   params: {} & { [key: string]: string | undefined }
   module: Module

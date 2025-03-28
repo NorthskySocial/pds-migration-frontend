@@ -10,8 +10,8 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { redirect, useFetcher } from "react-router";
-import { Checkbox } from "~/components/ui/checkbox";
-import { Field } from "~/components/ui/field";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field } from "@/components/ui/field";
 import { getSession, commitSession } from "../sessions.server";
 
 const hostname = import.meta.env.PDS_HOSTNAME ?? "localhost";
@@ -20,10 +20,12 @@ const inviteRegex = new RegExp(
 );
 
 export async function action({ request }: Route.ActionArgs) {
+  console.log("PAGE 1");
   const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
   const isNewAccount = data.has("create");
   const inviteCode = data.get("invite-code") as string;
+  console.log(data.get("agree-to-tos"));
   const confirmedTOS = data.get("agree-to-tos") === "on";
 
   const inviteCodeValid = inviteRegex.test(inviteCode as string);

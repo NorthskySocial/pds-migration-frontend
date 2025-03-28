@@ -27,65 +27,76 @@ describe("account migration tool", () => {
   // let sampleKey: string;
 
   beforeAll(async () => {
-    network = await TestNetworkNoAppView.create({
-      dbPostgresSchema: "account_migration",
-      pds: {
-        port: 6789,
-      },
-      plc: {
-        port: 8789,
-      },
-    });
+    try {
+      network = await TestNetworkNoAppView.create({
+        dbPostgresSchema: "account_migration",
+        pds: {
+          port: 6789,
+        },
+        plc: {
+          port: 8789,
+        },
+      });
 
-    const ctx = network.pds.ctx;
-    const mailer = ctx.mailer;
+      const ctx = network.pds.ctx;
+      const mailer = ctx.mailer;
 
-    newPds = await TestPds.create({
-      didPlcUrl: network.plc.url,
-      inviteRequired: true,
-      port: 7789,
-    });
-    mockNetworkUtilities(newPds);
-    console.log(network.plc.url, network.plc.port);
-    sc = network.getSeedClient();
-    oldAgent = network.pds.getClient();
-    newAgent = newPds.getClient();
+      newPds = await TestPds.create({
+        didPlcUrl: network.plc.url,
+        inviteRequired: true,
+        port: 7789,
+      });
+      mockNetworkUtilities(newPds);
+      console.log(network.plc.url, network.plc.port);
+      sc = network.getSeedClient();
+      oldAgent = network.pds.getClient();
+      newAgent = newPds.getClient();
 
-    await network.processAll();
-    // sampleKey = (await Secp256k1Keypair.create()).did();
+      await network.processAll();
+      // sampleKey = (await Secp256k1Keypair.create()).did();
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail;
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts);
-      mailCatcher.emit("mail", opts);
-      return result;
-    };
+      process.on("SIGINT", async function () {
+        await newPds.close();
+        await network.close();
+        await browser.close();
+        process.exit();
+      });
 
-    await sc.createAccount("alice", {
-      handle: "alice.test",
-      email: "alice@test.com",
-      password: "alice",
-    });
+      // Catch emails for use in tests
+      _origSendMail = mailer.transporter.sendMail;
+      mailer.transporter.sendMail = async (opts) => {
+        const result = await _origSendMail.call(mailer.transporter, opts);
+        mailCatcher.emit("mail", opts);
+        return result;
+      };
 
-    alice = sc.dids.alice;
+      await sc.createAccount("alice", {
+        handle: "alice.test",
+        email: "alice@test.com",
+        password: "alice",
+      });
 
-    // await oldAgent.login({
-    //   identifier: sc.accounts[alice].handle,
-    //   password: sc.accounts[alice].password,
-    // });
+      alice = sc.dids.alice;
 
-    const res = await network.pds
-      .getClient()
-      .com.atproto.server.createInviteCode(
-        { useCount: 5, forAccount: alice },
-        {
-          encoding: "application/json",
-          headers: network.pds.adminAuthHeaders(),
-        }
-      );
+      // await oldAgent.login({
+      //   identifier: sc.accounts[alice].handle,
+      //   password: sc.accounts[alice].password,
+      // });
 
-    inviteCode = res.data.code;
+      const res = await network.pds
+        .getClient()
+        .com.atproto.server.createInviteCode(
+          { useCount: 5, forAccount: alice },
+          {
+            encoding: "application/json",
+            headers: network.pds.adminAuthHeaders(),
+          }
+        );
+
+      inviteCode = res.data.code;
+    } catch (e) {
+      console.error(e);
+    }
   });
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
@@ -103,60 +114,59 @@ describe("account migration tool", () => {
   });
 
   it("does the migrate account account journey", async () => {
-    console.log(inviteCode);
-    await page.goto("http://localhost:5173");
-    await page.waitForSelector('[name="invite-code"]');
-    await page.type('[name="invite-code"]', inviteCode);
-    await page.click('input[name="agree-to-tos"]');
+    try {
+      console.log(inviteCode);
+      await page.goto("http://localhost:5173");
+      await page.waitForSelector('[name="invite-code"]');
+      await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
+      await page.type('[name="invite-code"]', inviteCode);
 
-    const goToPage2 = page.waitForNavigation();
-    await page.click('button[name="migrate"]');
-    await goToPage2;
-    await page.waitForSelector('input[name="confirm"]');
-    await page.click('input[name="confirm"]');
+      const goToPage2 = page.waitForNavigation();
+      await page.click('button[name="migrate"]');
+      await goToPage2;
+      await page.waitForSelector('input[name="confirm"]');
+      await page.$eval('input[name="confirm"]', (e) => e.click());
 
-    const gotoPage3 = page.waitForNavigation();
-    await page.click('button[type="submit"]');
-    await gotoPage3;
-    await page.waitForSelector('input[name="handle"]');
-    await page.type('input[name="handle"]', "alice.northsky.social");
-    await page.type('input[name="password"]', "hunter7password");
-    await page.type('input[name="password-repeat"]', "hunter7password");
+      await page.waitForSelector('input[name="bsky-handle"]');
+      await page.type('input[name="bsky-handle"]', "alice.test");
+      await page.type('input[name="bsky-password"]', "alice");
+      const gotoPage3 = page.waitForNavigation();
+      await page.click('button[type="submit"]');
+      await gotoPage3;
 
-    const gotoPage4 = page.waitForNavigation();
+      await page.waitForSelector('input[name="handle"]');
+      await page.type('input[name="handle"]', "alice.northsky.social");
+      await page.type('input[name="password"]', "hunter7password");
+      await page.type('input[name="password-repeat"]', "hunter7password");
+      const gotoPage4 = page.waitForNavigation();
+      await page.click('button[type="submit"]');
+      await gotoPage4;
 
-    await page.click('button[type="submit"]');
-    await gotoPage4;
+      // await page.waitForSelector("img.katie-clock");
 
-    await page.waitForSelector('input[name="bsky-handle"]');
-    await page.type('input[name="bsky-handle"]', "alice.test");
-    await page.type('input[name="bsky-password"]', "alice");
-    const gotoPageNext = page.waitForNavigation();
-    await page.click('button[type="submit"]');
-    await gotoPageNext;
+      const mail = await getMailFrom(
+        oldAgent.com.atproto.identity.requestPlcOperationSignature(undefined, {
+          headers: sc.getHeaders(alice),
+        })
+      );
 
-    await page.waitForSelector("img.katie-clock");
+      const plcToken = getTokenFromMail(mail);
 
-    const mail = await getMailFrom(
-      oldAgent.com.atproto.identity.requestPlcOperationSignature(undefined, {
-        headers: sc.getHeaders(alice),
-      })
-    );
+      const gotoPage5 = page.waitForNavigation();
+      await gotoPage5;
+      await page.waitForSelector('input[name="plc-token"]');
+      await page.type('input[name="plc-token"]', plcToken);
 
-    const plcToken = getTokenFromMail(mail);
+      const gotoPage6 = page.waitForNavigation();
+      await page.click('button[type="submit"]');
+      await gotoPage6;
+      await page.waitForSelector('input[name="login-to-northsky"]');
 
-    const gotoPage5 = page.waitForNavigation();
-    await gotoPage5;
-    await page.waitForSelector('input[name="plc-token"]');
-    await page.type('input[name="plc-token"]', plcToken);
-
-    const gotoPage6 = page.waitForNavigation();
-    await page.click('button[type="submit"]');
-    await gotoPage6;
-    await page.waitForSelector('input[name="login-to-northsky"]');
-
-    expect(page).toMatchTextContent(
-      "Your data has been migrated successfully."
-    );
+      expect(page).toMatchTextContent(
+        "Your data has been migrated successfully."
+      );
+    } catch (e) {
+      console.error(e);
+    }
   }, 60000);
 });

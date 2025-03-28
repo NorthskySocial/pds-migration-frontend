@@ -1,7 +1,7 @@
 import type { Route } from "./+types/bluesky-login";
 import { Heading, Highlight, Text, Input, Button } from "@chakra-ui/react";
-import { Field } from "~/components/ui/field";
-import { PasswordInput } from "~/components/ui/password-input";
+import { Field } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import { redirect, data as dataRes, useFetcher } from "react-router";
 import { AtpAgent } from "@atproto/api";
 import { getSession, commitSession } from "../sessions.server";
@@ -29,6 +29,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  console.log("PAGE 3");
   const session = await getSession(request.headers.get("Cookie"));
   const form = await request.formData();
   const handle_old = form.get("bsky-handle") as string | null;
@@ -84,38 +85,37 @@ export async function action({ request }: Route.ActionArgs) {
       identifier: handle_old,
       password: password!,
     });
-    console.log(data);
 
-    const { email } = data;
-
+    const { email, accessJwt } = data;
     session.set("email", email);
-    console.log(email);
-    const { token } = await (
-      await fetch(
-        `${MIGRATOR_BACKEND ?? "http://localhost:9090"}/service-auth`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          method: "post",
-          body: JSON.stringify({
-            pds_host: serviceEndpoint,
-            handle: handle_old,
-            did,
-            password,
-            aud: `did:web:${(PDS_HOSTNAME ?? "localhost:6789").replace(
-              /https?:\/\//i,
-              ""
-            )}`,
-          }),
-        }
-      )
-    ).json<{ token: string }>();
+    session.set("accessJwt", accessJwt);
 
-    if (!token) {
+    const res = await fetch(
+      `${MIGRATOR_BACKEND ?? "http://localhost:9090"}/service-auth`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+        body: JSON.stringify({
+          pds_host: serviceEndpoint,
+          handle: handle_old,
+          did,
+          token: accessJwt,
+          aud: `did:web:${(PDS_HOSTNAME ?? "localhost:6789").replace(
+            /https?:\/\//i,
+            ""
+          )}`,
+        }),
+      }
+    );
+
+    console.log("res", res);
+
+    if (!res.ok) {
       session.flash(
         "error",
-        "Invalid service token received; please contact support."
+        `Invalid service token received; please contact support with error: ${res.statusText}`
       );
 
       // Redirect back to the login page with errors.
@@ -125,6 +125,8 @@ export async function action({ request }: Route.ActionArgs) {
         },
       });
     }
+
+    const { accessJwt: token } = await res.json<{ accessJwt: string }>();
 
     console.log(handle_old, token);
     session.set("serviceToken", token);

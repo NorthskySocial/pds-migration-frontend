@@ -15,18 +15,19 @@ import {
   useFetcher,
   type ClientActionFunctionArgs,
 } from "react-router";
-import { Checkbox } from "~/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export function loader() {
   return { name: "northsky.social" };
 }
 
 export async function clientAction({ request }: ClientActionFunctionArgs) {
+  console.log("PAGE 2");
   const data = await request.formData();
   const submitted = data.has("submit");
   console.log(submitted);
   if (submitted) {
-    return redirect("/new-account");
+    return redirect("/connect-bluesky");
   }
 }
 

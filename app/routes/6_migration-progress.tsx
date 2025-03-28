@@ -1,7 +1,7 @@
 import type { Route } from "./+types/migration-progress";
 import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
 import clock_art from "../assets/clock.jpg";
-import { InfoTip } from "~/components/ui/toggle-tip";
+import { InfoTip } from "@/components/ui/toggle-tip";
 import { data, redirect, useSubmit } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { useEffect } from "react";
@@ -28,12 +28,14 @@ const defaultProgress = {
 };
 
 export async function action({ request }: Route.ActionArgs) {
+  console.log("PAGE 6");
   const session = await getSession(request.headers.get("Cookie"));
   const old_pds = session.get("old_pds");
   const old_handle = session.get("userId_old");
   const new_handle = session.get("userId_new");
-  const token = session.get("serviceToken");
+  const serviceToken = session.get("serviceToken");
   const newToken = session.get("newPdsUserToken");
+  const token = session.get("accessJwt");
 
   const progress = session.get("progress") || defaultProgress;
 

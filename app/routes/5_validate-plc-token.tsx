@@ -1,7 +1,7 @@
 import type { Route } from "./+types/validate-plc-token";
 import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
-import { Field } from "~/components/ui/field";
-import { PasswordInput } from "~/components/ui/password-input";
+import { Field } from "@/components/ui/field";
+import { PasswordInput } from "@/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
 import { redirect, useFetcher } from "react-router";
 
@@ -11,6 +11,7 @@ export function loader() {
 const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
 
 export async function action({ request }: Route.ActionArgs) {
+  console.log("PAGE 5");
   const data = await request.formData();
   const submitted = data.has("submit");
   const plcToken = data.get("plc-token") as string;

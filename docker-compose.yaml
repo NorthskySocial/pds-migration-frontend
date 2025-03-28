@@ -2,7 +2,7 @@ services:
   backend:
     image: northsky-migrator-backend:latest
     environment:
-      - ENDPOINT=http://localhost
+      - ENDPOINT=http://host.docker.internal
     ports:
       - 9090:9090
   # db:

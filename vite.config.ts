@@ -11,6 +11,9 @@ export default defineConfig(({ isSsrBuild }) => ({
         }
       : undefined,
   },
+  resolve: {
+    dedupe: ["@chakra-ui/react", "next-themes"],
+  },
   plugins: [
     cloudflareDevProxy({
       getLoadContext({ context }) {

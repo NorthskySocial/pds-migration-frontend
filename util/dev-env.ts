@@ -40,6 +40,12 @@ export const main = async () => {
     hostname: "k1xrpc41-9123.uks1.devtunnels.ms",
   });
 
+  process.on("SIGINT", async function () {
+    await newPds.close();
+    await network.close();
+    process.exit();
+  });
+
   const ctx = network.pds.ctx;
   const mailer = ctx.mailer;
   sampleKey = (await Secp256k1Keypair.create()).did();
@@ -92,11 +98,3 @@ export const main = async () => {
     await network.close();
   };
 };
-
-main().then(() => {
-  process.on("SIGINT", async function () {
-    await newPds.close();
-    await network.close();
-    process.exit();
-  });
-});

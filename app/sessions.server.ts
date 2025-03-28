@@ -9,6 +9,7 @@ type SessionData = {
   email?: string;
   old_pds?: string;
   newPdsUserToken?: string;
+  accessJwt?: string;
 };
 
 type SessionFlashData = {
