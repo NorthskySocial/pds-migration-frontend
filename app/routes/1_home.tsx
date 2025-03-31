@@ -1,4 +1,4 @@
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/1_home";
 import {
   Heading,
   Highlight,
@@ -9,23 +9,40 @@ import {
   Button,
   Box,
 } from "@chakra-ui/react";
-import { redirect, useFetcher } from "react-router";
+import {
+  createSearchParams,
+  parsePath,
+  redirect,
+  useFetcher,
+} from "react-router";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import { getSession, commitSession } from "../sessions.server";
 
-const hostname = import.meta.env.PDS_HOSTNAME ?? "localhost";
-const inviteRegex = new RegExp(
-  `^${hostname.replace(/\./g, "-")}-[a-z0-9]{5}-[a-z0-9]{5}$`
-);
-
 export async function action({ request }: Route.ActionArgs) {
   console.log("PAGE 1");
   const session = await getSession(request.headers.get("Cookie"));
+  const path = parsePath(request.url);
+  const search = createSearchParams(path.search);
+
+  const pds_dest =
+    search.get("destination") ?? import.meta.env.VITE_PDS_HOSTNAME;
+
+  const plc_hostname =
+    search.get("plc") ??
+    import.meta.env.VITE_PLC_HOSTNAME ??
+    "https://plc.directory";
+
+  session.set("pds_dest", pds_dest);
+  session.set("plc_hostname", plc_hostname);
+
+  const pds_dest_host = new URL(pds_dest).host.replace(/:\d+/, "");
+  console.log(pds_dest_host, pds_dest);
+  const inviteRegex = new RegExp(`^${pds_dest_host.replace(/\./g, "-")}-.+`);
+
   const data = await request.formData();
   const isNewAccount = data.has("create");
   const inviteCode = data.get("invite-code") as string;
-  console.log(data.get("agree-to-tos"));
   const confirmedTOS = data.get("agree-to-tos") === "on";
 
   const inviteCodeValid = inviteRegex.test(inviteCode as string);

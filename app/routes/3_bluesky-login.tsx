@@ -1,4 +1,4 @@
-import type { Route } from "./+types/bluesky-login";
+import type { Route } from "./+types/3_bluesky-login";
 import { Heading, Highlight, Text, Input, Button } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -10,14 +10,14 @@ import {
   isValidDidDoc,
   type DidDocument,
 } from "@atproto/common-web";
+import { Switch } from "@/components/ui/switch";
+import { useState } from "react";
 
-const { MIGRATOR_BACKEND, PDS_HOSTNAME, PLC_HOSTNAME } = import.meta.env;
+const { VITE_MIGRATOR_BACKEND = "http://localhost:9090" } = import.meta.env;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  console.log({
-    error: session.get("error"),
-  });
+
   return dataRes(
     { error: session.get("error") },
     {
@@ -32,19 +32,27 @@ export async function action({ request }: Route.ActionArgs) {
   console.log("PAGE 3");
   const session = await getSession(request.headers.get("Cookie"));
   const form = await request.formData();
-  const handle_old = form.get("bsky-handle") as string | null;
+  const handle_origin = form.get("bsky-handle") as string | null;
   const password = form.get("bsky-password") as string | null;
+  const pds_origin = (form.get("pds") as string) ?? "https://bsky.app";
+  const plc_hostname = session.get("plc_hostname");
+  const pds_dest = session.get("pds_dest") as string;
+  console.log(pds_origin);
+  const origin_agent = new AtpAgent({ service: pds_origin });
+
+  const { data: agentSessionData } = await origin_agent.login({
+    identifier: handle_origin!,
+    password: password!,
+  });
 
   try {
     const { did } = await (
       await fetch(
-        `${
-          PDS_HOSTNAME ?? "http://localhost:6789"
-        }/xrpc/com.atproto.identity.resolveHandle?handle=${handle_old}`
+        `${pds_origin}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_origin}`
       )
     ).json<{ did: string }>();
 
-    if (!did || !handle_old) {
+    if (!did || !handle_origin) {
       session.flash("error", "Invalid handle");
 
       // Redirect back to the login page with errors.
@@ -55,16 +63,16 @@ export async function action({ request }: Route.ActionArgs) {
       });
     }
 
-    console.log(did);
-
     session.set("did", did);
 
     const didDoc: DidDocument = await (
-      await fetch(`${PLC_HOSTNAME ?? "http://localhost:8789"}/${did}`)
+      await fetch(`${plc_hostname}/${did}`)
     ).json();
+
     console.log(didDoc);
 
     if (!didDoc || !isValidDidDoc(didDoc)) {
+      // This might need rewriting
       session.flash("error", "PLC Directory unavailable; please try later.");
 
       // Redirect back to the login page with errors.
@@ -75,44 +83,36 @@ export async function action({ request }: Route.ActionArgs) {
       });
     }
 
-    const serviceEndpoint = getPdsEndpoint(didDoc);
+    const serviceEndpoint = getPdsEndpoint(didDoc) ?? pds_origin;
 
-    session.set("old_pds", serviceEndpoint);
+    session.set("pds_origin", serviceEndpoint);
 
-    const agent = new AtpAgent({ service: serviceEndpoint! });
+    const { email, accessJwt: token_origin } = agentSessionData;
+    session.set("email", email!); // ???
+    session.set("token_origin", token_origin);
+    console.log("service endpoint", serviceEndpoint);
 
-    const { data } = await agent.login({
-      identifier: handle_old,
-      password: password!,
+    const pds_dest_uri = new URL(pds_dest);
+
+    const res = await fetch(`${VITE_MIGRATOR_BACKEND}/service-auth`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "post",
+      body: JSON.stringify({
+        pds_host: import.meta.env.DEV
+          ? serviceEndpoint.replace("localhost", "host.docker.internal")
+          : serviceEndpoint,
+        did,
+        token: token_origin,
+        aud: `did:web:${
+          import.meta.env.DEV ? "host.docker.internal" : pds_dest_uri.host
+        }`,
+      }),
     });
 
-    const { email, accessJwt } = data;
-    session.set("email", email);
-    session.set("accessJwt", accessJwt);
-
-    const res = await fetch(
-      `${MIGRATOR_BACKEND ?? "http://localhost:9090"}/service-auth`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "post",
-        body: JSON.stringify({
-          pds_host: serviceEndpoint,
-          handle: handle_old,
-          did,
-          token: accessJwt,
-          aud: `did:web:${(PDS_HOSTNAME ?? "localhost:6789").replace(
-            /https?:\/\//i,
-            ""
-          )}`,
-        }),
-      }
-    );
-
-    console.log("res", res);
-
     if (!res.ok) {
+      console.error(res.statusText);
       session.flash(
         "error",
         `Invalid service token received; please contact support with error: ${res.statusText}`
@@ -126,11 +126,10 @@ export async function action({ request }: Route.ActionArgs) {
       });
     }
 
-    const { accessJwt: token } = await res.json<{ accessJwt: string }>();
+    const token = await res.text();
 
-    console.log(handle_old, token);
-    session.set("serviceToken", token);
-    session.set("userId_old", handle_old);
+    session.set("token_service", token);
+    session.set("handle_origin", handle_origin);
 
     // Login succeeded, send them to the home page.
     return redirect("/new-account", {
@@ -140,7 +139,8 @@ export async function action({ request }: Route.ActionArgs) {
     });
   } catch (e) {
     console.error(e);
-    session.flash("error", e.message ?? "Unknown error");
+    session.flash("error", (e as Error).message ?? "Unknown error");
+
     return redirect("/new-account", {
       headers: {
         "Set-Cookie": await commitSession(session),
@@ -149,9 +149,10 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export default function BlueskyConnect({ loaderData }) {
+export default function BlueskyConnect({ loaderData }: Route.ComponentProps) {
   const { error } = loaderData;
   const fetcher = useFetcher();
+  const [altPds, setAltPds] = useState(false);
   return (
     <fetcher.Form method="post">
       <Heading size="3xl" letterSpacing="tight">
@@ -166,6 +167,18 @@ export default function BlueskyConnect({ loaderData }) {
         <strong>ensure your e-mail address is verified</strong> before starting
         migration.
       </Text>
+      <Switch
+        name="has-pds"
+        checked={altPds}
+        onCheckedChange={() => setAltPds(!altPds)}
+      >
+        Non-Bluesky PDS?
+      </Switch>
+      {altPds && (
+        <Field required label="Your PDS">
+          <Input name="pds" defaultValue="https://bsky.app" />
+        </Field>
+      )}
       <Field required label="Bluesky login">
         <Input name="bsky-handle" placeholder="username.bsky.social" />
       </Field>

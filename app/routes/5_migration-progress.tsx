@@ -1,4 +1,4 @@
-import type { Route } from "./+types/migration-progress";
+import type { Route } from "./+types/5_migration-progress";
 import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
 import clock_art from "../assets/clock.jpg";
 import { InfoTip } from "@/components/ui/toggle-tip";
@@ -6,7 +6,7 @@ import { data, redirect, useSubmit } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { useEffect } from "react";
 
-const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
+const { VITE_MIGRATOR_BACKEND } = import.meta.env;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -28,18 +28,17 @@ const defaultProgress = {
 };
 
 export async function action({ request }: Route.ActionArgs) {
-  console.log("PAGE 6");
   const session = await getSession(request.headers.get("Cookie"));
-  const old_pds = session.get("old_pds");
-  const old_handle = session.get("userId_old");
-  const new_handle = session.get("userId_new");
-  const serviceToken = session.get("serviceToken");
-  const newToken = session.get("newPdsUserToken");
-  const token = session.get("accessJwt");
+  const pds_origin = session.get("pds_origin") as string;
+  const pds_dest = session.get("pds_dest") as string;
+  const did = session.get("did") as string;
+  const token_dest = session.get("token_dest") as string;
+  const token_origin = session.get("token_origin") as string;
 
   const progress = session.get("progress") || defaultProgress;
+  console.log(`PAGE 6, STAGE ${progress.stageIdx}`);
 
-  if (!old_pds || !old_handle) {
+  if (!pds_origin || !did) {
     session.flash(
       "error",
       "Unable to resolve old account; please login again."
@@ -65,12 +64,14 @@ export async function action({ request }: Route.ActionArgs) {
     }
     case 1: {
       // export repo
-      const res = await fetch(`${MIGRATOR_BACKEND}/export-repo`, {
+      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/export-repo`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: old_pds,
-          handle: old_handle,
-          token,
+          pds_host: import.meta.env.DEV
+            ? pds_origin.replace("localhost", "host.docker.internal")
+            : pds_origin,
+          did,
+          token: token_origin,
         }),
       });
 
@@ -91,12 +92,14 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 2: {
       // import repo
-      const res = await fetch(`${MIGRATOR_BACKEND}/import-repo`, {
+      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/import-repo`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: PDS_HOSTNAME,
-          handle: new_handle,
-          token: newToken,
+          pds_host: import.meta.env.DEV
+            ? pds_dest.replace("localhost", "host.docker.internal")
+            : pds_dest,
+          did,
+          token: token_dest,
         }),
       });
 
@@ -117,12 +120,16 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 3: {
       // missing blobs
-      const res = await fetch(`${MIGRATOR_BACKEND}/missing-blobs`, {
+      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/export-blobs`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: PDS_HOSTNAME,
-          handle: new_handle,
-          token: newToken,
+          did,
+          destination: import.meta.env.DEV
+            ? pds_dest.replace("localhost", "host.docker.internal")
+            : pds_dest,
+          destination_token: token_dest,
+          origin: pds_origin,
+          origin_token: token_origin,
         }),
       });
 
@@ -140,17 +147,15 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     case 4: {
-      // export blobs
-      const res = await fetch(`${MIGRATOR_BACKEND}/export-blobs`, {
+      // upload blobs
+      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/upload-blobs`, {
         method: "post",
         body: JSON.stringify({
-          new_pds_host: PDS_HOSTNAME,
-          new_handle: new_handle,
-          // new_password: "<<new_password>>",
-          old_pds_host: old_pds,
-          old_handle: old_handle,
-          // old_password: "<<old_password>>",
-          token,
+          pds_host: import.meta.env.DEV
+            ? pds_dest.replace("localhost", "host.docker.internal")
+            : pds_dest,
+          did,
+          token: token_dest,
         }),
       });
 
@@ -168,42 +173,19 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     case 5: {
-      // upload blobs
-      const res = await fetch(`${MIGRATOR_BACKEND}/upload-blobs`, {
-        method: "post",
-        body: JSON.stringify({
-          pds_host: PDS_HOSTNAME,
-          handle: new_handle,
-          token: newToken,
-        }),
-      });
-
-      if (!res.ok) {
-        session.flash("error", (await res.json<{ message: string }>()).message);
-        break;
-      }
-
-      session.flash("progress", {
-        stageIdx: 5,
-        stageTitle: "Uploading your blobs...",
-        stageDescription:
-          "Uploading your blobs to our CDN. This may take awhile!",
-      });
-      break;
-    }
-
-    case 6: {
       // migrate preferences
-      const res = await fetch(`${MIGRATOR_BACKEND}/migrate-preferences`, {
+      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/migrate-preferences`, {
         method: "post",
         body: JSON.stringify({
-          new_pds_host: PDS_HOSTNAME,
-          new_handle: new_handle,
-          // new_password: "<<new_password>>",
-          old_pds_host: old_pds,
-          old_handle: old_handle,
-          // old_password: "<<old_password>>",
-          token,
+          did,
+          destination: import.meta.env.DEV
+            ? pds_dest.replace("localhost", "host.docker.internal")
+            : pds_dest,
+          destination_token: token_dest,
+          origin: import.meta.env.DEV
+            ? pds_origin.replace("localhost", "host.docker.internal")
+            : pds_origin,
+          origin_token: token_origin,
         }),
       });
 
@@ -223,12 +205,14 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 7: {
       // req PLC token
-      const res = await fetch(`${MIGRATOR_BACKEND}/request-token`, {
+      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/request-token`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: old_pds,
-          handle: old_handle,
-          token,
+          pds_host: import.meta.env.DEV
+            ? pds_origin.replace("localhost", "host.docker.internal")
+            : pds_origin,
+          did,
+          token: token_origin,
         }),
       });
 
@@ -255,14 +239,11 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
-  return data(
-    { error: session.get("error"), progress: session.get("progress") },
-    {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    }
-  );
+  return redirect("/migrate", {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
 }
 
 export default function Migrate({ loaderData }: Route.ComponentProps) {

@@ -11,7 +11,7 @@ type Params = {
   "/backup-your-data": {};
   "/connect-bluesky": {};
   "/new-account": {};
-  "/validate-plc-token": {};
   "/migrate": {};
+  "/validate-plc-token": {};
   "/done": {};
 };

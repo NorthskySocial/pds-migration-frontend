@@ -1,15 +1,18 @@
 import { createCookieSessionStorage } from "react-router";
 
 type SessionData = {
-  userId_old?: string;
-  userId_new?: string;
-  serviceToken?: string;
-  did?: string;
+  handle_origin: string;
+  handle_dest: string;
+  pds_dest: string;
+  pds_origin: string;
+  token_origin: string;
+  token_dest: string;
+  token_plc: string;
+  token_service: string;
+  plc_hostname: string;
+  did: string;
   inviteCode?: string;
-  email?: string;
-  old_pds?: string;
-  newPdsUserToken?: string;
-  accessJwt?: string;
+  email: string;
 };
 
 type SessionFlashData = {

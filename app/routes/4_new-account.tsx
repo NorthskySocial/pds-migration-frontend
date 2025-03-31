@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Route } from "./+types/new-account";
+import type { Route } from "./+types/4_new-account";
 import {
   Heading,
   Highlight,
@@ -15,35 +15,47 @@ import {
   PasswordStrengthMeter,
 } from "@/components/ui/password-input";
 import { passwordStrength } from "check-password-strength";
-import { redirect, useFetcher } from "react-router";
+import { data, redirect, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
-import AtpAgent from "@atproto/api";
+import { AtpAgent } from "@atproto/api";
 
-export function loader() {
-  return { name: "northsky.social" };
+export async function loader({ request }: Route.LoaderArgs) {
+  const session = await getSession(request.headers.get("Cookie"));
+
+  return data(
+    { error: session.get("error") },
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const { MIGRATOR_BACKEND = "http://localhost:9090", PDS_HOSTNAME } =
-    import.meta.env;
   console.log("PAGE 4");
+  const { VITE_MIGRATOR_BACKEND = "http://localhost:9090" } = import.meta.env;
   const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
-  const pw = (data.get("password") as string) ?? "";
+  const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
-  const handle_new = ((data.get("handle") as string) ?? "").toLowerCase();
+  const handle = ((data.get("handle") as string) ?? "").toLowerCase();
+  const handle_dest = `${handle}.northsky.social`;
   const submitted = data.has("submit");
-  const did = session.get("did");
+  const did = session.get("did") as string;
+  const service_token = session.get("token_service") as string;
+  const pds_dest = session.get("pds_dest") as string;
 
   let res = {
     ok: true,
-    handle: handle_new,
+    handle: handle + ".northsky.social",
     error_password_match: "",
     error_password_length: "",
     handle_available: null as null | boolean,
   };
 
-  if (pw !== pwConfirm && pw.length && pwConfirm.length) {
+  // Check passwords matching
+  if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
     res = {
       ...res,
       ok: false,
@@ -51,7 +63,8 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
-  if (pw?.length < 8 && pw.length > 0) {
+  // Check password length
+  if (pw_dest?.length < 8 && pw_dest.length > 0) {
     res = {
       ...res,
       ok: false,
@@ -59,9 +72,10 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
-  if (handle_new.length > 0) {
+  // Check handle availability
+  if (handle.length > 0) {
     const handle_available = await fetch(
-      `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${handle_new}`
+      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
       .then<{ message: string; error: string } & { did: string }>((r) =>
         r.json()
@@ -75,7 +89,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   if (submitted && res.ok) {
-    session.set("userId_new", handle_new);
+    session.set("handle_dest", handle_dest);
 
     const inviteCode = session.get("inviteCode");
 
@@ -91,21 +105,36 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     const email = session.get("email");
-    console.log(email);
+    console.log(
+      email,
+      handle_dest,
+      service_token,
+      pw_dest,
+      email,
+      did,
+      inviteCode
+    );
 
-    const createAccountRes = await fetch(`${MIGRATOR_BACKEND}/create-account`, {
-      method: "post",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pds_host: PDS_HOSTNAME,
-        handle: handle_new,
-        password: pw,
-        email,
-        did,
-        invite_code: inviteCode,
-      }),
-    });
-    console.log(createAccountRes);
+    const createAccountRes = await fetch(
+      `${VITE_MIGRATOR_BACKEND}/create-account`,
+      {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pds_host: import.meta.env.DEV
+            ? pds_dest.replace("localhost", "host.docker.internal")
+            : pds_dest,
+          handle: handle_dest,
+          token: service_token,
+          password: pw_dest,
+          email,
+          did,
+          invite_code: inviteCode,
+        }),
+      }
+    );
+    console.log("wheee", createAccountRes);
+
     if (!createAccountRes.ok) {
       const message = createAccountRes.statusText;
 
@@ -119,15 +148,17 @@ export async function action({ request }: Route.ActionArgs) {
       });
     }
 
-    // GET USER TOKEN BY LOGGING IN HERE
-    const agent = new AtpAgent({ service: "http://localhost:7789" });
-    const { data } = await agent.login({
-      identifier: "alice.northsky.social",
-      password: pw,
-    });
-    console.log("here", data);
-    session.set("newPdsUserToken", data.accessJwt);
+    // Get new user token
+    const agent_dest = new AtpAgent({ service: pds_dest });
 
+    const { data } = await agent_dest.login({
+      identifier: handle_dest,
+      password: pw_dest,
+    });
+
+    session.set("token_dest", data.accessJwt);
+
+    // All good! Go to migrator!
     return redirect("/migrate", {
       headers: {
         "Set-Cookie": await commitSession(session),
@@ -135,6 +166,7 @@ export async function action({ request }: Route.ActionArgs) {
     });
   }
 
+  // this doesn't seem right...
   return res;
 }
 
@@ -155,8 +187,9 @@ export default function NewAccount() {
         </Highlight>
       </Heading>
       <Text fontSize="md" textAlign={"center"}>
-        Bluesky should have just sent you an e-mail to your inbox. Input that
-        code below to continue migration.
+        We'll need to give to a .northsky.social handle as part of the
+        migration. If you have a custom domain handle, you can change it back
+        right after the migration process is over.
       </Text>
       <br />
 

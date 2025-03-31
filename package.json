@@ -7,8 +7,9 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
-    "test": "jest",
-    "dev-env": "docker-compose up"
+    "test:jest": "jest --maxWorkers=1",
+    "test:docker": "docker run --rm -p 9090:9090 northsky-migrator-backend:latest",
+    "test": "npx concurrently --kill-others npm:dev npm:test:jest npm:test:docker"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.8.0",
@@ -52,8 +53,5 @@
     "vite": "^6.1.0",
     "vite-tsconfig-paths": "^5.1.4",
     "wrangler": "^3.109.2"
-  },
-  "volta": {
-    "node": "22.14.0"
   }
 }

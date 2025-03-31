@@ -1,37 +1,22 @@
-import type { Route } from "./+types/home";
-import {
-  Heading,
-  Highlight,
-  VStack,
-  Text,
-  Input,
-  HStack,
-  Button,
-  Box,
-  Container,
-} from "@chakra-ui/react";
-import {
-  redirect,
-  useFetcher,
-  type ClientActionFunctionArgs,
-} from "react-router";
+import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
+import { redirect, useFetcher, type ActionFunctionArgs } from "react-router";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export function loader() {
   return { name: "northsky.social" };
 }
 
-export async function clientAction({ request }: ClientActionFunctionArgs) {
+export async function action({ request }: ActionFunctionArgs) {
   console.log("PAGE 2");
   const data = await request.formData();
   const submitted = data.has("submit");
-  console.log(submitted);
+
   if (submitted) {
     return redirect("/connect-bluesky");
   }
 }
 
-export default function BackupNotice({ loaderData }: Route.ComponentProps) {
+export default function BackupNotice() {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post">

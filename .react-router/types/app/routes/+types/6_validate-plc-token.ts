@@ -1,17 +1,17 @@
 // React Router generated types for route:
-// routes/6_migration-progress.tsx
+// routes/6_validate-plc-token.tsx
 
 import type * as T from "react-router/route-module"
 
 import type { Info as Parent0 } from "../../+types/root.js"
 
-type Module = typeof import("../6_migration-progress.js")
+type Module = typeof import("../6_validate-plc-token.js")
 
 export type Info = {
   parents: [Parent0],
-  id: "routes/6_migration-progress"
-  file: "routes/6_migration-progress.tsx"
-  path: "migrate"
+  id: "routes/6_validate-plc-token"
+  file: "routes/6_validate-plc-token.tsx"
+  path: "validate-plc-token"
   params: {} & { [key: string]: string | undefined }
   module: Module
   loaderData: T.CreateLoaderData<Module>

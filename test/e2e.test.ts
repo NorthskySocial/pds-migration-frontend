@@ -8,17 +8,14 @@ import {
 } from "@atproto/dev-env";
 import "jest-puppeteer";
 import "expect-puppeteer";
-
-// import { Secp256k1Keypair } from "@atproto/crypto";
 import Mail from "nodemailer/lib/mailer";
 
 describe("account migration tool", () => {
-  let network: TestNetworkNoAppView;
-  let newPds: TestPds;
+  let originNetwork: TestNetworkNoAppView;
+  let destPds: TestPds;
 
   let sc: SeedClient;
-  let oldAgent: AtpAgent;
-  let newAgent: AtpAgent;
+  let originAgent: AtpAgent;
   let inviteCode: string;
   let alice: string;
   const mailCatcher = new EventEmitter();
@@ -27,76 +24,58 @@ describe("account migration tool", () => {
   // let sampleKey: string;
 
   beforeAll(async () => {
-    try {
-      network = await TestNetworkNoAppView.create({
-        dbPostgresSchema: "account_migration",
-        pds: {
-          port: 6789,
-        },
-        plc: {
-          port: 8789,
-        },
-      });
+    originNetwork = await TestNetworkNoAppView.create({
+      dbPostgresSchema: "account_migration",
+    });
 
-      const ctx = network.pds.ctx;
-      const mailer = ctx.mailer;
+    const ctx = originNetwork.pds.ctx;
+    const mailer = ctx.mailer;
 
-      newPds = await TestPds.create({
-        didPlcUrl: network.plc.url,
-        inviteRequired: true,
-        port: 7789,
-      });
-      mockNetworkUtilities(newPds);
-      console.log(network.plc.url, network.plc.port);
-      sc = network.getSeedClient();
-      oldAgent = network.pds.getClient();
-      newAgent = newPds.getClient();
+    destPds = await TestPds.create({
+      didPlcUrl: originNetwork.plc.url,
+      inviteRequired: true,
+    });
 
-      await network.processAll();
-      // sampleKey = (await Secp256k1Keypair.create()).did();
+    mockNetworkUtilities(destPds);
 
-      process.on("SIGINT", async function () {
-        await newPds.close();
-        await network.close();
-        await browser.close();
-        process.exit();
-      });
+    sc = originNetwork.getSeedClient();
+    originAgent = originNetwork.pds.getClient();
 
-      // Catch emails for use in tests
-      _origSendMail = mailer.transporter.sendMail;
-      mailer.transporter.sendMail = async (opts) => {
-        const result = await _origSendMail.call(mailer.transporter, opts);
-        mailCatcher.emit("mail", opts);
-        return result;
-      };
+    process.on("SIGINT", async function () {
+      await destPds.close();
+      await originNetwork.close();
+      await browser.close();
+      process.exit();
+    });
 
-      await sc.createAccount("alice", {
-        handle: "alice.test",
-        email: "alice@test.com",
-        password: "alice",
-      });
+    await originNetwork.processAll();
+    // sampleKey = (await Secp256k1Keypair.create()).did();
 
-      alice = sc.dids.alice;
+    // Catch emails for use in tests
+    _origSendMail = mailer.transporter.sendMail;
+    mailer.transporter.sendMail = async (opts) => {
+      const result = await _origSendMail.call(mailer.transporter, opts);
+      mailCatcher.emit("mail", opts);
+      return result;
+    };
 
-      // await oldAgent.login({
-      //   identifier: sc.accounts[alice].handle,
-      //   password: sc.accounts[alice].password,
-      // });
+    await sc.createAccount("alice", {
+      handle: "alice.test",
+      email: "alice@test.com",
+      password: "alice",
+    });
 
-      const res = await network.pds
-        .getClient()
-        .com.atproto.server.createInviteCode(
-          { useCount: 5, forAccount: alice },
-          {
-            encoding: "application/json",
-            headers: network.pds.adminAuthHeaders(),
-          }
-        );
+    alice = sc.dids.alice;
 
-      inviteCode = res.data.code;
-    } catch (e) {
-      console.error(e);
-    }
+    const res = await destPds.getClient().com.atproto.server.createInviteCode(
+      { useCount: 5 },
+      {
+        encoding: "application/json",
+        headers: originNetwork.pds.adminAuthHeaders(),
+      }
+    );
+
+    inviteCode = res.data.code;
   });
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {
@@ -108,58 +87,70 @@ describe("account migration tool", () => {
     mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1];
 
   afterAll(async () => {
-    await newPds.close();
-    await network.close();
-    await browser.close();
+    await destPds?.close();
+    await originNetwork?.close();
+    await browser?.close();
   });
 
+  // This is a mess, if you have a better idea plmk
   it("does the migrate account account journey", async () => {
     try {
-      console.log(inviteCode);
-      await page.goto("http://localhost:5173");
+      await page.goto(
+        `http://localhost:5173?destination=${destPds.url}&plc=${originNetwork.plc.url}`
+      );
       await page.waitForSelector('[name="invite-code"]');
       await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
       await page.type('[name="invite-code"]', inviteCode);
-
       const goToPage2 = page.waitForNavigation();
       await page.click('button[name="migrate"]');
+
       await goToPage2;
       await page.waitForSelector('input[name="confirm"]');
       await page.$eval('input[name="confirm"]', (e) => e.click());
-
-      await page.waitForSelector('input[name="bsky-handle"]');
-      await page.type('input[name="bsky-handle"]', "alice.test");
-      await page.type('input[name="bsky-password"]', "alice");
       const gotoPage3 = page.waitForNavigation();
       await page.click('button[type="submit"]');
-      await gotoPage3;
 
-      await page.waitForSelector('input[name="handle"]');
-      await page.type('input[name="handle"]', "alice.northsky.social");
-      await page.type('input[name="password"]', "hunter7password");
-      await page.type('input[name="password-repeat"]', "hunter7password");
+      await gotoPage3;
+      await page.waitForSelector('input[name="bsky-handle"]');
+      await page.$eval('input[name="has-pds"]', (e) => e.click());
+      await page.$eval('input[name="pds"]', (el, [pds]) => (el.value = pds), [
+        originNetwork.pds.url,
+      ]);
+      await page.type('input[name="bsky-handle"]', "alice.test");
+      await page.type('input[name="bsky-password"]', "alice");
       const gotoPage4 = page.waitForNavigation();
       await page.click('button[type="submit"]');
+
       await gotoPage4;
+      await page.waitForSelector('input[name="handle"]');
+      await page.type('input[name="handle"]', "alice");
+      await page.type('input[name="password"]', "hunter7password");
+      await page.type('input[name="password-repeat"]', "hunter7password");
+      const gotoPage5 = page.waitForNavigation();
+      await page.click('button[type="submit"]');
+      await gotoPage5;
 
       // await page.waitForSelector("img.katie-clock");
 
       const mail = await getMailFrom(
-        oldAgent.com.atproto.identity.requestPlcOperationSignature(undefined, {
-          headers: sc.getHeaders(alice),
-        })
+        originAgent.com.atproto.identity.requestPlcOperationSignature(
+          undefined,
+          {
+            headers: sc.getHeaders(alice),
+          }
+        )
       );
 
       const plcToken = getTokenFromMail(mail);
 
-      const gotoPage5 = page.waitForNavigation();
-      await gotoPage5;
+      const gotoPage6 = page.waitForNavigation();
+      await gotoPage6;
       await page.waitForSelector('input[name="plc-token"]');
       await page.type('input[name="plc-token"]', plcToken);
 
-      const gotoPage6 = page.waitForNavigation();
+      const gotoPage7 = page.waitForNavigation();
       await page.click('button[type="submit"]');
-      await gotoPage6;
+      await gotoPage7;
       await page.waitForSelector('input[name="login-to-northsky"]');
 
       expect(page).toMatchTextContent(
@@ -167,6 +158,7 @@ describe("account migration tool", () => {
       );
     } catch (e) {
       console.error(e);
+      process.exit(1);
     }
   }, 60000);
 });
