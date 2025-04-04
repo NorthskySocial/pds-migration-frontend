@@ -1,11 +1,9 @@
-import type { Route } from "./+types/done";
+import type { Route } from "./+types/7_done";
 import { Heading, Text, Button } from "@chakra-ui/react";
 import misleading_notice from "../assets/misleading.png";
 import melted_clock from "../assets/melted.jpg";
-import { data, redirect, useFetcher } from "react-router";
+import { data, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
-
-const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));

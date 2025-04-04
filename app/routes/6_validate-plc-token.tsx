@@ -1,4 +1,4 @@
-import type { Route } from "./+types/validate-plc-token";
+import type { Route } from "./+types/6_validate-plc-token";
 import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -8,7 +8,7 @@ import { redirect, useFetcher } from "react-router";
 export function loader() {
   return { name: "northsky.social" };
 }
-const { MIGRATOR_BACKEND, PDS_HOSTNAME } = import.meta.env;
+const { VITE_MIGRATOR_BACKEND, VITE_PDS_HOSTNAME } = import.meta.env;
 
 export async function action({ request }: Route.ActionArgs) {
   console.log("PAGE 5");
@@ -18,17 +18,17 @@ export async function action({ request }: Route.ActionArgs) {
 
   if (submitted) {
     // activate new account
-    fetch(`${MIGRATOR_BACKEND}/activate-account`, {
+    fetch(`${VITE_MIGRATOR_BACKEND}/activate-account`, {
       method: "post",
       body: JSON.stringify({
-        pds_host: PDS_HOSTNAME,
+        pds_host: VITE_PDS_HOSTNAME,
         handle: "<<new_handle>>",
         password: "<<new_password>>",
       }),
     });
 
     // deactivate old account
-    fetch(`${MIGRATOR_BACKEND}/deactivate-account`, {
+    fetch(`${VITE_MIGRATOR_BACKEND}/deactivate-account`, {
       method: "post",
       body: JSON.stringify({
         pds_host: "<<old_host>>",
@@ -38,10 +38,10 @@ export async function action({ request }: Route.ActionArgs) {
     });
 
     // deactivate old account
-    fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
+    fetch(`${VITE_MIGRATOR_BACKEND}/migrate-plc`, {
       method: "post",
       body: JSON.stringify({
-        new_pds_host: PDS_HOSTNAME,
+        new_pds_host: VITE_PDS_HOSTNAME,
         new_handle: "<<new_handle>>",
         new_password: "<<new_password>>",
         old_pds_host: "<<old_host>>",

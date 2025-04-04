@@ -31,7 +31,7 @@ const { getSession, commitSession, destroySession } =
       name: "__session",
 
       // all of these are optional
-      domain: import.meta.env.PDS_HOSTNAME ?? "localhost",
+      domain: import.meta.env.VITE_PDS_HOSTNAME ?? "localhost",
       // Expires can also be set (although maxAge overrides it when used in combination).
       // Note that this method is NOT recommended as `new Date` creates only one date on each server deployment, not a dynamic date in the future!
       //
