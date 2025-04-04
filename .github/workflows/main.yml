@@ -15,9 +15,10 @@ jobs:
         with:
           node-version: "20.x"
           registry-url: "https://npm.pkg.github.com"
-          token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm ci
-      - run: npm test
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - run: npm test
       - run: npm run build
       - name: Deploy
         uses: cloudflare/wrangler-action@v3

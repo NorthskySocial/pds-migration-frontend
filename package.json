@@ -9,7 +9,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "test:jest": "jest --maxWorkers=1",
     "test:backend": "./pds-migration/target/debug/pdsmigration-web",
-    "test": "exit 0"
+    "test": "npx concurrently --kill-others npm:dev npm:test:jest npm:test:backend"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.8.0",
