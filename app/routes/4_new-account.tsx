@@ -40,15 +40,16 @@ export async function action({ request }: Route.ActionArgs) {
   const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
-  const handle_dest = `${handle}.northsky.social`;
   const submitted = data.has("submit");
   const did = session.get("did") as string;
   const service_token = session.get("token_service") as string;
   const pds_dest = session.get("pds_dest") as string;
+  const dest_hostname = pds_dest.replace(/https?:\/\//, "");
+  const handle_dest = `${handle}.${dest_hostname}`;
 
   let res = {
     ok: true,
-    handle: handle + ".northsky.social",
+    handle: `${handle}.${dest_hostname}`,
     error_password_match: "",
     error_password_length: "",
     handle_available: null as null | boolean,
@@ -121,9 +122,7 @@ export async function action({ request }: Route.ActionArgs) {
         method: "post",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          pds_host: import.meta.env.DEV
-            ? pds_dest.replace("localhost", "host.docker.internal")
-            : pds_dest,
+          pds_host: pds_dest,
           handle: handle_dest,
           token: service_token,
           password: pw_dest,

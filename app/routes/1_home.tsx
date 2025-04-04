@@ -50,7 +50,7 @@ export async function action({ request }: Route.ActionArgs) {
   if (!confirmedTOS)
     return { ok: false, error: "Please agree to the Terms Of Service" };
 
-  if (!inviteCode || !inviteCodeValid)
+  if (!import.meta.env.DEV && (!inviteCode || !inviteCodeValid))
     return { ok: false, error: "Please enter a valid invite code" };
 
   session.set("inviteCode", inviteCode);

@@ -67,9 +67,7 @@ export async function action({ request }: Route.ActionArgs) {
       const res = await fetch(`${VITE_MIGRATOR_BACKEND}/export-repo`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: import.meta.env.DEV
-            ? pds_origin.replace("localhost", "host.docker.internal")
-            : pds_origin,
+          pds_host: pds_origin,
           did,
           token: token_origin,
         }),
@@ -95,9 +93,7 @@ export async function action({ request }: Route.ActionArgs) {
       const res = await fetch(`${VITE_MIGRATOR_BACKEND}/import-repo`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: import.meta.env.DEV
-            ? pds_dest.replace("localhost", "host.docker.internal")
-            : pds_dest,
+          pds_host: pds_dest,
           did,
           token: token_dest,
         }),
@@ -124,9 +120,7 @@ export async function action({ request }: Route.ActionArgs) {
         method: "post",
         body: JSON.stringify({
           did,
-          destination: import.meta.env.DEV
-            ? pds_dest.replace("localhost", "host.docker.internal")
-            : pds_dest,
+          destination: pds_dest,
           destination_token: token_dest,
           origin: pds_origin,
           origin_token: token_origin,
@@ -151,9 +145,7 @@ export async function action({ request }: Route.ActionArgs) {
       const res = await fetch(`${VITE_MIGRATOR_BACKEND}/upload-blobs`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: import.meta.env.DEV
-            ? pds_dest.replace("localhost", "host.docker.internal")
-            : pds_dest,
+          pds_host: pds_dest,
           did,
           token: token_dest,
         }),
@@ -178,13 +170,9 @@ export async function action({ request }: Route.ActionArgs) {
         method: "post",
         body: JSON.stringify({
           did,
-          destination: import.meta.env.DEV
-            ? pds_dest.replace("localhost", "host.docker.internal")
-            : pds_dest,
+          destination: pds_dest,
           destination_token: token_dest,
-          origin: import.meta.env.DEV
-            ? pds_origin.replace("localhost", "host.docker.internal")
-            : pds_origin,
+          origin: pds_origin,
           origin_token: token_origin,
         }),
       });
@@ -208,9 +196,7 @@ export async function action({ request }: Route.ActionArgs) {
       const res = await fetch(`${VITE_MIGRATOR_BACKEND}/request-token`, {
         method: "post",
         body: JSON.stringify({
-          pds_host: import.meta.env.DEV
-            ? pds_origin.replace("localhost", "host.docker.internal")
-            : pds_origin,
+          pds_host: pds_origin,
           did,
           token: token_origin,
         }),

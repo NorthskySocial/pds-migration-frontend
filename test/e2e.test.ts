@@ -10,6 +10,11 @@ import "jest-puppeteer";
 import "expect-puppeteer";
 import Mail from "nodemailer/lib/mailer";
 
+const PDS_DEST_HOSTNAME = "4rb5x7qf-6789.uks1.devtunnels.ms";
+const PDS_ORIGIN_HOSTNAME = "4rb5x7qf-7890.uks1.devtunnels.ms";
+const PDS_DEST_PORT = 7890;
+const PDS_ORIGIN_PORT = 6789;
+
 describe("account migration tool", () => {
   let originNetwork: TestNetworkNoAppView;
   let destPds: TestPds;
@@ -21,61 +26,84 @@ describe("account migration tool", () => {
   const mailCatcher = new EventEmitter();
   let _origSendMail;
 
-  // let sampleKey: string;
-
   beforeAll(async () => {
-    originNetwork = await TestNetworkNoAppView.create({
-      dbPostgresSchema: "account_migration",
-    });
+    try {
+      originNetwork = await TestNetworkNoAppView.create({
+        dbPostgresSchema: "account_migration",
+        pds: {
+          devMode: true,
+          // hostname: PDS_ORIGIN_HOSTNAME,
+          // port: PDS_ORIGIN_PORT,
+        },
+      });
 
-    const ctx = originNetwork.pds.ctx;
-    const mailer = ctx.mailer;
+      const ctx = originNetwork.pds.ctx;
+      const mailer = ctx.mailer;
 
-    destPds = await TestPds.create({
-      didPlcUrl: originNetwork.plc.url,
-      inviteRequired: true,
-    });
+      destPds = await TestPds.create({
+        devMode: true,
+        didPlcUrl: originNetwork.plc.url,
+        inviteRequired: true,
+        // hostname: PDS_DEST_HOSTNAME,
+        // port: PDS_DEST_PORT,
+      });
 
-    mockNetworkUtilities(destPds);
+      mockNetworkUtilities(destPds);
 
-    sc = originNetwork.getSeedClient();
-    originAgent = originNetwork.pds.getClient();
+      // const origin_config: ProxyOptions = {
+      //   from: `${originNetwork.pds.url}:${originNetwork.pds.port}`,
+      //   to: PDS_ORIGIN_HOSTNAME,
+      // };
 
-    process.on("SIGINT", async function () {
-      await destPds.close();
-      await originNetwork.close();
-      await browser.close();
-      process.exit();
-    });
+      // const dest_config: ProxyOptions = {
+      //   from: `${destPds.url}:${destPds.port}`,
+      //   to: PDS_DEST_HOSTNAME,
+      // };
 
-    await originNetwork.processAll();
-    // sampleKey = (await Secp256k1Keypair.create()).did();
+      // startProxy(origin_config);
+      // startProxy(dest_config);
 
-    // Catch emails for use in tests
-    _origSendMail = mailer.transporter.sendMail;
-    mailer.transporter.sendMail = async (opts) => {
-      const result = await _origSendMail.call(mailer.transporter, opts);
-      mailCatcher.emit("mail", opts);
-      return result;
-    };
+      sc = originNetwork.getSeedClient();
+      originAgent = originNetwork.pds.getClient();
 
-    await sc.createAccount("alice", {
-      handle: "alice.test",
-      email: "alice@test.com",
-      password: "alice",
-    });
+      process.on("SIGINT", async function () {
+        await destPds.close();
+        await originNetwork.close();
+        await browser.close();
+        process.exit();
+      });
 
-    alice = sc.dids.alice;
+      await originNetwork.processAll();
+      // sampleKey = (await Secp256k1Keypair.create()).did();
 
-    const res = await destPds.getClient().com.atproto.server.createInviteCode(
-      { useCount: 5 },
-      {
-        encoding: "application/json",
-        headers: originNetwork.pds.adminAuthHeaders(),
-      }
-    );
+      // Catch emails for use in tests
+      _origSendMail = mailer.transporter.sendMail;
+      mailer.transporter.sendMail = async (opts) => {
+        const result = await _origSendMail.call(mailer.transporter, opts);
+        mailCatcher.emit("mail", opts);
+        return result;
+      };
 
-    inviteCode = res.data.code;
+      await sc.createAccount("alice", {
+        handle: "alice.test",
+        email: "alice@test.com",
+        password: "alice",
+      });
+
+      alice = sc.dids.alice;
+
+      const res = await destPds.getClient().com.atproto.server.createInviteCode(
+        { useCount: 5 },
+        {
+          encoding: "application/json",
+          headers: destPds.adminAuthHeaders(),
+        }
+      );
+
+      inviteCode = res.data.code;
+    } catch (e) {
+      console.error(e);
+    }
   });
 
   const getMailFrom = async (promise): Promise<Mail.Options> => {

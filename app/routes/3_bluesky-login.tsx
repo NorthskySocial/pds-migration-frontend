@@ -93,21 +93,18 @@ export async function action({ request }: Route.ActionArgs) {
     console.log("service endpoint", serviceEndpoint);
 
     const pds_dest_uri = new URL(pds_dest);
-
+    const aud = `did:web:${pds_dest_uri.host.replace(/:\d+/, "")}`;
+    console.log(aud);
     const res = await fetch(`${VITE_MIGRATOR_BACKEND}/service-auth`, {
       headers: {
         "Content-Type": "application/json",
       },
       method: "post",
       body: JSON.stringify({
-        pds_host: import.meta.env.DEV
-          ? serviceEndpoint.replace("localhost", "host.docker.internal")
-          : serviceEndpoint,
+        pds_host: serviceEndpoint,
         did,
         token: token_origin,
-        aud: `did:web:${
-          import.meta.env.DEV ? "host.docker.internal" : pds_dest_uri.host
-        }`,
+        aud,
       }),
     });
 

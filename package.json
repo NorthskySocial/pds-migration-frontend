@@ -8,8 +8,8 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "test:jest": "jest --maxWorkers=1",
-    "test:docker": "docker run --rm -p 9090:9090 northsky-migrator-backend:latest",
-    "test": "npx concurrently --kill-others npm:dev npm:test:jest npm:test:docker"
+    "test:backend": "./pds-migration/target/debug/pdsmigration-web",
+    "test": "npx concurrently --kill-others npm:dev npm:test:jest npm:test:backend"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.8.0",
