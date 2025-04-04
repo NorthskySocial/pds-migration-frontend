@@ -18,7 +18,7 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
-      "@/*": ["./node_modules/@ProjectNorthwoods/northwoods-ui/src/*"]
+      "@/*": ["./node_modules/@northskysocial/northwoods-ui/src/*"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
