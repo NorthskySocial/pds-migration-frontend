@@ -19,19 +19,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import { getSession, commitSession } from "../sessions.server";
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   console.log("PAGE 1");
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
 
-  const pds_dest =
-    search.get("destination") ?? import.meta.env.VITE_PDS_HOSTNAME;
+  const pds_dest = search.get("destination") ?? context.PDS_HOSTNAME;
 
   const plc_hostname =
-    search.get("plc") ??
-    import.meta.env.VITE_PLC_HOSTNAME ??
-    "https://plc.directory";
+    search.get("plc") ?? context.PLC_HOSTNAME ?? "https://plc.directory";
 
   session.set("pds_dest", pds_dest);
   session.set("plc_hostname", plc_hostname);

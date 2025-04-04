@@ -1,11 +1,19 @@
 import { createRequestHandler } from "react-router";
 
 declare global {
-  interface CloudflareEnvironment {}
+  interface CloudflareEnvironment {
+    PDS_HOSTNAME: string;
+    MIGRATOR_BACKEND: string;
+    PLC_HOSTNAME?: string;
+  }
 }
 
 declare module "react-router" {
-  export interface AppLoadContext {}
+  export interface AppLoadContext {
+    PDS_HOSTNAME: string;
+    MIGRATOR_BACKEND: string;
+    PLC_HOSTNAME?: string;
+  }
 }
 
 const requestHandler = createRequestHandler(
@@ -16,6 +24,10 @@ const requestHandler = createRequestHandler(
 
 export default {
   fetch(request, env) {
-    return requestHandler(request, {});
+    return requestHandler(request, {
+      PDS_HOSTNAME: env.PDS_HOSTNAME,
+      MIGRATOR_BACKEND: env.MIGRATOR_BACKEND,
+      PLC_HOSTNAME: env.PLC_HOSTNAME,
+    });
   },
 } satisfies ExportedHandler<CloudflareEnvironment>;

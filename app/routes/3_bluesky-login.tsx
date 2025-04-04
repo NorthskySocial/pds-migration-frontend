@@ -13,8 +13,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 
-const { VITE_MIGRATOR_BACKEND = "http://localhost:9090" } = import.meta.env;
-
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
 
@@ -28,7 +26,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   console.log("PAGE 3");
   const session = await getSession(request.headers.get("Cookie"));
   const form = await request.formData();
@@ -95,7 +93,7 @@ export async function action({ request }: Route.ActionArgs) {
     const pds_dest_uri = new URL(pds_dest);
     const aud = `did:web:${pds_dest_uri.host.replace(/:\d+/, "")}`;
     console.log(aud);
-    const res = await fetch(`${VITE_MIGRATOR_BACKEND}/service-auth`, {
+    const res = await fetch(`${context.MIGRATOR_BACKEND}/service-auth`, {
       headers: {
         "Content-Type": "application/json",
       },

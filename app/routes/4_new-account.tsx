@@ -32,9 +32,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
 }
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   console.log("PAGE 4");
-  const { VITE_MIGRATOR_BACKEND = "http://localhost:9090" } = import.meta.env;
+  const { MIGRATOR_BACKEND = "http://localhost:9090" } = context;
   const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
   const pw_dest = (data.get("password") as string) ?? "";
@@ -116,22 +116,19 @@ export async function action({ request }: Route.ActionArgs) {
       inviteCode
     );
 
-    const createAccountRes = await fetch(
-      `${VITE_MIGRATOR_BACKEND}/create-account`,
-      {
-        method: "post",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pds_host: pds_dest,
-          handle: handle_dest,
-          token: service_token,
-          password: pw_dest,
-          email,
-          did,
-          invite_code: inviteCode,
-        }),
-      }
-    );
+    const createAccountRes = await fetch(`${MIGRATOR_BACKEND}/create-account`, {
+      method: "post",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pds_host: pds_dest,
+        handle: handle_dest,
+        token: service_token,
+        password: pw_dest,
+        email,
+        did,
+        invite_code: inviteCode,
+      }),
+    });
     console.log("wheee", createAccountRes);
 
     if (!createAccountRes.ok) {

@@ -6,8 +6,6 @@ import { data, redirect, useSubmit } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { useEffect } from "react";
 
-const { VITE_MIGRATOR_BACKEND } = import.meta.env;
-
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
 
@@ -27,7 +25,7 @@ const defaultProgress = {
   stageIdx: 0,
 };
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const pds_origin = session.get("pds_origin") as string;
   const pds_dest = session.get("pds_dest") as string;
@@ -64,7 +62,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
     case 1: {
       // export repo
-      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/export-repo`, {
+      const res = await fetch(`${context.MIGRATOR_BACKEND}/export-repo`, {
         method: "post",
         body: JSON.stringify({
           pds_host: pds_origin,
@@ -90,7 +88,7 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 2: {
       // import repo
-      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/import-repo`, {
+      const res = await fetch(`${context.MIGRATOR_BACKEND}/import-repo`, {
         method: "post",
         body: JSON.stringify({
           pds_host: pds_dest,
@@ -116,7 +114,7 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 3: {
       // missing blobs
-      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/export-blobs`, {
+      const res = await fetch(`${context.MIGRATOR_BACKEND}/export-blobs`, {
         method: "post",
         body: JSON.stringify({
           did,
@@ -142,7 +140,7 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 4: {
       // upload blobs
-      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/upload-blobs`, {
+      const res = await fetch(`${context.MIGRATOR_BACKEND}/upload-blobs`, {
         method: "post",
         body: JSON.stringify({
           pds_host: pds_dest,
@@ -166,16 +164,19 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 5: {
       // migrate preferences
-      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/migrate-preferences`, {
-        method: "post",
-        body: JSON.stringify({
-          did,
-          destination: pds_dest,
-          destination_token: token_dest,
-          origin: pds_origin,
-          origin_token: token_origin,
-        }),
-      });
+      const res = await fetch(
+        `${context.MIGRATOR_BACKEND}/migrate-preferences`,
+        {
+          method: "post",
+          body: JSON.stringify({
+            did,
+            destination: pds_dest,
+            destination_token: token_dest,
+            origin: pds_origin,
+            origin_token: token_origin,
+          }),
+        }
+      );
 
       if (!res.ok) {
         session.flash("error", (await res.json<{ message: string }>()).message);
@@ -193,7 +194,7 @@ export async function action({ request }: Route.ActionArgs) {
 
     case 7: {
       // req PLC token
-      const res = await fetch(`${VITE_MIGRATOR_BACKEND}/request-token`, {
+      const res = await fetch(`${context.MIGRATOR_BACKEND}/request-token`, {
         method: "post",
         body: JSON.stringify({
           pds_host: pds_origin,

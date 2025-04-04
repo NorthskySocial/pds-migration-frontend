@@ -10,11 +10,6 @@ import "jest-puppeteer";
 import "expect-puppeteer";
 import Mail from "nodemailer/lib/mailer";
 
-const PDS_DEST_HOSTNAME = "4rb5x7qf-6789.uks1.devtunnels.ms";
-const PDS_ORIGIN_HOSTNAME = "4rb5x7qf-7890.uks1.devtunnels.ms";
-const PDS_DEST_PORT = 7890;
-const PDS_ORIGIN_PORT = 6789;
-
 describe("account migration tool", () => {
   let originNetwork: TestNetworkNoAppView;
   let destPds: TestPds;

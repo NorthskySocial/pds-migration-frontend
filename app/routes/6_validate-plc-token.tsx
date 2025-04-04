@@ -8,27 +8,27 @@ import { redirect, useFetcher } from "react-router";
 export function loader() {
   return { name: "northsky.social" };
 }
-const { VITE_MIGRATOR_BACKEND, VITE_PDS_HOSTNAME } = import.meta.env;
 
-export async function action({ request }: Route.ActionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   console.log("PAGE 5");
+  const { MIGRATOR_BACKEND, PDS_HOSTNAME } = context;
   const data = await request.formData();
   const submitted = data.has("submit");
   const plcToken = data.get("plc-token") as string;
 
   if (submitted) {
     // activate new account
-    fetch(`${VITE_MIGRATOR_BACKEND}/activate-account`, {
+    fetch(`${MIGRATOR_BACKEND}/activate-account`, {
       method: "post",
       body: JSON.stringify({
-        pds_host: VITE_PDS_HOSTNAME,
+        pds_host: PDS_HOSTNAME,
         handle: "<<new_handle>>",
         password: "<<new_password>>",
       }),
     });
 
     // deactivate old account
-    fetch(`${VITE_MIGRATOR_BACKEND}/deactivate-account`, {
+    fetch(`${MIGRATOR_BACKEND}/deactivate-account`, {
       method: "post",
       body: JSON.stringify({
         pds_host: "<<old_host>>",
@@ -38,10 +38,10 @@ export async function action({ request }: Route.ActionArgs) {
     });
 
     // deactivate old account
-    fetch(`${VITE_MIGRATOR_BACKEND}/migrate-plc`, {
+    fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
       method: "post",
       body: JSON.stringify({
-        new_pds_host: VITE_PDS_HOSTNAME,
+        new_pds_host: PDS_HOSTNAME,
         new_handle: "<<new_handle>>",
         new_password: "<<new_password>>",
         old_pds_host: "<<old_host>>",

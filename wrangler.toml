@@ -5,4 +5,5 @@ main = "./build/server/index.js"
 assets = { directory = "./build/client/" }
 
 [vars]
-VALUE_FROM_CLOUDFLARE = "Hello from Cloudflare"
+PDS_HOSTNAME = "northsky.social"
+MIGRATOR_BACKEND = "localhost:9090"
