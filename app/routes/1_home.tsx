@@ -25,10 +25,13 @@ export async function action({ request, context }: Route.ActionArgs) {
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
 
-  const pds_dest = search.get("destination") ?? context.PDS_HOSTNAME;
+  const pds_dest =
+    search.get("destination") ?? context.cloudflare.env.PDS_HOSTNAME;
 
   const plc_hostname =
-    search.get("plc") ?? context.PLC_HOSTNAME ?? "https://plc.directory";
+    search.get("plc") ??
+    context.cloudflare.env.PLC_HOSTNAME ??
+    "https://plc.directory";
 
   session.set("pds_dest", pds_dest);
   session.set("plc_hostname", plc_hostname);

@@ -1,0 +1,50 @@
+services:
+  origin:
+    image: ghcr.io/bluesky-social/pds:0.4.107
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./pds/origin
+        target: /pds
+    env_file:
+      - ./pds/origin/pds.env
+  destination:
+    image: ghcr.io/bluesky-social/pds:0.4.107
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./pds/destination
+        target: /pds
+    env_file:
+      - ./pds/destination/pds.env
+  migrator:
+    image: pds-migration:latest
+    build: ./pds-migration
+
+  frontend:
+    image: migration-fe:latest
+    build: .
+    env_file:
+      - ./.env
+    ports:
+      - 5173:5173
+  proxy:
+    container_name: caddy
+    image: caddy:2
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    depends_on:
+      - origin
+      - destination
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./pds/caddy/data
+        target: /data
+      - type: bind
+        source: ./pds/caddy/etc/caddy
+        target: /etc/caddy

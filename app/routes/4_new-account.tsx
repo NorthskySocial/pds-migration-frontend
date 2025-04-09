@@ -34,7 +34,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   console.log("PAGE 4");
-  const { MIGRATOR_BACKEND = "http://localhost:9090" } = context;
+  const { MIGRATOR_BACKEND } = context.cloudflare.env;
   const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
   const pw_dest = (data.get("password") as string) ?? "";
@@ -44,7 +44,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const did = session.get("did") as string;
   const service_token = session.get("token_service") as string;
   const pds_dest = session.get("pds_dest") as string;
-  const dest_hostname = pds_dest.replace(/https?:\/\//, "");
+  const dest_hostname = new URL(pds_dest).host;
   const handle_dest = `${handle}.${dest_hostname}`;
 
   let res = {
@@ -106,28 +106,21 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
 
     const email = session.get("email");
-    console.log(
-      email,
-      handle_dest,
-      service_token,
-      pw_dest,
+    const body = {
+      pds_host: pds_dest,
+      handle: handle_dest,
+      token: service_token,
+      password: pw_dest,
       email,
       did,
-      inviteCode
-    );
+      invite_code: inviteCode,
+    };
+    console.log(body);
 
     const createAccountRes = await fetch(`${MIGRATOR_BACKEND}/create-account`, {
       method: "post",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pds_host: pds_dest,
-        handle: handle_dest,
-        token: service_token,
-        password: pw_dest,
-        email,
-        did,
-        invite_code: inviteCode,
-      }),
+      body: JSON.stringify(body),
     });
     console.log("wheee", createAccountRes);
 

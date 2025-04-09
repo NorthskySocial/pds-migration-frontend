@@ -1,5 +1,5 @@
 import { reactRouter } from "@react-router/dev/vite";
-import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
+import { cloudflare } from "@cloudflare/vite-plugin";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -15,11 +15,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     dedupe: ["@chakra-ui/react", "next-themes"],
   },
   plugins: [
-    cloudflareDevProxy({
-      getLoadContext({ context }) {
-        return { cloudflare: context.cloudflare };
-      },
-    }),
+    cloudflare({ viteEnvironment: { name: "ssr" } }),
     reactRouter(),
     tsconfigPaths(),
   ],

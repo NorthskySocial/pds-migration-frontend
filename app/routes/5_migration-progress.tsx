@@ -62,14 +62,17 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
     case 1: {
       // export repo
-      const res = await fetch(`${context.MIGRATOR_BACKEND}/export-repo`, {
-        method: "post",
-        body: JSON.stringify({
-          pds_host: pds_origin,
-          did,
-          token: token_origin,
-        }),
-      });
+      const res = await fetch(
+        `${context.cloudflare.env.MIGRATOR_BACKEND}/export-repo`,
+        {
+          method: "post",
+          body: JSON.stringify({
+            pds_host: pds_origin,
+            did,
+            token: token_origin,
+          }),
+        }
+      );
 
       if (!res.ok) {
         session.flash("error", (await res.json<{ message: string }>()).message);
@@ -88,14 +91,17 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     case 2: {
       // import repo
-      const res = await fetch(`${context.MIGRATOR_BACKEND}/import-repo`, {
-        method: "post",
-        body: JSON.stringify({
-          pds_host: pds_dest,
-          did,
-          token: token_dest,
-        }),
-      });
+      const res = await fetch(
+        `${context.cloudflare.env.MIGRATOR_BACKEND}/import-repo`,
+        {
+          method: "post",
+          body: JSON.stringify({
+            pds_host: pds_dest,
+            did,
+            token: token_dest,
+          }),
+        }
+      );
 
       if (!res.ok) {
         session.flash("error", (await res.json<{ message: string }>()).message);
@@ -114,16 +120,19 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     case 3: {
       // missing blobs
-      const res = await fetch(`${context.MIGRATOR_BACKEND}/export-blobs`, {
-        method: "post",
-        body: JSON.stringify({
-          did,
-          destination: pds_dest,
-          destination_token: token_dest,
-          origin: pds_origin,
-          origin_token: token_origin,
-        }),
-      });
+      const res = await fetch(
+        `${context.cloudflare.env.MIGRATOR_BACKEND}/export-blobs`,
+        {
+          method: "post",
+          body: JSON.stringify({
+            did,
+            destination: pds_dest,
+            destination_token: token_dest,
+            origin: pds_origin,
+            origin_token: token_origin,
+          }),
+        }
+      );
 
       if (!res.ok) {
         session.flash("error", (await res.json<{ message: string }>()).message);
@@ -140,14 +149,17 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     case 4: {
       // upload blobs
-      const res = await fetch(`${context.MIGRATOR_BACKEND}/upload-blobs`, {
-        method: "post",
-        body: JSON.stringify({
-          pds_host: pds_dest,
-          did,
-          token: token_dest,
-        }),
-      });
+      const res = await fetch(
+        `${context.cloudflare.env.MIGRATOR_BACKEND}/upload-blobs`,
+        {
+          method: "post",
+          body: JSON.stringify({
+            pds_host: pds_dest,
+            did,
+            token: token_dest,
+          }),
+        }
+      );
 
       if (!res.ok) {
         session.flash("error", (await res.json<{ message: string }>()).message);
@@ -165,7 +177,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     case 5: {
       // migrate preferences
       const res = await fetch(
-        `${context.MIGRATOR_BACKEND}/migrate-preferences`,
+        `${context.cloudflare.env.MIGRATOR_BACKEND}/migrate-preferences`,
         {
           method: "post",
           body: JSON.stringify({
@@ -194,14 +206,17 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     case 7: {
       // req PLC token
-      const res = await fetch(`${context.MIGRATOR_BACKEND}/request-token`, {
-        method: "post",
-        body: JSON.stringify({
-          pds_host: pds_origin,
-          did,
-          token: token_origin,
-        }),
-      });
+      const res = await fetch(
+        `${context.cloudflare.env.MIGRATOR_BACKEND}/request-token`,
+        {
+          method: "post",
+          body: JSON.stringify({
+            pds_host: pds_origin,
+            did,
+            token: token_origin,
+          }),
+        }
+      );
 
       if (!res.ok) {
         session.flash("error", (await res.json<{ message: string }>()).message);

@@ -93,18 +93,21 @@ export async function action({ request, context }: Route.ActionArgs) {
     const pds_dest_uri = new URL(pds_dest);
     const aud = `did:web:${pds_dest_uri.host.replace(/:\d+/, "")}`;
     console.log(aud);
-    const res = await fetch(`${context.MIGRATOR_BACKEND}/service-auth`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      method: "post",
-      body: JSON.stringify({
-        pds_host: serviceEndpoint,
-        did,
-        token: token_origin,
-        aud,
-      }),
-    });
+    const res = await fetch(
+      `${context.cloudflare.env.MIGRATOR_BACKEND}/service-auth`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+        body: JSON.stringify({
+          pds_host: serviceEndpoint,
+          did,
+          token: token_origin,
+          aud,
+        }),
+      }
+    );
 
     if (!res.ok) {
       console.error(res.statusText);
@@ -121,7 +124,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       });
     }
 
-    const token = await res.text();
+    const token = (await res.text()).replace(/"/g, "");
 
     session.set("token_service", token);
     session.set("handle_origin", handle_origin);
