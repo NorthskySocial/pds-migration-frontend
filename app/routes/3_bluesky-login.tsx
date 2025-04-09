@@ -124,7 +124,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       });
     }
 
-    const token = (await res.text()).replace(/"/g, "");
+    const token = (await res.json()) as string;
 
     session.set("token_service", token);
     session.set("handle_origin", handle_origin);
