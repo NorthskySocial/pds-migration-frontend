@@ -4,6 +4,7 @@ import misleading_notice from "../assets/misleading.png";
 import melted_clock from "../assets/melted.jpg";
 import { data, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
+import { Layout } from "~/components/layout";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -64,7 +65,7 @@ export default function Migrate({ loaderData }: Route.ComponentProps) {
       );
     case "failed":
       return (
-        <>
+        <Layout>
           <Heading size="3xl" letterSpacing="tight">
             Migration failed
           </Heading>
@@ -80,7 +81,7 @@ export default function Migrate({ loaderData }: Route.ComponentProps) {
             <a href="mailto:support@northsky.social">support@northsky.social</a>
             .
           </Text>
-        </>
+        </Layout>
       );
   }
 }

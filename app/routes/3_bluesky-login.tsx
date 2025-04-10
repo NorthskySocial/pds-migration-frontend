@@ -12,6 +12,7 @@ import {
 } from "@atproto/common-web";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
+import { Layout } from "~/components/layout";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -152,41 +153,43 @@ export default function BlueskyConnect({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   const [altPds, setAltPds] = useState(false);
   return (
-    <fetcher.Form method="post">
-      <Heading size="3xl" letterSpacing="tight">
-        <Highlight query="to Bluesky">Login to Bluesky</Highlight>
-      </Heading>
-      <Text fontSize="md" textAlign={"center"}>
-        Please provide us with the following information so we can migrate your
-        data.
-      </Text>
-      <Text fontSize="md" textAlign={"center"}>
-        Bluesky will e-mail you as part of this process, so{" "}
-        <strong>ensure your e-mail address is verified</strong> before starting
-        migration.
-      </Text>
-      <Switch
-        name="has-pds"
-        checked={altPds}
-        onCheckedChange={() => setAltPds(!altPds)}
-      >
-        Non-Bluesky PDS?
-      </Switch>
-      {altPds && (
-        <Field required label="Your PDS">
-          <Input name="pds" defaultValue="https://bsky.app" />
+    <Layout>
+      <fetcher.Form method="post">
+        <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
+          <Highlight query="to Bluesky">Login to Bluesky</Highlight>
+        </Heading>
+        <Text fontSize="md" textAlign={"center"}>
+          Please provide us with the following information so we can migrate
+          your data.
+        </Text>
+        <Text fontSize="md" textAlign={"center"}>
+          Bluesky will e-mail you as part of this process, so{" "}
+          <strong>ensure your e-mail address is verified</strong> before
+          starting migration.
+        </Text>
+        <Switch
+          name="has-pds"
+          checked={altPds}
+          onCheckedChange={() => setAltPds(!altPds)}
+        >
+          Non-Bluesky PDS?
+        </Switch>
+        {altPds && (
+          <Field required label="Your PDS">
+            <Input name="pds" defaultValue="https://bsky.app" />
+          </Field>
+        )}
+        <Field required label="Bluesky login">
+          <Input name="bsky-handle" placeholder="username.bsky.social" />
         </Field>
-      )}
-      <Field required label="Bluesky login">
-        <Input name="bsky-handle" placeholder="username.bsky.social" />
-      </Field>
-      <Field required label="Bluesky password">
-        <PasswordInput name="bsky-password" />
-      </Field>
-      <Button name="submit" type="submit">
-        Continue
-      </Button>
-      {error && <div>{error}</div>}
-    </fetcher.Form>
+        <Field required label="Bluesky password">
+          <PasswordInput name="bsky-password" />
+        </Field>
+        <Button name="submit" type="submit">
+          Continue
+        </Button>
+        {error && <div>{error}</div>}
+      </fetcher.Form>
+    </Layout>
   );
 }

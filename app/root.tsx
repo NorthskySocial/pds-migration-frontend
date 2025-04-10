@@ -7,14 +7,12 @@ import {
   ScrollRestoration,
 } from "react-router";
 import type { Route } from "./+types/root";
-import { Provider } from "@/components/ui/provider";
-import { Container, VStack } from "@chakra-ui/react";
 import "@fontsource-variable/museomoderno/index.css";
 import "@fontsource-variable/geist/index.css";
 
 export default function App() {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -30,19 +28,7 @@ export default function App() {
       </head>
       <body>
         {/* Child routes render here */}
-        <Provider>
-          <Container>
-            <VStack
-              margin="0 auto"
-              maxWidth={"350px"}
-              height={"100vh"}
-              justifyContent={"space-evenly"}
-              alignItems={"center"}
-            >
-              <Outlet />
-            </VStack>
-          </Container>
-        </Provider>
+        <Outlet />
 
         {/* Manages scroll position for client-side transitions */}
         {/* If you use a nonce-based content security policy for scripts, you must provide the `nonce` prop. Otherwise, omit the nonce prop as shown here. */}
