@@ -12,7 +12,10 @@ import "@fontsource-variable/geist/index.css";
 
 export default function App() {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning /* needed for dark mode support; extends only 1 level deep */
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
