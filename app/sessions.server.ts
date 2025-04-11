@@ -1,21 +1,30 @@
 import { createCookieSessionStorage } from "react-router";
 
-type SessionData = {
-  handle_origin: string;
-  handle_dest: string;
-  pds_dest: string;
-  pds_origin: string;
-  token_origin: string;
-  token_dest: string;
-  token_plc: string;
-  token_service: string;
-  plc_hostname: string;
-  did: string;
+export type SessionData = {
+  handle_origin?: string;
+  handle_dest?: string;
+  pds_dest?: string;
+  pds_origin?: string;
+  token_origin?: string;
+  token_dest?: string;
+  token_plc?: string;
+  token_service?: string;
+  plc_hostname?: string;
+  did?: string;
   inviteCode?: string;
-  email: string;
+  email?: string;
+
+  // state flags
+  hasBackup: boolean;
+  migratedRepo: boolean;
+  migratedBlobs: boolean;
+  migratedPrefs: boolean;
+  originDeactivated: boolean;
+  destActivated: boolean;
+  migratedPlc: boolean;
 };
 
-type SessionFlashData = {
+export type SessionFlashData = {
   error: string;
   progress?: {
     stageTitle: string;

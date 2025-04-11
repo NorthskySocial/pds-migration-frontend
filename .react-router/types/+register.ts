@@ -8,10 +8,6 @@ declare module "react-router" {
 
 type Params = {
   "/": {};
-  "/backup-your-data": {};
-  "/connect-bluesky": {};
-  "/new-account": {};
-  "/migrate": {};
-  "/validate-plc-token": {};
-  "/done": {};
+  "/failed": {};
+  "/success": {};
 };
