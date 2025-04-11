@@ -6,6 +6,9 @@ import {
   type SessionFlashData,
 } from "~/sessions.server";
 
+/**
+ * enum of all migrator stages
+ */
 export enum STAGES {
   INVITE_CODE,
   BACKUP_NOTICE,
@@ -24,8 +27,18 @@ export enum STAGES {
   FAILED,
 }
 
+/**
+ * Returns true is all arguments are truthy.
+ * @param items
+ * @returns
+ */
 const all = (...items: any[]) => items.every((i) => i);
 
+/**
+ * Returns the correct stage based on session value availability.
+ * @param session
+ * @returns STAGES
+ */
 export function getStage(session: SessionData) {
   if (!session.inviteCode) {
     return STAGES.INVITE_CODE;
@@ -94,6 +107,11 @@ export function getStage(session: SessionData) {
   return STAGES.FAILED;
 }
 
+/**
+ * Gets the correct screen component based on stage.
+ * @param stage
+ * @returns Promise<Element>
+ */
 export function getScreen(stage: STAGES) {
   switch (stage) {
     case STAGES.INVITE_CODE:
@@ -132,6 +150,13 @@ export function getScreen(stage: STAGES) {
   }
 }
 
+/**
+ * Takes the form data, runs any side-effect actions,
+ * sets new session data, return redirect.
+ * @param session
+ * @param data
+ * @returns
+ */
 export const processState = async (
   session: Session<SessionData, SessionFlashData>,
   data: FormData
@@ -210,9 +235,16 @@ export const processState = async (
     }
   }
 
-  return redirect("/", {
-    headers: {
-      "Set-Cookie": await commitSession(session),
-    },
-  });
+  return redirect(
+    stage === STAGES.DONE
+      ? "/success"
+      : stage === STAGES.FAILED
+      ? "/failed"
+      : "/",
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
 };
