@@ -2,10 +2,12 @@ import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Span } from "@chakra-ui/react/box";
 import type { ScreenProps } from "~/util/types";
+import { useFetcher } from "react-router";
 
-export default function EncourageBackupScreen({ state, fetcher }: ScreenProps) {
+export default function EncourageBackupScreen({ state }: ScreenProps) {
+  const fetcher = useFetcher();
   return (
-    <>
+    <fetcher.Form method="post">
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
         <Highlight query="your Data">Backup your data</Highlight>
       </Heading>
@@ -14,7 +16,7 @@ export default function EncourageBackupScreen({ state, fetcher }: ScreenProps) {
         migrate from Bluesky's PDS to ours.
       </Text>
       <Text fontSize="md" textAlign={"center"} mb="4">
-        We recommend using this simple web tool by Rose:
+        We recommend using this simple web tool by Rose:{" "}
         <Span fontSize="lg" fontWeight="bold">
           <a href="">Bluesky Archival Tool</a>
         </Span>
@@ -37,6 +39,6 @@ export default function EncourageBackupScreen({ state, fetcher }: ScreenProps) {
       <Button type="submit" name="submit" margin={"0 auto"}>
         Continue
       </Button>
-    </>
+    </fetcher.Form>
   );
 }

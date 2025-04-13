@@ -2,13 +2,12 @@ import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
 import clock_art from "../assets/clock.jpg";
 import { InfoTip } from "@/components/ui/toggle-tip";
 import type { ScreenProps } from "~/util/types";
+import { useFetcher } from "react-router";
 
-export default function MigrationProgressScreen({
-  state,
-  fetcher,
-}: ScreenProps) {
+export default function MigrationProgressScreen({ state }: ScreenProps) {
+  const fetcher = useFetcher();
   return (
-    <>
+    <fetcher.Form method="post">
       <VStack
         margin="0 auto"
         maxWidth={"350px"}
@@ -27,27 +26,24 @@ export default function MigrationProgressScreen({
           src={clock_art}
           className="katie-clock"
         />
-        {error ? (
-          <h1>{error}</h1>
-        ) : (
-          <Progress.Root
-            width="100%"
-            max={8}
-            min={0}
-            value={stageIdx}
-            striped
-            animated
-          >
-            <Progress.Label mb="2">
-              {stageTitle}
-              <InfoTip>{stageDescription}</InfoTip>
-            </Progress.Label>
-            <Progress.Track>
-              <Progress.Range />
-            </Progress.Track>
-          </Progress.Root>
-        )}
+
+        <Progress.Root
+          width="100%"
+          max={8}
+          min={0}
+          value={stageIdx}
+          striped
+          animated
+        >
+          <Progress.Label mb="2">
+            {stageTitle}
+            <InfoTip>{stageDescription}</InfoTip>
+          </Progress.Label>
+          <Progress.Track>
+            <Progress.Range />
+          </Progress.Track>
+        </Progress.Root>
       </VStack>
-    </>
+    </fetcher.Form>
   );
 }

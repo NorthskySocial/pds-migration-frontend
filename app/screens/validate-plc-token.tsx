@@ -3,13 +3,12 @@ import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
 import type { ScreenProps } from "~/util/types";
+import { useFetcher } from "react-router";
 
-export default function ValidatePLCTokenScreen({
-  state,
-  fetcher,
-}: ScreenProps) {
+export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
+  const fetcher = useFetcher();
   return (
-    <>
+    <fetcher.Form method="post">
       <Heading size="3xl" letterSpacing="tight">
         <Highlight query="to Bluesky">Check Your Email</Highlight>
       </Heading>
@@ -24,6 +23,6 @@ export default function ValidatePLCTokenScreen({
       <Button name="submit" type="submit">
         Migrate!
       </Button>
-    </>
+    </fetcher.Form>
   );
 }

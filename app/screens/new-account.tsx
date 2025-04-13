@@ -13,10 +13,15 @@ import {
   PasswordStrengthMeter,
 } from "@/components/ui/password-input";
 import type { ScreenProps } from "~/util/types";
+import { useFetcher } from "react-router";
+import { useState } from "react";
 
-export default function NewAccountScreen({ state, fetcher }: ScreenProps) {
+export default function NewAccountScreen({ state }: ScreenProps) {
+  const fetcher = useFetcher();
+  const [pass, setPass] = useState("");
+  const [passVerify, setPassVerify] = useState("");
   return (
-    <>
+    <fetcher.Form method="post">
       <Heading size="3xl" textAlign={"center"} letterSpacing="tight">
         <Highlight
           styles={{ bg: "secondary", color: "brand.bg" }}
@@ -104,6 +109,6 @@ export default function NewAccountScreen({ state, fetcher }: ScreenProps) {
       <Button name="submit" type="submit">
         Continue
       </Button>
-    </>
+    </fetcher.Form>
   );
 }

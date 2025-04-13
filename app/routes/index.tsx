@@ -1,16 +1,50 @@
 import type { Route } from "./+types";
 
-import { data, useFetcher } from "react-router";
+import { data, redirect, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { Layout } from "~/components/layout";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { getStage, processState } from "~/util/get-stage";
 import { getScreen } from "~/util/get-screen";
 import { Loading } from "~/components/loading";
 import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/types";
 
+export async function action({ request, context }: Route.ActionArgs) {
+  console.log("aaaaa");
+  const session = await getSession(request.headers.get("Cookie"));
+  const data = await request.formData();
+  let stage = STAGES.INVITE_CODE;
+
+  try {
+    const state = await processState(session, data, context.cloudflare.env);
+    console.log(state);
+    stage = getStage(state);
+  } catch (e) {
+    console.error(e);
+    if (e instanceof Error) {
+      session.flash("error", e.message);
+    }
+  }
+
+  console.log("action", stage);
+
+  return redirect(
+    stage === STAGES.DONE
+      ? "/success"
+      : stage === STAGES.FAILED
+      ? "/failed"
+      : "/",
+    {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    }
+  );
+}
+
 export async function loader({ request }: Route.LoaderArgs) {
+  console.log("lllll");
   const session = await getSession(request.headers.get("Cookie"));
   const state = {
     handle_origin: session.get("handle_origin"),
@@ -48,25 +82,19 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
 }
 
-export async function action({ request, context }: Route.ActionArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const data = await request.formData();
-
-  return await processState(session, data, context.cloudflare.env);
-}
-
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { error, state, stage = STAGES.INVITE_CODE } = loaderData;
   const fetcher = useFetcher();
-  const Stage = lazy(() => getScreen(stage));
+  console.log(error, state, stage);
+
+  const Stage = useMemo(() => getScreen(stage), [stage]);
+
   return (
     <Layout>
       {error && <ErrorMessage>{error}</ErrorMessage>}
-      <fetcher.Form method="post">
-        <Suspense fallback={<Loading />}>
-          <Stage state={state} fetcher={fetcher} />
-        </Suspense>
-      </fetcher.Form>
+      <Suspense fallback={<Loading />}>
+        {fetcher.state !== "idle" ? <Loading /> : <Stage state={state} />}
+      </Suspense>
     </Layout>
   );
 }

@@ -11,10 +11,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import type { ScreenProps } from "~/util/types";
+import { useFetcher } from "react-router";
 
-export default function IntroScreen({ state, fetcher }: ScreenProps) {
+export default function IntroScreen({ state }: ScreenProps) {
+  const fetcher = useFetcher();
   return (
-    <>
+    <fetcher.Form method="post">
       <VStack mb="5">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Northsky">Migrate to Northsky</Highlight>
@@ -59,6 +61,6 @@ export default function IntroScreen({ state, fetcher }: ScreenProps) {
           </Button>
         </HStack>
       </VStack>
-    </>
+    </fetcher.Form>
   );
 }

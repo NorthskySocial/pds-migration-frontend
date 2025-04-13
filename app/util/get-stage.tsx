@@ -111,6 +111,7 @@ export const processState = async (
   data: FormData,
   env: CloudflareEnvironment
 ) => {
+  console.log("processState");
   const state = {
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
@@ -134,6 +135,7 @@ export const processState = async (
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
   };
+  console.log(state);
 
   const stage = getStage(state);
 
@@ -141,6 +143,12 @@ export const processState = async (
     case STAGES.INVITE_CODE: {
       state.inviteCode = data.get("invite-code") as string;
       session.set("inviteCode", state.inviteCode);
+      break;
+    }
+
+    case STAGES.BACKUP_NOTICE: {
+      state.hasBackup = data.get("confirm") === "on";
+      session.set("hasBackup", state.hasBackup);
       break;
     }
 
@@ -212,16 +220,5 @@ export const processState = async (
     }
   }
 
-  return redirect(
-    stage === STAGES.DONE
-      ? "/success"
-      : stage === STAGES.FAILED
-      ? "/failed"
-      : "/",
-    {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    }
-  );
+  return state;
 };

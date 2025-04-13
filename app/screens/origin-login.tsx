@@ -3,8 +3,12 @@ import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
 import type { ScreenProps } from "~/util/types";
+import { useState } from "react";
+import { useFetcher } from "react-router";
 
-export default function OriginLoginScreen({ state, fetcher }: ScreenProps) {
+export default function OriginLoginScreen({ state }: ScreenProps) {
+  const [altPds, setAltPds] = useState(false);
+  const fetcher = useFetcher();
   return (
     <>
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
@@ -20,6 +24,7 @@ export default function OriginLoginScreen({ state, fetcher }: ScreenProps) {
         migration.
       </Text>
       <Switch
+        colorPalette={"purple"}
         name="has-pds"
         checked={altPds}
         onCheckedChange={() => setAltPds(!altPds)}

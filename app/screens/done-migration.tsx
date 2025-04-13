@@ -5,7 +5,6 @@ import type { ScreenProps } from "~/util/types";
 
 export default function DoneMigrationScreen({
   state,
-  fetcher,
 }: ScreenProps): ReactElement {
   return (
     <>

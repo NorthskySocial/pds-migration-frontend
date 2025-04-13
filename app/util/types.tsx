@@ -23,5 +23,4 @@ export enum STAGES {
 
 export type ScreenProps = {
   state: SessionData;
-  fetcher: FetcherWithComponents<any>;
 };
