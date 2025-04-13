@@ -10,7 +10,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
   const [altPds, setAltPds] = useState(false);
   const fetcher = useFetcher();
   return (
-    <>
+    <fetcher.Form method="post">
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
         <Highlight query="to Bluesky">Login to Bluesky</Highlight>
       </Heading>
@@ -37,14 +37,18 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
         </Field>
       )}
       <Field required label="Bluesky login">
-        <Input name="bsky-handle" placeholder="username.bsky.social" />
+        <Input
+          autoComplete="username"
+          name="bsky-handle"
+          placeholder="username.bsky.social"
+        />
       </Field>
       <Field required label="Bluesky password">
-        <PasswordInput name="bsky-password" />
+        <PasswordInput autoComplete="password" name="bsky-password" />
       </Field>
       <Button name="submit" type="submit">
         Continue
       </Button>
-    </>
+    </fetcher.Form>
   );
 }

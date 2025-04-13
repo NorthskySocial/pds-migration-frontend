@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect, type Session } from "react-router";
+import { type Session } from "react-router";
 import {
   createDestAccount,
   exportBlobs,
@@ -12,11 +12,7 @@ import {
   uploadBlobs,
   validatePlcToken,
 } from "~/actions";
-import {
-  commitSession,
-  type SessionData,
-  type SessionFlashData,
-} from "~/sessions.server";
+import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { STAGES } from "./types";
 
 /**

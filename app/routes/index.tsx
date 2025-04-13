@@ -3,15 +3,14 @@ import type { Route } from "./+types";
 import { data, redirect, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { Layout } from "~/components/layout";
-import { lazy, Suspense, useMemo } from "react";
+import { Suspense } from "react";
 import { getStage, processState } from "~/util/get-stage";
-import { getScreen } from "~/util/get-screen";
 import { Loading } from "~/components/loading";
 import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/types";
+import { SCREENS } from "~/screens";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  console.log("aaaaa");
   const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
   let stage = STAGES.INVITE_CODE;
@@ -44,7 +43,6 @@ export async function action({ request, context }: Route.ActionArgs) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  console.log("lllll");
   const session = await getSession(request.headers.get("Cookie"));
   const state = {
     handle_origin: session.get("handle_origin"),
@@ -87,7 +85,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher();
   console.log(error, state, stage);
 
-  const Stage = useMemo(() => getScreen(stage), [stage]);
+  const Stage = SCREENS[stage];
 
   return (
     <Layout>

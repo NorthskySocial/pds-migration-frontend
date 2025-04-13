@@ -15,11 +15,13 @@ import {
 import type { ScreenProps } from "~/util/types";
 import { useFetcher } from "react-router";
 import { useState } from "react";
+import { passwordStrength } from "check-password-strength";
 
 export default function NewAccountScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   const [pass, setPass] = useState("");
   const [passVerify, setPassVerify] = useState("");
+  const { id: strength } = passwordStrength(pass);
   return (
     <fetcher.Form method="post">
       <Heading size="3xl" textAlign={"center"} letterSpacing="tight">
@@ -82,6 +84,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
       >
         <PasswordInput
           name="password"
+          autoComplete="new-password"
           onChange={(e) => setPass(e.target.value)}
           value={pass}
         />
@@ -101,6 +104,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
       >
         <PasswordInput
           name="password-repeat"
+          autoComplete="new-password"
           onChange={(e) => setPassVerify(e.target.value)}
           value={passVerify}
         />
