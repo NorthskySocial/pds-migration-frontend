@@ -1,7 +1,12 @@
 import { Heading, Text, Button } from "@chakra-ui/react";
 import misleading_notice from "../assets/misleading.png";
+import type { ReactElement } from "react";
+import type { ScreenProps } from "~/util/types";
 
-export default function DoneMigrationScreen() {
+export default function DoneMigrationScreen({
+  state,
+  fetcher,
+}: ScreenProps): ReactElement {
   return (
     <>
       <Heading size="3xl" letterSpacing="tight">

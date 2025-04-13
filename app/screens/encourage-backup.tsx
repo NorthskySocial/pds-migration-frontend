@@ -1,8 +1,9 @@
 import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Box } from "@chakra-ui/react/box";
+import { Box, Span } from "@chakra-ui/react/box";
+import type { ScreenProps } from "~/util/types";
 
-export default function EncourageBackupScreen() {
+export default function EncourageBackupScreen({ state, fetcher }: ScreenProps) {
   return (
     <>
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
@@ -14,9 +15,9 @@ export default function EncourageBackupScreen() {
       </Text>
       <Text fontSize="md" textAlign={"center"} mb="4">
         We recommend using this simple web tool by Rose:
-        <Text fontSize="lg" fontWeight="bold">
+        <Span fontSize="lg" fontWeight="bold">
           <a href="">Bluesky Archival Tool</a>
-        </Text>
+        </Span>
       </Text>
       <Text fontSize="md" textAlign={"center"} mb="4">
         Once you have archived your data, press Continue to proceed with

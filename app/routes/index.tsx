@@ -1,11 +1,14 @@
 import type { Route } from "./+types";
 
-import { redirect, data, useFetcher } from "react-router";
+import { data, useFetcher } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { Layout } from "~/components/layout";
-import { lazy, Suspense, useState } from "react";
-import { getScreen, getStage, processState } from "~/util/get-stage";
+import { lazy, Suspense } from "react";
+import { getStage, processState } from "~/util/get-stage";
+import { getScreen } from "~/util/get-screen";
 import { Loading } from "~/components/loading";
+import { ErrorMessage } from "~/components/error-message";
+import { STAGES } from "~/util/types";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -46,25 +49,22 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const { MIGRATOR_BACKEND, PDS_HOSTNAME, PLC_HOSTNAME } =
-    context.cloudflare.env;
-
   const session = await getSession(request.headers.get("Cookie"));
   const data = await request.formData();
 
-  return await processState(session, data);
+  return await processState(session, data, context.cloudflare.env);
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { error, state, stage } = loaderData;
+  const { error, state, stage = STAGES.INVITE_CODE } = loaderData;
   const fetcher = useFetcher();
   const Stage = lazy(() => getScreen(stage));
   return (
     <Layout>
-      {error && <div>{error}</div>}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
       <fetcher.Form method="post">
         <Suspense fallback={<Loading />}>
-          <Stage state={state} />
+          <Stage state={state} fetcher={fetcher} />
         </Suspense>
       </fetcher.Form>
     </Layout>

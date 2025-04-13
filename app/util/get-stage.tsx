@@ -1,31 +1,23 @@
+"use server";
+
 import { redirect, type Session } from "react-router";
-import { createDestAccount, loginOrigin, migrate, validate } from "~/actions";
+import {
+  createDestAccount,
+  exportBlobs,
+  exportRepo,
+  importRepo,
+  loginOrigin,
+  migratePreferences,
+  requestPlcToken,
+  uploadBlobs,
+  validatePlcToken,
+} from "~/actions";
 import {
   commitSession,
   type SessionData,
   type SessionFlashData,
 } from "~/sessions.server";
-
-/**
- * enum of all migrator stages
- */
-export enum STAGES {
-  INVITE_CODE,
-  BACKUP_NOTICE,
-  ORIGIN_PDS_LOGIN,
-  CREATE_DEST_ACCOUNT,
-  EXPORT_REPO_ORIGIN,
-  IMPORT_REPO_DEST,
-  EXPORT_BLOBS_ORIGIN,
-  IMPORT_BLOBS_DEST,
-  MIGRATE_PREFERENCES,
-  REQUEST_PLC,
-  ACTIVATE_DEST,
-  DEACTIVATE_ORIGIN,
-  MIGRATE_PLC,
-  DONE,
-  FAILED,
-}
+import { STAGES } from "./types";
 
 /**
  * Returns true is all arguments are truthy.
@@ -108,49 +100,6 @@ export function getStage(session: SessionData) {
 }
 
 /**
- * Gets the correct screen component based on stage.
- * @param stage
- * @returns Promise<Element>
- */
-export function getScreen(stage: STAGES) {
-  switch (stage) {
-    case STAGES.INVITE_CODE:
-      return import("../screens/intro");
-
-    case STAGES.BACKUP_NOTICE:
-      return import("../screens/encourage-backup");
-
-    case STAGES.ORIGIN_PDS_LOGIN:
-      return import("../screens/origin-login");
-
-    case STAGES.CREATE_DEST_ACCOUNT:
-      return import("../screens/new-account");
-
-    case STAGES.EXPORT_REPO_ORIGIN:
-    case STAGES.IMPORT_REPO_DEST:
-    case STAGES.EXPORT_BLOBS_ORIGIN:
-    case STAGES.IMPORT_BLOBS_DEST:
-    case STAGES.MIGRATE_PREFERENCES:
-      return import("../screens/migration-progress");
-
-    case STAGES.REQUEST_PLC:
-    case STAGES.ACTIVATE_DEST:
-    case STAGES.DEACTIVATE_ORIGIN:
-    case STAGES.MIGRATE_PLC:
-      return import("../screens/validate-plc-token");
-
-    case STAGES.DONE:
-      return import("../screens/done-migration");
-
-    case STAGES.FAILED:
-      return import("../screens/failed-migration");
-
-    default:
-      return Promise.resolve({ default: () => <div>loading...</div> });
-  }
-}
-
-/**
  * Takes the form data, runs any side-effect actions,
  * sets new session data, return redirect.
  * @param session
@@ -159,7 +108,8 @@ export function getScreen(stage: STAGES) {
  */
 export const processState = async (
   session: Session<SessionData, SessionFlashData>,
-  data: FormData
+  data: FormData,
+  env: CloudflareEnvironment
 ) => {
   const state = {
     handle_origin: session.get("handle_origin"),
@@ -202,7 +152,8 @@ export const processState = async (
         token_service,
         handle_origin,
         did,
-      } = await loginOrigin(state);
+      } = await loginOrigin(state, data, env);
+
       session.set("pds_origin", pds_origin);
       session.set("email", email);
       session.set("token_origin", token_origin);
@@ -213,24 +164,50 @@ export const processState = async (
     }
 
     case STAGES.CREATE_DEST_ACCOUNT: {
-      const res = await createDestAccount(state);
+      const { handle_available, token_dest } = await createDestAccount(
+        state,
+        data,
+        env
+      );
+
+      if (data.get("submited") && token_dest) {
+        session.set("token_dest", token_dest);
+      } else if (handle_available) {
+        // return info
+      }
+
       break;
     }
 
-    case STAGES.EXPORT_REPO_ORIGIN:
-    case STAGES.IMPORT_REPO_DEST:
-    case STAGES.EXPORT_BLOBS_ORIGIN:
-    case STAGES.IMPORT_BLOBS_DEST:
-    case STAGES.MIGRATE_PREFERENCES:
+    case STAGES.EXPORT_REPO_ORIGIN: {
+      const res = await exportRepo(state, env);
+      break;
+    }
+    case STAGES.IMPORT_REPO_DEST: {
+      const res = await importRepo(state, env);
+      break;
+    }
+    case STAGES.EXPORT_BLOBS_ORIGIN: {
+      const res = await exportBlobs(state, env);
+      break;
+    }
+    case STAGES.IMPORT_BLOBS_DEST: {
+      const res = await uploadBlobs(state, env);
+      break;
+    }
+    case STAGES.MIGRATE_PREFERENCES: {
+      const res = await migratePreferences(state, env);
+      break;
+    }
     case STAGES.REQUEST_PLC: {
-      const res = await migrate(stage, state);
+      const res = await requestPlcToken(state, env);
       break;
     }
 
     case STAGES.ACTIVATE_DEST:
     case STAGES.DEACTIVATE_ORIGIN:
     case STAGES.MIGRATE_PLC: {
-      const res = await validate(stage, state);
+      const res = await validatePlcToken(state, data, env);
       break;
     }
   }

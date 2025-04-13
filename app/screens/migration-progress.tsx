@@ -1,8 +1,12 @@
 import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
 import clock_art from "../assets/clock.jpg";
 import { InfoTip } from "@/components/ui/toggle-tip";
+import type { ScreenProps } from "~/util/types";
 
-export default function MigrationProgressScreen() {
+export default function MigrationProgressScreen({
+  state,
+  fetcher,
+}: ScreenProps) {
   return (
     <>
       <VStack

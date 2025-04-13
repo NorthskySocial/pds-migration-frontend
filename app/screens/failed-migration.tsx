@@ -1,7 +1,8 @@
 import { Heading, Text } from "@chakra-ui/react";
 import melted_clock from "../assets/melted.jpg";
+import type { ScreenProps } from "~/util/types";
 
-export default function FailedMigrationScreen() {
+export default function FailedMigrationScreen({ state, fetcher }: ScreenProps) {
   return (
     <>
       <Heading size="3xl" letterSpacing="tight">

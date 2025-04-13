@@ -1,0 +1,27 @@
+import type { FetcherWithComponents, SessionData } from "react-router";
+
+/**
+ * enum of all migrator stages
+ */
+export enum STAGES {
+  INVITE_CODE = "INVITE_CODE",
+  BACKUP_NOTICE = "BACKUP_NOTICE",
+  ORIGIN_PDS_LOGIN = "ORIGIN_PDS_LOGIN",
+  CREATE_DEST_ACCOUNT = "CREATE_DEST_ACCOUNT",
+  EXPORT_REPO_ORIGIN = "EXPORT_REPO_ORIGIN",
+  IMPORT_REPO_DEST = "IMPORT_REPO_DEST",
+  EXPORT_BLOBS_ORIGIN = "EXPORT_BLOBS_ORIGIN",
+  IMPORT_BLOBS_DEST = "IMPORT_BLOBS_DEST",
+  MIGRATE_PREFERENCES = "MIGRATE_PREFERENCES",
+  REQUEST_PLC = "REQUEST_PLC",
+  ACTIVATE_DEST = "ACTIVATE_DEST",
+  DEACTIVATE_ORIGIN = "DEACTIVATE_ORIGIN",
+  MIGRATE_PLC = "MIGRATE_PLC",
+  DONE = "DONE",
+  FAILED = "FAILED",
+}
+
+export type ScreenProps = {
+  state: SessionData;
+  fetcher: FetcherWithComponents<any>;
+};

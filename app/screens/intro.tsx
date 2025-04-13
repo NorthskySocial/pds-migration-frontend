@@ -10,8 +10,9 @@ import {
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
+import type { ScreenProps } from "~/util/types";
 
-export default function IntroScreen() {
+export default function IntroScreen({ state, fetcher }: ScreenProps) {
   return (
     <>
       <VStack mb="5">
@@ -37,8 +38,8 @@ export default function IntroScreen() {
       </VStack>
       <VStack>
         <Field
-          invalid={fetcher.data?.error}
-          errorText={fetcher.data?.error}
+          invalid={fetcher?.data?.error}
+          errorText={fetcher?.data?.error}
           mb="4"
         >
           <Input name="invite-code" placeholder="Enter your invite code" />

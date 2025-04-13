@@ -12,8 +12,9 @@ import {
   PasswordInput,
   PasswordStrengthMeter,
 } from "@/components/ui/password-input";
+import type { ScreenProps } from "~/util/types";
 
-export default function NewAccountScreen() {
+export default function NewAccountScreen({ state, fetcher }: ScreenProps) {
   return (
     <>
       <Heading size="3xl" textAlign={"center"} letterSpacing="tight">

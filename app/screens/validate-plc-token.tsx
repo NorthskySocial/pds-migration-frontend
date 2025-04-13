@@ -2,8 +2,12 @@ import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
+import type { ScreenProps } from "~/util/types";
 
-export default function ValidatePLCTokenScreen() {
+export default function ValidatePLCTokenScreen({
+  state,
+  fetcher,
+}: ScreenProps) {
   return (
     <>
       <Heading size="3xl" letterSpacing="tight">

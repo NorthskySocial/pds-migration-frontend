@@ -2,8 +2,9 @@ import { Heading, Highlight, Text, Input, Button } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
+import type { ScreenProps } from "~/util/types";
 
-export default function OriginLoginScreen() {
+export default function OriginLoginScreen({ state, fetcher }: ScreenProps) {
   return (
     <>
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
