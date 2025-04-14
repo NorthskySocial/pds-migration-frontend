@@ -20,7 +20,7 @@ export const SCREENS = {
   [STAGES.EXPORT_BLOBS_ORIGIN]: MigrationProgress,
   [STAGES.IMPORT_BLOBS_DEST]: MigrationProgress,
   [STAGES.MIGRATE_PREFERENCES]: MigrationProgress,
-  [STAGES.REQUEST_PLC]: ValidatePLCToken,
+  [STAGES.REQUEST_PLC]: MigrationProgress,
   [STAGES.ACTIVATE_DEST]: ValidatePLCToken,
   [STAGES.DEACTIVATE_ORIGIN]: ValidatePLCToken,
   [STAGES.MIGRATE_PLC]: ValidatePLCToken,

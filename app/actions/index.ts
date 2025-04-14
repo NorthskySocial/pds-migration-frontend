@@ -354,18 +354,20 @@ export async function validatePlcToken(
   const plcToken = data.get("token_plc") as string;
 
   if (submitted && plcToken) {
+    const payload = {
+      destination: pds_dest,
+      destination_token: token_dest,
+      origin: pds_origin,
+      did,
+      origin_token: token_origin,
+      plc_signing_token: plcToken,
+      // user_recover_key,
+    };
+    console.log("payyyyyloadz", payload);
     // migrate PLC
     const migrateRes = await fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
       method: "post",
-      body: JSON.stringify({
-        destination: pds_dest,
-        destination_token: token_dest,
-        origin: pds_origin,
-        did,
-        origin_token: token_origin,
-        plc_signing_token: plcToken,
-        // user_recover_key,
-      }),
+      body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" },
     });
 

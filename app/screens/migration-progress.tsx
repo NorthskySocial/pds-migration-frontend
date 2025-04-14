@@ -30,7 +30,7 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
       ) {
         setTimeout(async () => {
           await fetcher.submit({}, { method: "post" });
-        }, 2000);
+        }, 500);
       }
     })();
   }, [fetcher, stage, error]);
