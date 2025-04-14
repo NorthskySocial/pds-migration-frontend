@@ -2,7 +2,7 @@ import { Heading, Highlight, Text, Input, Button } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 import { useState } from "react";
 import { useFetcher } from "react-router";
 

@@ -2,7 +2,7 @@ import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
 export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
@@ -18,7 +18,7 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
       </Text>
       <img src={plc_screenshot} />
       <Field required label="PLC Token">
-        <PasswordInput name="plc-token" />
+        <PasswordInput name="token_plc" />
       </Field>
       <Button name="submit" type="submit">
         Migrate!

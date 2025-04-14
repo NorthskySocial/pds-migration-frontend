@@ -1,17 +1,49 @@
 import type { Route } from "./+types";
 
-import { data, redirect, useFetcher } from "react-router";
+import {
+  createSearchParams,
+  data,
+  parsePath,
+  redirect,
+  useFetcher,
+} from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { Layout } from "~/components/layout";
 import { Suspense } from "react";
 import { getStage, processState } from "~/util/get-stage";
 import { Loading } from "~/components/loading";
 import { ErrorMessage } from "~/components/error-message";
-import { STAGES } from "~/util/types";
+import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
 
 export async function action({ request, context }: Route.ActionArgs) {
+  console.log("ACTION");
   const session = await getSession(request.headers.get("Cookie"));
+  const path = parsePath(request.url);
+  const search = createSearchParams(path.search);
+
+  if (!session.get("pds_dest")) {
+    session.set(
+      "pds_dest",
+      search.get("destination") ?? context.cloudflare.env.PDS_HOSTNAME
+    );
+  }
+
+  if (!session.get("plc_hostname")) {
+    session.set(
+      "plc_hostname",
+      search.get("plc") ??
+        context.cloudflare.env.PLC_HOSTNAME ??
+        "https://plc.directory"
+    );
+  }
+
+  const pds_dest = session.get("pds_dest");
+  const plc_hostname = session.get("plc_hostname");
+
+  session.set("pds_dest", pds_dest);
+  session.set("plc_hostname", plc_hostname);
+
   const data = await request.formData();
   let stage = STAGES.INVITE_CODE;
 
@@ -51,7 +83,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     pds_origin: session.get("pds_origin"),
     token_origin: session.get("token_origin"),
     token_dest: session.get("token_dest"),
-    token_plc: session.get("token_plc"),
     token_service: session.get("token_service"),
     plc_hostname: session.get("plc_hostname"),
     did: session.get("did"),
@@ -60,9 +91,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
-    migratedRepo: session.get("migratedRepo") ?? false,
-    migratedBlobs: session.get("migratedBlobs") ?? false,
+    exportedRepo: session.get("exportedRepo") ?? false,
+    importedRepo: session.get("importedRepo") ?? false,
+    exportedBlobs: session.get("exportedBlobs") ?? false,
+    importedBlobs: session.get("importedBlobs") ?? false,
     migratedPrefs: session.get("migratedPrefs") ?? false,
+    requestedPlcToken: session.get("requestedPlcToken") ?? false,
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
@@ -91,7 +125,11 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     <Layout>
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <Suspense fallback={<Loading />}>
-        {fetcher.state !== "idle" ? <Loading /> : <Stage state={state} />}
+        {fetcher.state !== "idle" ? (
+          <Loading />
+        ) : (
+          <Stage stage={stage} state={state} error={error} />
+        )}
       </Suspense>
     </Layout>
   );

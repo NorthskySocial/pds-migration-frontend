@@ -13,7 +13,7 @@ import {
   validatePlcToken,
 } from "~/actions";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
-import { STAGES } from "./types";
+import { STAGES } from "./stages";
 
 /**
  * Returns true is all arguments are truthy.
@@ -51,44 +51,43 @@ export function getStage(session: SessionData) {
     return STAGES.CREATE_DEST_ACCOUNT;
   }
 
-  if (!session.migratedRepo) {
+  if (!session.exportedRepo) {
     return STAGES.EXPORT_REPO_ORIGIN;
   }
 
-  if (!session.migratedBlobs) {
+  if (!session.importedRepo) {
+    return STAGES.IMPORT_REPO_DEST;
+  }
+
+  if (!session.exportedBlobs) {
     return STAGES.EXPORT_BLOBS_ORIGIN;
+  }
+
+  if (!session.importedBlobs) {
+    return STAGES.IMPORT_BLOBS_DEST;
   }
 
   if (!session.migratedPrefs) {
     return STAGES.MIGRATE_PREFERENCES;
   }
 
-  if (!session.token_plc) {
+  if (!session.requestedPlcToken) {
     return STAGES.REQUEST_PLC;
-  }
-
-  if (!session.originDeactivated) {
-    return STAGES.DEACTIVATE_ORIGIN;
   }
 
   if (!session.destActivated) {
     return STAGES.ACTIVATE_DEST;
   }
 
+  if (!session.originDeactivated) {
+    return STAGES.DEACTIVATE_ORIGIN;
+  }
+
   if (!session.migratedPlc) {
     return STAGES.MIGRATE_PLC;
   }
 
-  if (
-    all(
-      session.migratedPlc,
-      session.destActivated,
-      session.originDeactivated,
-      session.migratedRepo,
-      session.migratedPrefs,
-      session.migratedBlobs
-    )
-  ) {
+  if (all(...Object.values(session))) {
     return STAGES.DONE;
   }
 
@@ -115,7 +114,6 @@ export const processState = async (
     pds_origin: session.get("pds_origin"),
     token_origin: session.get("token_origin"),
     token_dest: session.get("token_dest"),
-    token_plc: session.get("token_plc"),
     token_service: session.get("token_service"),
     plc_hostname: session.get("plc_hostname"),
     did: session.get("did"),
@@ -124,9 +122,12 @@ export const processState = async (
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
-    migratedRepo: session.get("migratedRepo") ?? false,
-    migratedBlobs: session.get("migratedBlobs") ?? false,
+    exportedRepo: session.get("exportedRepo") ?? false,
+    importedRepo: session.get("importedRepo") ?? false,
+    exportedBlobs: session.get("exportedBlobs") ?? false,
+    importedBlobs: session.get("importedBlobs") ?? false,
     migratedPrefs: session.get("migratedPrefs") ?? false,
+    requestedPlcToken: session.get("requestedPlcToken") ?? false,
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
@@ -137,7 +138,8 @@ export const processState = async (
 
   switch (stage) {
     case STAGES.INVITE_CODE: {
-      state.inviteCode = data.get("invite-code") as string;
+      const invite = data.get("invite-code") as string;
+      state.inviteCode = invite;
       session.set("inviteCode", state.inviteCode);
       break;
     }
@@ -168,50 +170,71 @@ export const processState = async (
     }
 
     case STAGES.CREATE_DEST_ACCOUNT: {
-      const { handle_available, token_dest } = await createDestAccount(
-        state,
-        data,
-        env
-      );
+      const { handle_available, token_dest, handle_dest } =
+        await createDestAccount(state, data, env);
 
-      if (data.get("submited") && token_dest) {
+      if (token_dest) {
         session.set("token_dest", token_dest);
       } else if (handle_available) {
-        // return info
+        session.set("handle_dest", handle_dest);
       }
 
       break;
     }
 
     case STAGES.EXPORT_REPO_ORIGIN: {
-      const res = await exportRepo(state, env);
+      const { ok } = await exportRepo(state, env);
+      if (ok) {
+        session.set("exportedRepo", ok);
+      }
       break;
     }
     case STAGES.IMPORT_REPO_DEST: {
-      const res = await importRepo(state, env);
+      const { ok } = await importRepo(state, env);
+      if (ok) {
+        session.set("importedRepo", ok);
+      }
       break;
     }
     case STAGES.EXPORT_BLOBS_ORIGIN: {
-      const res = await exportBlobs(state, env);
+      const { ok } = await exportBlobs(state, env);
+      if (ok) {
+        session.set("exportedBlobs", ok);
+      }
       break;
     }
     case STAGES.IMPORT_BLOBS_DEST: {
-      const res = await uploadBlobs(state, env);
+      const { ok } = await uploadBlobs(state, env);
+      if (ok) {
+        session.set("importedBlobs", ok);
+      }
       break;
     }
     case STAGES.MIGRATE_PREFERENCES: {
-      const res = await migratePreferences(state, env);
+      const { ok } = await migratePreferences(state, env);
+      if (ok) {
+        session.set("migratedPrefs", ok);
+      }
       break;
     }
     case STAGES.REQUEST_PLC: {
-      const res = await requestPlcToken(state, env);
+      const { ok } = await requestPlcToken(state, env);
+      if (ok) {
+        session.set("requestedPlcToken", ok);
+      }
       break;
     }
 
     case STAGES.ACTIVATE_DEST:
     case STAGES.DEACTIVATE_ORIGIN:
     case STAGES.MIGRATE_PLC: {
-      const res = await validatePlcToken(state, data, env);
+      console.log("LAST STAGE");
+      const { ok } = await validatePlcToken(state, data, env);
+      if (ok) {
+        session.set("destActivated", ok);
+        session.set("originDeactivated", ok);
+        session.set("migratedPlc", ok);
+      }
       break;
     }
   }

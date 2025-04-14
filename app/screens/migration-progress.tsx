@@ -1,11 +1,40 @@
 import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
 import clock_art from "../assets/clock.jpg";
 import { InfoTip } from "@/components/ui/toggle-tip";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
+import { stageInfo, STAGES } from "~/util/stages";
+import { useEffect } from "react";
 
-export default function MigrationProgressScreen({ state }: ScreenProps) {
+export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
   const fetcher = useFetcher();
+  if (!stage) throw new Error("Invalid stage received");
+
+  const { stageIdx, stageTitle, stageDescription } = stageInfo[stage];
+
+  // Immediately submit to go to next step
+  useEffect(() => {
+    console.log("eff", stage, fetcher.state, error);
+    (async () => {
+      if (
+        fetcher.state === "idle" &&
+        !error &&
+        [
+          STAGES.EXPORT_REPO_ORIGIN,
+          STAGES.IMPORT_REPO_DEST,
+          STAGES.EXPORT_BLOBS_ORIGIN,
+          STAGES.IMPORT_BLOBS_DEST,
+          STAGES.MIGRATE_PREFERENCES,
+          STAGES.REQUEST_PLC,
+        ].includes(stage)
+      ) {
+        setTimeout(async () => {
+          await fetcher.submit({}, { method: "post" });
+        }, 2000);
+      }
+    })();
+  }, [fetcher, stage, error]);
+
   return (
     <fetcher.Form method="post">
       <VStack
@@ -29,7 +58,7 @@ export default function MigrationProgressScreen({ state }: ScreenProps) {
 
         <Progress.Root
           width="100%"
-          max={8}
+          max={6}
           min={0}
           value={stageIdx}
           striped

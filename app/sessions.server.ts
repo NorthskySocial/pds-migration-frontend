@@ -7,7 +7,6 @@ export type SessionData = {
   pds_origin?: string;
   token_origin?: string;
   token_dest?: string;
-  token_plc?: string;
   token_service?: string;
   plc_hostname?: string;
   did?: string;
@@ -16,9 +15,12 @@ export type SessionData = {
 
   // state flags
   hasBackup: boolean;
-  migratedRepo: boolean;
-  migratedBlobs: boolean;
+  exportedRepo: boolean;
+  importedRepo: boolean;
+  exportedBlobs: boolean;
+  importedBlobs: boolean;
   migratedPrefs: boolean;
+  requestedPlcToken: boolean;
   originDeactivated: boolean;
   destActivated: boolean;
   migratedPlc: boolean;
@@ -29,7 +31,6 @@ export type SessionFlashData = {
   progress?: {
     stageTitle: string;
     stageDescription: string;
-    stageIdx: number;
   };
 };
 

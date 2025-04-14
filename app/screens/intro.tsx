@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
 export default function IntroScreen({ state }: ScreenProps) {

@@ -8,4 +8,4 @@ assets = {}
 
 [vars]
 PDS_HOSTNAME = "https://pds-dest.aendra.dev"
-MIGRATOR_BACKEND = "http://migrator:9090"
+MIGRATOR_BACKEND = "http://localhost:9090"

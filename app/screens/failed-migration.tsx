@@ -1,6 +1,6 @@
 import { Heading, Text } from "@chakra-ui/react";
 import melted_clock from "../assets/melted.jpg";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 
 export default function FailedMigrationScreen({ state }: ScreenProps) {
   return (

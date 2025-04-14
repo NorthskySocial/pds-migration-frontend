@@ -1,0 +1,66 @@
+import type { SessionData } from "react-router";
+
+/**
+ * enum of all migrator stages
+ */
+export enum STAGES {
+  INVITE_CODE = "INVITE_CODE",
+  BACKUP_NOTICE = "BACKUP_NOTICE",
+  ORIGIN_PDS_LOGIN = "ORIGIN_PDS_LOGIN",
+  CREATE_DEST_ACCOUNT = "CREATE_DEST_ACCOUNT",
+  EXPORT_REPO_ORIGIN = "EXPORT_REPO_ORIGIN",
+  IMPORT_REPO_DEST = "IMPORT_REPO_DEST",
+  EXPORT_BLOBS_ORIGIN = "EXPORT_BLOBS_ORIGIN",
+  IMPORT_BLOBS_DEST = "IMPORT_BLOBS_DEST",
+  MIGRATE_PREFERENCES = "MIGRATE_PREFERENCES",
+  REQUEST_PLC = "REQUEST_PLC",
+  ACTIVATE_DEST = "ACTIVATE_DEST",
+  DEACTIVATE_ORIGIN = "DEACTIVATE_ORIGIN",
+  MIGRATE_PLC = "MIGRATE_PLC",
+  DONE = "DONE",
+  FAILED = "FAILED",
+}
+
+export type ScreenProps = {
+  state: SessionData;
+  stage?: STAGES;
+  error?: string;
+};
+
+export const stageInfo = {
+  [STAGES.CREATE_DEST_ACCOUNT]: {
+    stageIdx: 0,
+    stageTitle: "Creating destination account...",
+    stageDescription: "Initialising a new account on the destination PDS",
+  },
+  [STAGES.EXPORT_REPO_ORIGIN]: {
+    stageIdx: 1,
+    stageTitle: "Copying repo...",
+    stageDescription: "Exporting repo from old PDS",
+  },
+  [STAGES.IMPORT_REPO_DEST]: {
+    stageIdx: 2,
+    stageTitle: "Copying repo...",
+    stageDescription: "Import repo to new PDS",
+  },
+  [STAGES.EXPORT_BLOBS_ORIGIN]: {
+    stageIdx: 3,
+    stageTitle: "Copying blobs...",
+    stageDescription: "Exporting blobs from old PDS",
+  },
+  [STAGES.IMPORT_BLOBS_DEST]: {
+    stageIdx: 4,
+    stageTitle: "Copying blobs...",
+    stageDescription: "Importing blobs to new PDS",
+  },
+  [STAGES.MIGRATE_PREFERENCES]: {
+    stageIdx: 5,
+    stageTitle: "Migrating preferenes...",
+    stageDescription: "Copying all your preferences to new PDS",
+  },
+  [STAGES.REQUEST_PLC]: {
+    stageIdx: 6,
+    stageTitle: "Request PLC token...",
+    stageDescription: "Almost done!",
+  },
+};

@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { STAGES } from "~/util/types";
+import { STAGES } from "~/util/stages";
 
 export const Intro = lazy(() => import("./intro"));
 export const EncourageBackup = lazy(() => import("./encourage-backup"));
@@ -20,7 +20,7 @@ export const SCREENS = {
   [STAGES.EXPORT_BLOBS_ORIGIN]: MigrationProgress,
   [STAGES.IMPORT_BLOBS_DEST]: MigrationProgress,
   [STAGES.MIGRATE_PREFERENCES]: MigrationProgress,
-  [STAGES.REQUEST_PLC]: MigrationProgress,
+  [STAGES.REQUEST_PLC]: ValidatePLCToken,
   [STAGES.ACTIVATE_DEST]: ValidatePLCToken,
   [STAGES.DEACTIVATE_ORIGIN]: ValidatePLCToken,
   [STAGES.MIGRATE_PLC]: ValidatePLCToken,

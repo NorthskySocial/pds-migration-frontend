@@ -9,6 +9,7 @@ import {
 import "jest-puppeteer";
 import "expect-puppeteer";
 import Mail from "nodemailer/lib/mailer";
+import { STAGES } from "../app/util/stages";
 
 describe("account migration tool", () => {
   let originNetwork: TestNetworkNoAppView;
@@ -116,45 +117,41 @@ describe("account migration tool", () => {
   });
 
   // This is a mess, if you have a better idea plmk
-  it("does the migrate account account journey", async () => {
+  test("happy path", async () => {
     try {
+      console.log(STAGES.INVITE_CODE);
       await page.goto(
         `http://localhost:5173?destination=${destPds.url}&plc=${originNetwork.plc.url}`
       );
       await page.waitForSelector('[name="invite-code"]');
       await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
       await page.type('[name="invite-code"]', inviteCode);
-      const goToPage2 = page.waitForNavigation();
       await page.click('button[name="migrate"]');
 
-      await goToPage2;
+      console.log(STAGES.BACKUP_NOTICE);
       await page.waitForSelector('input[name="confirm"]');
       await page.$eval('input[name="confirm"]', (e) => e.click());
-      const gotoPage3 = page.waitForNavigation();
       await page.click('button[type="submit"]');
 
-      await gotoPage3;
+      console.log(STAGES.ORIGIN_PDS_LOGIN);
       await page.waitForSelector('input[name="bsky-handle"]');
       await page.$eval('input[name="has-pds"]', (e) => e.click());
+      await page.waitForSelector('input[name="pds"]');
       await page.$eval('input[name="pds"]', (el, [pds]) => (el.value = pds), [
         originNetwork.pds.url,
       ]);
       await page.type('input[name="bsky-handle"]', "alice.test");
       await page.type('input[name="bsky-password"]', "alice");
-      const gotoPage4 = page.waitForNavigation();
       await page.click('button[type="submit"]');
 
-      await gotoPage4;
+      console.log(STAGES.CREATE_DEST_ACCOUNT);
       await page.waitForSelector('input[name="handle"]');
-      await page.type('input[name="handle"]', "alice");
+      await page.type('input[name="handle"]', "new-alice");
       await page.type('input[name="password"]', "hunter7password");
       await page.type('input[name="password-repeat"]', "hunter7password");
-      const gotoPage5 = page.waitForNavigation();
       await page.click('button[type="submit"]');
-      await gotoPage5;
 
-      // await page.waitForSelector("img.katie-clock");
-
+      console.log(STAGES.REQUEST_PLC);
       const mail = await getMailFrom(
         originAgent.com.atproto.identity.requestPlcOperationSignature(
           undefined,
@@ -166,14 +163,13 @@ describe("account migration tool", () => {
 
       const plcToken = getTokenFromMail(mail);
 
-      const gotoPage6 = page.waitForNavigation();
-      await gotoPage6;
-      await page.waitForSelector('input[name="plc-token"]');
-      await page.type('input[name="plc-token"]', plcToken);
+      console.log("PLC TOKEN", STAGES.MIGRATE_PLC, plcToken);
+      await page.waitForSelector('input[name="token_plc"]');
+      await page.type('input[name="token_plc"]', plcToken);
 
-      const gotoPage7 = page.waitForNavigation();
+      await page.waitForSelector('button[type="submit"]');
       await page.click('button[type="submit"]');
-      await gotoPage7;
+
       await page.waitForSelector('input[name="login-to-northsky"]');
 
       expect(page).toMatchTextContent(

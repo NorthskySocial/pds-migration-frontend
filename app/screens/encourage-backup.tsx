@@ -1,7 +1,7 @@
 import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Span } from "@chakra-ui/react/box";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
 export default function EncourageBackupScreen({ state }: ScreenProps) {

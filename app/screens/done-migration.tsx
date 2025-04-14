@@ -1,7 +1,7 @@
 import { Heading, Text, Button } from "@chakra-ui/react";
 import misleading_notice from "../assets/misleading.png";
 import type { ReactElement } from "react";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 
 export default function DoneMigrationScreen({
   state,

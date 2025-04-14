@@ -12,7 +12,7 @@ import {
   PasswordInput,
   PasswordStrengthMeter,
 } from "@/components/ui/password-input";
-import type { ScreenProps } from "~/util/types";
+import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { useState } from "react";
 import { passwordStrength } from "check-password-strength";
