@@ -25,13 +25,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
         Once you have archived your data, press Continue to proceed with
         Migration
       </Text>
-      <Box
-        mb="10"
-        background={"muted/30"}
-        color="secondary"
-        p="4"
-        borderRadius={"2xl"}
-      >
+      <Box mb="10" background={"muted"} color="fg" p="4" borderRadius={"2xl"}>
         <Checkbox name="confirm" required>
           I have backed up my data or do not wish to before migrating.
         </Checkbox>

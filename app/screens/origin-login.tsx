@@ -24,7 +24,6 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
         migration.
       </Text>
       <Switch
-        colorPalette={"purple"}
         name="has-pds"
         checked={altPds}
         onCheckedChange={() => setAltPds(!altPds)}
