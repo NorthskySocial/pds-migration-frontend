@@ -150,7 +150,7 @@ describe("account migration tool", () => {
       .executeTakeFirst();
 
     const plcToken = res?.token;
-    console.log("toktok", plcToken);
+    console.log("PLC token: ", plcToken);
 
     await page.type('input[name="token_plc"]', plcToken!);
 

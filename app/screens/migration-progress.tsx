@@ -14,7 +14,6 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
 
   // Immediately submit to go to next step
   useEffect(() => {
-    console.log("eff", stage, fetcher.state, error);
     (async () => {
       if (
         fetcher.state === "idle" &&
@@ -28,9 +27,12 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
           STAGES.REQUEST_PLC,
         ].includes(stage)
       ) {
-        setTimeout(async () => {
-          await fetcher.submit({}, { method: "post" });
-        }, 500);
+        setTimeout(
+          async () => {
+            await fetcher.submit({}, { method: "post" });
+          },
+          import.meta.env.DEV ? 500 : 0
+        );
       }
     })();
   }, [fetcher, stage, error]);

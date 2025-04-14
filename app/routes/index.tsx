@@ -16,9 +16,10 @@ import { Loading } from "~/components/loading";
 import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
+import { logger } from "~/util/logger";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  console.log("ACTION");
+  logger.log("ACTION");
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
@@ -50,7 +51,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   try {
     const state = await processState(session, data, context.cloudflare.env);
-    console.log(state);
+    logger.log(state);
     stage = getStage(state);
   } catch (e) {
     console.error(e);
@@ -59,7 +60,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
   }
 
-  console.log("action", stage);
+  logger.log("action", stage);
 
   return redirect(
     stage === STAGES.DONE
@@ -118,7 +119,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { error, state, stage = STAGES.INVITE_CODE } = loaderData;
   const fetcher = useFetcher();
-  console.log(error, state, stage);
 
   const Stage = SCREENS[stage];
 

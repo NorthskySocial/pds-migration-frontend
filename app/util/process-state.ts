@@ -15,6 +15,7 @@ import {
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
+import { logger } from "./logger";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -28,7 +29,7 @@ export const processState = async (
   data: FormData,
   env: CloudflareEnvironment
 ) => {
-  console.log("processState");
+  logger.log("processState");
   const state = {
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
@@ -54,7 +55,6 @@ export const processState = async (
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
   };
-  console.log(state);
 
   const stage = getStage(state);
 
@@ -150,7 +150,6 @@ export const processState = async (
     case STAGES.ACTIVATE_DEST:
     case STAGES.DEACTIVATE_ORIGIN:
     case STAGES.MIGRATE_PLC: {
-      console.log("LAST STAGE");
       const { ok } = await validatePlcToken(state, data, env);
       if (ok) {
         session.set("destActivated", ok);

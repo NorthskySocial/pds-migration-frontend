@@ -14,6 +14,7 @@ import {
   MigrationError,
   PasswordValidationError,
 } from "~/errors";
+import { logger } from "~/util/logger";
 
 export async function loginOrigin(
   { plc_hostname, pds_dest }: SessionData,
@@ -51,7 +52,7 @@ export async function loginOrigin(
     await fetch(`${plc_hostname}/${did}`)
   ).json();
 
-  console.log(didDoc);
+  logger.log(didDoc);
 
   if (!didDoc || !isValidDidDoc(didDoc)) {
     throw new LoginError("Invalid DID Doc");
@@ -202,7 +203,7 @@ export async function importRepo(
 ) {
   // This breaks during local tests so return early if Vite in dev mode
   if (import.meta.env.DEV) {
-    console.info("Ignoring importRepo during tests");
+    logger.log("Ignoring importRepo during tests");
     return { ok: true };
   }
   if (!pds_dest || !did || !token_dest) {
@@ -264,7 +265,7 @@ export async function uploadBlobs(
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
   if (import.meta.env.DEV) {
-    console.info("Not uploading blobs because this is a test");
+    logger.log("Not uploading blobs because this is a test");
     return { ok: true };
   }
   if (!pds_dest || !did || !token_dest) {
@@ -363,7 +364,7 @@ export async function validatePlcToken(
       plc_signing_token: plcToken,
       // user_recover_key,
     };
-    console.log("payyyyyloadz", payload);
+
     // migrate PLC
     const migrateRes = await fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
       method: "post",
