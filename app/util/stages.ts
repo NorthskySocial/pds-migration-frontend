@@ -59,32 +59,32 @@ export const stageInfo = {
   },
   [STAGES.EXPORT_REPO_ORIGIN]: {
     stageIdx: 1,
-    stageTitle: "Copying repo...",
+    stageTitle: "Exporting repo...",
     stageDescription: "Exporting repo from old PDS",
   },
   [STAGES.IMPORT_REPO_DEST]: {
     stageIdx: 2,
-    stageTitle: "Copying repo...",
+    stageTitle: "Importing repo...",
     stageDescription: "Import repo to new PDS",
   },
   [STAGES.EXPORT_BLOBS_ORIGIN]: {
     stageIdx: 3,
-    stageTitle: "Copying blobs...",
+    stageTitle: "Exporting blobs...",
     stageDescription: "Exporting blobs from old PDS",
   },
   [STAGES.IMPORT_BLOBS_DEST]: {
     stageIdx: 4,
-    stageTitle: "Copying blobs...",
+    stageTitle: "Importing blobs...",
     stageDescription: "Importing blobs to new PDS",
   },
   [STAGES.MIGRATE_PREFERENCES]: {
     stageIdx: 5,
-    stageTitle: "Migrating preferenes...",
+    stageTitle: "Migrating prefercenes...",
     stageDescription: "Copying all your preferences to new PDS",
   },
   [STAGES.REQUEST_PLC]: {
     stageIdx: 6,
-    stageTitle: "Request PLC token...",
-    stageDescription: "Almost done!",
+    stageTitle: "Requesting PLC token...",
+    stageDescription: "Almost done! Check your email!",
   },
 };
