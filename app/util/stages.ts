@@ -28,6 +28,30 @@ export type ScreenProps = {
 };
 
 export const stageInfo = {
+  [STAGES.INVITE_CODE]: { stageIdx: -1, stageTitle: "", stageDescription: "" },
+  [STAGES.BACKUP_NOTICE]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
+  },
+  [STAGES.ORIGIN_PDS_LOGIN]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
+  },
+  [STAGES.ACTIVATE_DEST]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
+  },
+  [STAGES.DEACTIVATE_ORIGIN]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
+  },
+  [STAGES.MIGRATE_PLC]: { stageIdx: -1, stageTitle: "", stageDescription: "" },
+  [STAGES.DONE]: { stageIdx: -1, stageTitle: "", stageDescription: "" },
+  [STAGES.FAILED]: { stageIdx: -1, stageTitle: "", stageDescription: "" },
   [STAGES.CREATE_DEST_ACCOUNT]: {
     stageIdx: 0,
     stageTitle: "Creating destination account...",

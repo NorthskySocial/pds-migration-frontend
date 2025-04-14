@@ -10,7 +10,8 @@ import {
 import { getSession, commitSession } from "../sessions.server";
 import { Layout } from "~/components/layout";
 import { Suspense } from "react";
-import { getStage, processState } from "~/util/get-stage";
+import { getStage } from "~/util/get-stage";
+import { processState } from "~/util/process-state";
 import { Loading } from "~/components/loading";
 import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/stages";

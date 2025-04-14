@@ -354,6 +354,28 @@ export async function validatePlcToken(
   const plcToken = data.get("token_plc") as string;
 
   if (submitted && plcToken) {
+    // migrate PLC
+    const migrateRes = await fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
+      method: "post",
+      body: JSON.stringify({
+        destination: pds_dest,
+        destination_token: token_dest,
+        origin: pds_origin,
+        did,
+        origin_token: token_origin,
+        plc_signing_token: plcToken,
+        // user_recover_key,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!migrateRes.ok) {
+      throw new MigrationError(
+        (await migrateRes.json<{ message: string }>())?.message ??
+          migrateRes.statusText
+      );
+    }
+
     // activate new account
     const activateRes = await fetch(`${MIGRATOR_BACKEND}/activate-account`, {
       method: "post",
@@ -390,28 +412,6 @@ export async function validatePlcToken(
       throw new MigrationError(
         (await deactivateRes.json<{ message: string }>())?.message ??
           deactivateRes.statusText
-      );
-    }
-
-    // migrate PLC
-    const migrateRes = await fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
-      method: "post",
-      body: JSON.stringify({
-        destination: pds_dest,
-        destination_token: token_dest,
-        origin: pds_origin,
-        did,
-        origin_token: token_origin,
-        plc_signing_token: plcToken,
-        // user_recover_key,
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!migrateRes.ok) {
-      throw new MigrationError(
-        (await migrateRes.json<{ message: string }>())?.message ??
-          migrateRes.statusText
       );
     }
 
