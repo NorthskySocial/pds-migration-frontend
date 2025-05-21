@@ -1,0 +1,48 @@
+import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
+import type { ScreenProps } from "~/util/stages";
+import { useFetcher } from "react-router";
+import { OpenRotationKeyModal } from "~/components/rotation-key-modal";
+import { useCallback } from "react";
+import { Secp256k1Keypair } from "@atproto/crypto";
+
+export default function EncourageBackupScreen({ state }: ScreenProps) {
+  const fetcher = useFetcher();
+
+  const modalClose = useCallback(
+    async (keypair: Secp256k1Keypair) => {
+      await fetcher.submit(
+        { user_recover_key: keypair.did() },
+        { method: "post" }
+      );
+    },
+    [fetcher]
+  );
+
+  const continueWithoutRecoveryKey = useCallback(async () => {
+    await fetcher.submit({ user_recover_key: false }, { method: "post" });
+  }, [fetcher]);
+  return (
+    <fetcher.Form method="post">
+      <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
+        <Highlight query="your Data">Add a rotation key</Highlight>
+      </Heading>
+      <Text fontSize="md" textAlign={"center"} mb="4">
+        For peace of mind, add a <strong>rotation key</strong> that can be used
+        to restore access to your account in case anything catastrophic ever
+        happens to Northsky. Note,{" "}
+        <strong>you should treat this key like a password</strong> because if
+        someone gets access to it they can irrecoverably take over your account.
+      </Text>
+
+      <OpenRotationKeyModal onClose={modalClose} />
+
+      <Button
+        type="button"
+        onClick={continueWithoutRecoveryKey}
+        margin={"0 auto"}
+      >
+        Continue without generating rotation key
+      </Button>
+    </fetcher.Form>
+  );
+}

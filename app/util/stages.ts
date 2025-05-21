@@ -13,6 +13,7 @@ export enum STAGES {
   EXPORT_BLOBS_ORIGIN = "EXPORT_BLOBS_ORIGIN",
   IMPORT_BLOBS_DEST = "IMPORT_BLOBS_DEST",
   MIGRATE_PREFERENCES = "MIGRATE_PREFERENCES",
+  GENERATE_RECOVERY_KEY = "GENERATE_RECOVERY_KEY",
   REQUEST_PLC = "REQUEST_PLC",
   ACTIVATE_DEST = "ACTIVATE_DEST",
   DEACTIVATE_ORIGIN = "DEACTIVATE_ORIGIN",
@@ -79,11 +80,17 @@ export const stageInfo = {
   },
   [STAGES.MIGRATE_PREFERENCES]: {
     stageIdx: 5,
-    stageTitle: "Migrating prefercenes...",
+    stageTitle: "Migrating preferences...",
     stageDescription: "Copying all your preferences to new PDS",
   },
-  [STAGES.REQUEST_PLC]: {
+  [STAGES.GENERATE_RECOVERY_KEY]: {
     stageIdx: 6,
+    stageTitle: "Generate recovery key?",
+    stageDescription:
+      "Generate a recovery key to save in case you ever want to migrate away from Northsky",
+  },
+  [STAGES.REQUEST_PLC]: {
+    stageIdx: 7,
     stageTitle: "Requesting PLC token...",
     stageDescription: "Almost done! Check your email!",
   },

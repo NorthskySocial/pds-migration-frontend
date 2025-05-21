@@ -42,6 +42,7 @@ export const processState = async (
     did: session.get("did"),
     inviteCode: session.get("inviteCode"),
     email: session.get("email"),
+    user_recover_key: session.get("user_recover_key"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -139,6 +140,11 @@ export const processState = async (
       }
       break;
     }
+    case STAGES.GENERATE_RECOVERY_KEY: {
+      session.set("user_recover_key", state.user_recover_key);
+      break;
+    }
+
     case STAGES.REQUEST_PLC: {
       const { ok } = await requestPlcToken(state, env);
       if (ok) {

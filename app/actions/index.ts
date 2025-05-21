@@ -347,7 +347,14 @@ export async function requestPlcToken(
 }
 
 export async function validatePlcToken(
-  { pds_dest, did, token_dest, pds_origin, token_origin }: SessionData,
+  {
+    pds_dest,
+    did,
+    token_dest,
+    pds_origin,
+    token_origin,
+    user_recover_key,
+  }: SessionData,
   data: FormData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
@@ -362,7 +369,7 @@ export async function validatePlcToken(
       did,
       origin_token: token_origin,
       plc_signing_token: plcToken,
-      // user_recover_key,
+      user_recover_key,
     };
 
     // migrate PLC

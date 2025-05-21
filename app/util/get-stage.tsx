@@ -60,6 +60,10 @@ export function getStage(session: SessionData) {
     return STAGES.MIGRATE_PREFERENCES;
   }
 
+  if (session.user_recover_key === undefined) {
+    return STAGES.GENERATE_RECOVERY_KEY;
+  }
+
   if (!session.requestedPlcToken) {
     return STAGES.REQUEST_PLC;
   }

@@ -12,6 +12,7 @@ export type SessionData = {
   did?: string;
   inviteCode?: string;
   email?: string;
+  user_recover_key?: string | false;
 
   // state flags
   hasBackup: boolean;

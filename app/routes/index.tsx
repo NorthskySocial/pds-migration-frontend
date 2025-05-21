@@ -90,6 +90,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     did: session.get("did"),
     inviteCode: session.get("inviteCode"),
     email: session.get("email"),
+    user_recover_key: session.get("user_recover_key"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,

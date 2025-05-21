@@ -32,9 +32,6 @@ export default function DoneMigrationScreen({
         Instead, hit <strong>Cancel</strong> and log in with your new username
         and password.
       </Text>
-      <Button name="login-to-northsky" type="submit">
-        Login to Northsky
-      </Button>
     </>
   );
 }
