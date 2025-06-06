@@ -108,7 +108,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   const stage = getStage(state);
 
   return data(
-    { error: session.get("error"), stage, state },
+    {
+      error: session.get("error"),
+      stage,
+      state,
+    },
     {
       headers: {
         "Set-Cookie": await commitSession(session),

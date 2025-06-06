@@ -4,6 +4,7 @@ import { useFetcher } from "react-router";
 import { OpenRotationKeyModal } from "~/components/rotation-key-modal";
 import { useCallback } from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
+import "@1password/save-button";
 
 export default function EncourageBackupScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
@@ -21,6 +22,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
   const continueWithoutRecoveryKey = useCallback(async () => {
     await fetcher.submit({ user_recover_key: false }, { method: "post" });
   }, [fetcher]);
+
   return (
     <fetcher.Form method="post">
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
@@ -34,7 +36,11 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
         someone gets access to it they can irrecoverably take over your account.
       </Text>
 
-      <OpenRotationKeyModal onClose={modalClose} />
+      <OpenRotationKeyModal
+        did={state.did}
+        handle={state.handle}
+        onClose={modalClose}
+      />
 
       <Button
         type="button"
