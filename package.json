@@ -8,7 +8,7 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "test:jest": "jest --maxWorkers=1",
-    "test:backend": "./pds-migration/target/debug/pdsmigration-web",
+    "test:backend": "docker pull ghcr.io/northskysocial/pds-migration:latest && docker run -it northskysocial/pds-migration:latest",
     "test": "npx concurrently --kill-others npm:dev npm:test:jest npm:test:backend",
     "typecheck": "wrangler types && react-router typegen && tsc"
   },
