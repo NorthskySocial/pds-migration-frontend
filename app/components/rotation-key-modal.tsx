@@ -43,18 +43,19 @@ export const SuccessText = ({
       setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
     }
   }, [keypair, result.encrypted, result.salt]);
+
   return result.salt && result.encrypted && result.passphrase ? (
     <>
       <p>You've successfully generated a key. Its DID is:</p>
-      <h4>{keypair.did()}</h4>
+      <h4 style={{ padding: "1em" }}>{keypair.did()}</h4>
       <p>We've encrypted it using the following passphrase:</p>
-      <pre>
+      <pre style={{ textAlign: "center", padding: "1em" }}>
         {result.passphrase
           ?.split(" ")
-          .map((v, i) => (v + (i % 0) ? "\t" : "\n"))
-          .join("")}
+          .map((v, i) => `${v}`)
+          .join("\n")}
       </pre>
-      <h5>
+      <h5 style={{ padding: "1em", textAlign: "center" }}>
         WRITE THIS DOWN, IDEALLY ON A SHEET OF PAPER YOU CAN PUT SOMEWHERE SAFE
       </h5>
       <p>The key can't be recovered without the above collection of words!</p>
@@ -69,7 +70,9 @@ export const SuccessText = ({
         always generate a new one! But if you lose access to Northsky as well as
         this key, you may not be able to recover your account.
       </p>
-      <Button onClick={downloadKey}>Download {keypair.did()}.key</Button>
+      <Button style={{ margin: "1em 0" }} onClick={downloadKey}>
+        Download {keypair.did()}.key
+      </Button>
       <p>
         You want to <u>securely</u> back this up <strong>right now</strong>.
       </p>
@@ -90,10 +93,10 @@ export const SuccessText = ({
               autocomplete: "one-time-code" as AutofillType,
               value: result.salt,
             },
-            {
-              autocomplete: "recovery-code" as AutofillType,
-              value: result.passphrase,
-            },
+            // {
+            //   autocomplete: "one-time-code" as AutofillType,
+            //   value: result.passphrase,
+            // },
           ],
           notes: `Generated ${new Date().toISOString()} by Northsky Migrator.\n\nSalt: ${
             result.salt
@@ -130,7 +133,8 @@ export const OpenRotationKeyModal = ({
   const generateKeypair = useCallback(async () => {
     const keypair = await Secp256k1Keypair.create({ exportable: true });
     setKey(keypair);
-  }, []);
+  }, [setKey]);
+
   const exit = useCallback(() => key && onClose(key), [key, onClose]);
   return (
     <Dialog.Root
@@ -150,18 +154,18 @@ export const OpenRotationKeyModal = ({
             <Dialog.Header>
               <Dialog.Title>Add rotation key</Dialog.Title>
             </Dialog.Header>
-            <Dialog.Body>
+            <Dialog.Body style={{ background: "black" }}>
               {key ? (
                 <SuccessText did={did} handle={handle} keypair={key} />
               ) : (
-                <Dialog.ActionTrigger onClick={generateKeypair} asChild>
-                  <Button variant="outline"></Button>
-                </Dialog.ActionTrigger>
+                <Button variant="outline" onClick={generateKeypair}>
+                  Generate new keypair
+                </Button>
               )}
             </Dialog.Body>
             <Dialog.Footer>
               <Dialog.CloseTrigger asChild>
-                <Button variant="outline">Done</Button>
+                <Button variant="outline"></Button>
               </Dialog.CloseTrigger>
             </Dialog.Footer>
             <Dialog.CloseTrigger asChild>

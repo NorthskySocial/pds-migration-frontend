@@ -15,6 +15,7 @@ import {
   PasswordValidationError,
 } from "~/errors";
 import { logger } from "~/util/logger";
+import f from "~/util/mock-fetch";
 
 export async function loginOrigin(
   { plc_hostname, pds_dest }: SessionData,
@@ -23,7 +24,11 @@ export async function loginOrigin(
 ) {
   const pds_origin = (data.get("pds") as string) ?? "https://bsky.app";
 
-  const origin_agent = new AtpAgent({ service: pds_origin });
+  const origin_agent = new AtpAgent({
+    service: pds_origin,
+    fetch: f as typeof fetch,
+  });
+
   const handle_origin = data.get("bsky-handle") as string;
 
   if (!handle_origin) {
@@ -48,9 +53,8 @@ export async function loginOrigin(
     throw new LoginError("Unable to resolve DID");
   }
 
-  const didDoc: DidDocument = await (
-    await fetch(`${plc_hostname}/${did}`)
-  ).json();
+  // Do we need to do this?
+  const didDoc: DidDocument = await (await f(`${plc_hostname}/${did}`)).json();
 
   logger.log(didDoc);
 
@@ -66,7 +70,7 @@ export async function loginOrigin(
   }`;
 
   // Generate service token
-  const res = await fetch(`${MIGRATOR_BACKEND}/service-auth`, {
+  const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
     headers: {
       "Content-Type": "application/json",
     },
@@ -126,7 +130,7 @@ export async function createDestAccount(
   if (!handle.length) {
     return { handle_available: null, token_dest: null };
   } else {
-    const handle_available = await fetch(
+    const handle_available = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
       .then<{ message: string; error: string } & { did: string }>((r) =>
@@ -146,7 +150,7 @@ export async function createDestAccount(
       invite_code: inviteCode,
     };
 
-    const createAccountRes = await fetch(`${MIGRATOR_BACKEND}/create-account`, {
+    const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
       method: "post",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -157,7 +161,10 @@ export async function createDestAccount(
     }
 
     // Get new user token
-    const agent_dest = new AtpAgent({ service: pds_dest! });
+    const agent_dest = new AtpAgent({
+      service: pds_dest!,
+      fetch: f as typeof fetch,
+    });
 
     const { data } = await agent_dest.login({
       identifier: handle_dest,
@@ -180,7 +187,7 @@ export async function exportRepo(
 
   // export repo
 
-  const res = await fetch(`${MIGRATOR_BACKEND}/export-repo`, {
+  const res = await f(`${MIGRATOR_BACKEND}/export-repo`, {
     method: "post",
     body: JSON.stringify({
       pds_host: pds_origin,
@@ -213,7 +220,7 @@ export async function importRepo(
   }
 
   // import repo
-  const res = await fetch(`${MIGRATOR_BACKEND}/import-repo`, {
+  const res = await f(`${MIGRATOR_BACKEND}/import-repo`, {
     method: "post",
     body: JSON.stringify({
       pds_host: pds_dest,
@@ -241,7 +248,7 @@ export async function exportBlobs(
   }
 
   // missing blobs
-  const res = await fetch(`${MIGRATOR_BACKEND}/export-blobs`, {
+  const res = await f(`${MIGRATOR_BACKEND}/export-blobs`, {
     method: "post",
     body: JSON.stringify({
       did,
@@ -275,7 +282,7 @@ export async function uploadBlobs(
   }
 
   // upload blobs
-  const res = await fetch(`${MIGRATOR_BACKEND}/upload-blobs`, {
+  const res = await f(`${MIGRATOR_BACKEND}/upload-blobs`, {
     method: "post",
     body: JSON.stringify({
       pds_host: pds_dest,
@@ -300,7 +307,7 @@ export async function migratePreferences(
     throw new MigrationError("Not able to migrate preferences");
   }
   // migrate preferences
-  const res = await fetch(`${MIGRATOR_BACKEND}/migrate-preferences`, {
+  const res = await f(`${MIGRATOR_BACKEND}/migrate-preferences`, {
     method: "post",
     body: JSON.stringify({
       did,
@@ -329,7 +336,7 @@ export async function requestPlcToken(
     );
   }
   // req PLC token
-  const res = await fetch(`${MIGRATOR_BACKEND}/request-token`, {
+  const res = await f(`${MIGRATOR_BACKEND}/request-token`, {
     method: "post",
     body: JSON.stringify({
       pds_host: pds_origin,
@@ -373,7 +380,7 @@ export async function validatePlcToken(
     };
 
     // migrate PLC
-    const migrateRes = await fetch(`${MIGRATOR_BACKEND}/migrate-plc`, {
+    const migrateRes = await f(`${MIGRATOR_BACKEND}/migrate-plc`, {
       method: "post",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" },
@@ -387,7 +394,7 @@ export async function validatePlcToken(
     }
 
     // activate new account
-    const activateRes = await fetch(`${MIGRATOR_BACKEND}/activate-account`, {
+    const activateRes = await f(`${MIGRATOR_BACKEND}/activate-account`, {
       method: "post",
       body: JSON.stringify({
         pds_host: pds_dest,
@@ -405,18 +412,15 @@ export async function validatePlcToken(
     }
 
     // deactivate old account
-    const deactivateRes = await fetch(
-      `${MIGRATOR_BACKEND}/deactivate-account`,
-      {
-        method: "post",
-        body: JSON.stringify({
-          pds_host: pds_origin,
-          did,
-          token: token_origin,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const deactivateRes = await f(`${MIGRATOR_BACKEND}/deactivate-account`, {
+      method: "post",
+      body: JSON.stringify({
+        pds_host: pds_origin,
+        did,
+        token: token_origin,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
 
     if (!deactivateRes.ok) {
       throw new MigrationError(

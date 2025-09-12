@@ -141,7 +141,7 @@ export const processState = async (
       break;
     }
     case STAGES.GENERATE_RECOVERY_KEY: {
-      session.set("user_recover_key", state.user_recover_key);
+      session.set("user_recover_key", data.get("user_recover_key") as string);
       break;
     }
 

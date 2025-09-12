@@ -1,5 +1,7 @@
 import { Secp256k1Keypair } from "@atproto/crypto";
-import { generatePassphrase } from "niceware";
+import "niceware/browser/niceware";
+
+const { generatePassphrase } = niceware;
 
 export const toBase64 = (buffer: Uint8Array<ArrayBuffer>) =>
   btoa(String.fromCharCode(...buffer));

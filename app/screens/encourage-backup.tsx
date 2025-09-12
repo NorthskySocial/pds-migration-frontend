@@ -1,6 +1,6 @@
 import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Box, Span } from "@chakra-ui/react/box";
+import { Box, Span } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 

@@ -1,2 +1,4 @@
 /// <reference types="vite/client" />
-declare module "niceware";
+declare namespace niceware {
+  const generatePassphrase = (num: number) => string;
+}

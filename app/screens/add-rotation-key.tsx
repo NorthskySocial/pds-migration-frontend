@@ -2,25 +2,30 @@ import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { OpenRotationKeyModal } from "~/components/rotation-key-modal";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
 import "@1password/save-button";
 
 export default function EncourageBackupScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
-
+  const [didKeyWizard, setDidKeyWizard] = useState(false);
   const modalClose = useCallback(
     async (keypair: Secp256k1Keypair) => {
       await fetcher.submit(
         { user_recover_key: keypair.did() },
         { method: "post" }
       );
+      setDidKeyWizard(true);
     },
     [fetcher]
   );
 
-  const continueWithoutRecoveryKey = useCallback(async () => {
-    await fetcher.submit({ user_recover_key: false }, { method: "post" });
+  const continueMigration = useCallback(async () => {
+    try {
+      await fetcher.submit({ user_recover_key: true }, { method: "post" });
+    } catch (e) {
+      console.error(e);
+    }
   }, [fetcher]);
 
   return (
@@ -42,12 +47,8 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
         onClose={modalClose}
       />
 
-      <Button
-        type="button"
-        onClick={continueWithoutRecoveryKey}
-        margin={"0 auto"}
-      >
-        Continue without generating rotation key
+      <Button type="button" onClick={continueMigration} margin={"0 auto"}>
+        {didKeyWizard ? "Continue" : "Continue without generating rotation key"}
       </Button>
     </fetcher.Form>
   );

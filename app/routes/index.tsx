@@ -66,8 +66,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     stage === STAGES.DONE
       ? "/success"
       : stage === STAGES.FAILED
-      ? "/failed"
-      : "/",
+        ? "/failed"
+        : "/",
     {
       headers: {
         "Set-Cookie": await commitSession(session),
