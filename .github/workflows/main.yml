@@ -19,10 +19,15 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # - run: npm test
-      - run: npm run build
+      - run: CLOUDFLARE_ENV=production npm run build
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_WORKERS_GH_ACTIONS_DEPLOY }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          environment: production
+          secrets: |
+            PDS_HOSTNAME
+            MIGRATOR_BACKEND
+        env:
+          PDS_HOSTNAME: 'https://northsky.social'
+          MIGRATOR_BACKEND: 'https://migrator.northsky.social'
