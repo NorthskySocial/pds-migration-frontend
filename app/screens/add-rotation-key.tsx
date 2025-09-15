@@ -22,7 +22,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
 
   const continueMigration = useCallback(async () => {
     try {
-      await fetcher.submit({ user_recover_key: true }, { method: "post" });
+      await fetcher.submit({ user_recover_key: null }, { method: "post" });
     } catch (e) {
       console.error(e);
     }

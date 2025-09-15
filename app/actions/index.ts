@@ -376,7 +376,7 @@ export async function validatePlcToken(
       did,
       origin_token: token_origin,
       plc_signing_token: plcToken,
-      user_recover_key,
+      user_recover_key: user_recover_key ?? undefined,
     };
 
     // migrate PLC

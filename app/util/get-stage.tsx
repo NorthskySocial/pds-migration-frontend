@@ -60,7 +60,7 @@ export function getStage(session: SessionData) {
     return STAGES.MIGRATE_PREFERENCES;
   }
 
-  if (!session.user_recover_key) {
+  if (session.user_recover_key === undefined) {
     return STAGES.GENERATE_RECOVERY_KEY;
   }
 
