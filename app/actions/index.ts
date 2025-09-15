@@ -53,7 +53,7 @@ export async function loginOrigin(
     throw new LoginError("Unable to resolve DID");
   }
 
-  // Do we need to do this?
+  // Do we need to do this? Is DidDoc always returned when logging in??
   const didDoc: DidDocument = await (await f(`${plc_hostname}/${did}`)).json();
 
   logger.log(didDoc);
