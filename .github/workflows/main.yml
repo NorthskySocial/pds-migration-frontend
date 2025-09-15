@@ -25,6 +25,6 @@ jobs:
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
-          environment: ${{ github.ref_name == "main" && "staging" || "production" }}
+          environment: "${{ github.ref_name == 'main' && 'staging' || 'production' }}"
           apiToken: ${{ secrets.CLOUDFLARE_WORKERS_GH_ACTIONS_DEPLOY }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
