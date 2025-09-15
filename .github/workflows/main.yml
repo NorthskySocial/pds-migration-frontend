@@ -25,6 +25,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_WORKERS_GH_ACTIONS_DEPLOY }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        env:
-          PDS_HOSTNAME: 'https://northsky.social'
-          MIGRATOR_BACKEND: 'https://migrator.northsky.social'
+          environment: production

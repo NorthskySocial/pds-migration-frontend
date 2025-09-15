@@ -1,7 +1,7 @@
 workers_dev = true
 name = "northsky-migration-tool"
 compatibility_date = "2025-03-17"
-compatibility_flags = [ "nodejs_compat" ]
+compatibility_flags = ["nodejs_compat"]
 main = "./workers/app.ts"
 
 assets = {}
@@ -9,3 +9,7 @@ assets = {}
 [vars]
 PDS_HOSTNAME = "https://pds-dest.aendra.dev"
 MIGRATOR_BACKEND = "http://localhost:9090"
+
+[env.production.vars]
+PDS_HOSTNAME = "https://northsky.social"
+MIGRATOR_BACKEND = "https://migrator.northsky.social"
