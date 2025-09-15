@@ -10,6 +10,11 @@ assets = {}
 PDS_HOSTNAME = "https://pds-dest.aendra.dev"
 MIGRATOR_BACKEND = "http://localhost:9090"
 
+[env.staging.vars]
+PDS_HOSTNAME = "https://devpds2.northsky.social"
+MIGRATOR_BACKEND = "https://migrator.northsky.social"
+PLC_HOSTNAME = "https://devplc.northsky.social"
+
 [env.production.vars]
 PDS_HOSTNAME = "https://northsky.social"
 MIGRATOR_BACKEND = "https://migrator.northsky.social"
