@@ -36,6 +36,10 @@ export function getStage(session: SessionData) {
     return STAGES.ORIGIN_PDS_LOGIN;
   }
 
+  if (session.user_recover_key === undefined) {
+    return STAGES.GENERATE_RECOVERY_KEY;
+  }
+
   if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
     return STAGES.CREATE_DEST_ACCOUNT;
   }
@@ -58,10 +62,6 @@ export function getStage(session: SessionData) {
 
   if (!session.migratedPrefs) {
     return STAGES.MIGRATE_PREFERENCES;
-  }
-
-  if (session.user_recover_key === undefined) {
-    return STAGES.GENERATE_RECOVERY_KEY;
   }
 
   if (!session.requestedPlcToken) {

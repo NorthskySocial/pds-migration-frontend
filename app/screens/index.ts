@@ -14,6 +14,7 @@ export const SCREENS = {
   [STAGES.INVITE_CODE]: Intro,
   [STAGES.BACKUP_NOTICE]: EncourageBackup,
   [STAGES.ORIGIN_PDS_LOGIN]: OriginLogin,
+  [STAGES.GENERATE_RECOVERY_KEY]: AddRotationKey,
   [STAGES.CREATE_DEST_ACCOUNT]: NewAccount,
   [STAGES.EXPORT_REPO_ORIGIN]: MigrationProgress,
   [STAGES.IMPORT_REPO_DEST]: MigrationProgress,
@@ -24,7 +25,6 @@ export const SCREENS = {
   [STAGES.ACTIVATE_DEST]: ValidatePLCToken,
   [STAGES.DEACTIVATE_ORIGIN]: ValidatePLCToken,
   [STAGES.MIGRATE_PLC]: ValidatePLCToken,
-  [STAGES.GENERATE_RECOVERY_KEY]: AddRotationKey,
   [STAGES.DONE]: DoneMigration,
   [STAGES.FAILED]: FailedMigration,
 };
