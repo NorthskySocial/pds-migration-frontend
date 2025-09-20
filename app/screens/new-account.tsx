@@ -56,6 +56,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
       <br />
       <Field
         label="New handle"
+        required
         invalid={fetcher.data && !fetcher.data?.handle_available}
         errorText={!fetcher.data?.ok && fetcher.data?.handle_available}
         helperText={

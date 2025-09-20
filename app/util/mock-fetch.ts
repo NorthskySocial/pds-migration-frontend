@@ -148,6 +148,8 @@ const f = async (input: URL | string, init?: RequestInit) => {
         }
       }
     }
+
+    return new Response("Error", { status: 500 });
   } else {
     return fetch(input, init);
   }

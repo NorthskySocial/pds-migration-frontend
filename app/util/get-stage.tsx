@@ -17,80 +17,85 @@ const all = (...items: (string | boolean | undefined | null)[]) =>
  * @returns STAGES
  */
 export function getStage(session: SessionData) {
-  if (!session.inviteCode) {
-    return STAGES.INVITE_CODE;
-  }
-
-  if (session.do_journey === "create") {
-    if (session.user_recover_key === undefined) {
-      return STAGES.GENERATE_RECOVERY_KEY;
+  try {
+    if (!session.inviteCode) {
+      return STAGES.INVITE_CODE;
     }
 
-    if (!all(session.token_dest, session.handle_dest)) {
-      return STAGES.CREATE_DEST_ACCOUNT;
-    }
+    if (session.do_journey === "create") {
+      if (session.user_recover_key === undefined) {
+        return STAGES.GENERATE_RECOVERY_KEY;
+      }
 
-    return STAGES.DONE;
-  } else {
-    if (!session.hasBackup) {
-      return STAGES.BACKUP_NOTICE;
-    }
+      if (!all(session.token_dest, session.handle_dest)) {
+        return STAGES.CREATE_DEST_ACCOUNT;
+      }
 
-    if (
-      !all(
-        session.token_origin,
-        session.did,
-        session.pds_origin,
-        session.token_service
-      )
-    ) {
-      return STAGES.ORIGIN_PDS_LOGIN;
-    }
+      return STAGES.DONE;
+    } else {
+      if (!session.hasBackup) {
+        return STAGES.BACKUP_NOTICE;
+      }
 
-    if (session.user_recover_key === undefined) {
-      return STAGES.GENERATE_RECOVERY_KEY;
-    }
+      if (
+        !all(
+          session.token_origin,
+          session.did,
+          session.pds_origin,
+          session.token_service
+        )
+      ) {
+        return STAGES.ORIGIN_PDS_LOGIN;
+      }
 
-    if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
-      return STAGES.CREATE_DEST_ACCOUNT;
-    }
+      if (session.user_recover_key === undefined) {
+        return STAGES.GENERATE_RECOVERY_KEY;
+      }
 
-    if (!session.exportedRepo) {
-      return STAGES.EXPORT_REPO_ORIGIN;
-    }
+      if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
+        return STAGES.CREATE_DEST_ACCOUNT;
+      }
 
-    if (!session.importedRepo) {
-      return STAGES.IMPORT_REPO_DEST;
-    }
+      if (!session.exportedRepo) {
+        return STAGES.EXPORT_REPO_ORIGIN;
+      }
 
-    if (!session.exportedBlobs) {
-      return STAGES.EXPORT_BLOBS_ORIGIN;
-    }
+      if (!session.importedRepo) {
+        return STAGES.IMPORT_REPO_DEST;
+      }
 
-    if (!session.importedBlobs) {
-      return STAGES.IMPORT_BLOBS_DEST;
-    }
+      if (!session.exportedBlobs) {
+        return STAGES.EXPORT_BLOBS_ORIGIN;
+      }
 
-    if (!session.migratedPrefs) {
-      return STAGES.MIGRATE_PREFERENCES;
-    }
+      if (!session.importedBlobs) {
+        return STAGES.IMPORT_BLOBS_DEST;
+      }
 
-    if (!session.requestedPlcToken) {
-      return STAGES.REQUEST_PLC;
-    }
+      if (!session.migratedPrefs) {
+        return STAGES.MIGRATE_PREFERENCES;
+      }
 
-    if (!session.destActivated) {
-      return STAGES.ACTIVATE_DEST;
-    }
+      if (!session.requestedPlcToken) {
+        return STAGES.REQUEST_PLC;
+      }
 
-    if (!session.originDeactivated) {
-      return STAGES.DEACTIVATE_ORIGIN;
-    }
+      if (!session.destActivated) {
+        return STAGES.ACTIVATE_DEST;
+      }
 
-    if (!session.migratedPlc) {
-      return STAGES.MIGRATE_PLC;
-    }
+      if (!session.originDeactivated) {
+        return STAGES.DEACTIVATE_ORIGIN;
+      }
 
-    return STAGES.DONE;
+      if (!session.migratedPlc) {
+        return STAGES.MIGRATE_PLC;
+      }
+
+      return STAGES.DONE;
+    }
+  } catch (e) {
+    console.error(e);
+    return STAGES.FAILED;
   }
 }

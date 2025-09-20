@@ -160,14 +160,16 @@ export async function createDestAccount(
       console.log(
         "create account debugging",
         createAccountRes,
-        await createAccountRes?.text()
+        await createAccountRes.text()
       );
     } catch (e) {
       console.error(e);
     }
 
     if (!createAccountRes.ok) {
-      throw new CreateAccountError(createAccountRes.statusText);
+      throw new CreateAccountError(
+        `Error creating account${createAccountRes.statusText ? createAccountRes.statusText : ""}`
+      );
     }
 
     // Get new user token

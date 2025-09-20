@@ -1,4 +1,4 @@
-import { Button, CloseButton, Dialog, Portal } from "@chakra-ui/react";
+import { Button, Dialog, Portal } from "@chakra-ui/react";
 import {
   useCallback,
   useEffect,
@@ -63,7 +63,7 @@ export const SuccessText = ({
       <pre style={{ textAlign: "center", padding: "1em" }}>
         {result.passphrase
           ?.split(" ")
-          .map((v, i) => `${v}`)
+          .map((v) => `${v}`)
           .join("\n")}
       </pre>
       <h5 style={{ padding: "1em", textAlign: "center" }}>
