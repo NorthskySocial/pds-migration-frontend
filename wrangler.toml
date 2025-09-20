@@ -19,3 +19,6 @@ PLC_HOSTNAME = "https://devplc.northsky.social"
 [env.production.vars]
 PDS_HOSTNAME = "https://northsky.social"
 MIGRATOR_BACKEND = "https://migrator.northsky.social"
+
+[observability.logs]
+enabled = true

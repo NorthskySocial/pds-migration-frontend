@@ -156,6 +156,12 @@ export async function createDestAccount(
       body: JSON.stringify(body),
     });
 
+    console.log(
+      "create account debugging",
+      createAccountRes,
+      await createAccountRes?.json()
+    );
+
     if (!createAccountRes.ok) {
       throw new CreateAccountError(createAccountRes.statusText);
     }
