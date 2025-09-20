@@ -43,6 +43,16 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           use a custom domain handle, you can set that later.
         </Text>
       )}
+      {!state.email && (
+        <Field
+          required
+          invalid={fetcher.data?.error_password_length}
+          label="Email address"
+          errorText={fetcher.data?.error_password_length}
+        >
+          <Input name="email" required placeholder="user@example.com" />
+        </Field>
+      )}
       <br />
       <Field
         label="New handle"

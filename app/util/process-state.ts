@@ -99,6 +99,11 @@ export const processState = async (
     }
 
     case STAGES.CREATE_DEST_ACCOUNT: {
+      if (!state.email) {
+        state.email = data.get("email") as string;
+        session.set("email", state.email);
+      }
+
       const { handle_available, token_dest, handle_dest } =
         await createDestAccount(state, data, env);
 
