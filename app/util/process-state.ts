@@ -31,6 +31,7 @@ export const processState = async (
 ) => {
   logger.log("processState");
   const state = {
+    do_journey: session.get("do_journey"),
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
     pds_dest: session.get("pds_dest"),
@@ -62,8 +63,13 @@ export const processState = async (
   switch (stage) {
     case STAGES.INVITE_CODE: {
       const invite = data.get("invite-code") as string;
+      state.do_journey =
+        (data.get("create") as "create" | null) ||
+        (data.get("migrate") as "migrate" | null) ||
+        "create";
       state.inviteCode = invite;
       session.set("inviteCode", state.inviteCode);
+      session.set("do_journey", state.do_journey);
       break;
     }
 

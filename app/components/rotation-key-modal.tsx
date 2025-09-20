@@ -1,18 +1,26 @@
 import { Button, CloseButton, Dialog, Portal } from "@chakra-ui/react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type MouseEventHandler,
+} from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
 import { type AutofillType, encodeOPSaveRequest } from "@1password/save-button";
 import { encryptKey, toBase64 } from "~/util/crypto";
 
 export const SuccessText = ({
+  exit,
   keypair,
   did,
   handle,
 }: {
+  exit: MouseEventHandler<HTMLButtonElement>;
   keypair: Secp256k1Keypair;
   did: string;
   handle: string;
 }) => {
+  const [downloaded, setDownloaded] = useState(false);
   const [result, setResult] = useState<{
     encrypted: ArrayBuffer | null;
     passphrase: string | null;
@@ -40,7 +48,10 @@ export const SuccessText = ({
       a.style.display = "none";
       a.click();
       a.remove();
-      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(blobUrl);
+        setDownloaded(true);
+      }, 1000);
     }
   }, [keypair, result.encrypted, result.salt]);
 
@@ -114,6 +125,12 @@ export const SuccessText = ({
           </u>
         </strong>
       </p>
+
+      {downloaded && (
+        <Button variant="outline" size="lg" onClick={exit}>
+          Continue
+        </Button>
+      )}
     </>
   ) : (
     <strong>An error has occurred.</strong>
@@ -143,9 +160,7 @@ export const OpenRotationKeyModal = ({
       onExitComplete={exit}
     >
       <Dialog.Trigger asChild>
-        <Button variant="outline" size="lg">
-          Open rotation key tool
-        </Button>
+        <Button size="lg">Open rotation key tool</Button>
       </Dialog.Trigger>
       <Portal>
         <Dialog.Backdrop />
@@ -156,21 +171,24 @@ export const OpenRotationKeyModal = ({
             </Dialog.Header>
             <Dialog.Body style={{ background: "black" }}>
               {key ? (
-                <SuccessText did={did} handle={handle} keypair={key} />
+                <SuccessText
+                  exit={exit}
+                  did={did}
+                  handle={handle}
+                  keypair={key}
+                />
               ) : (
-                <Button variant="outline" onClick={generateKeypair}>
-                  Generate new keypair
-                </Button>
+                <Button onClick={generateKeypair}>Generate new keypair</Button>
               )}
             </Dialog.Body>
             <Dialog.Footer>
-              <Dialog.CloseTrigger asChild>
+              {/* <Dialog.CloseTrigger asChild>
                 <Button variant="outline"></Button>
-              </Dialog.CloseTrigger>
+              </Dialog.CloseTrigger> */}
             </Dialog.Footer>
-            <Dialog.CloseTrigger asChild>
+            {/* <Dialog.CloseTrigger asChild>
               <CloseButton size="sm" />
-            </Dialog.CloseTrigger>
+            </Dialog.CloseTrigger> */}
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>

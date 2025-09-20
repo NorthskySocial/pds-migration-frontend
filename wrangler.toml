@@ -7,8 +7,9 @@ main = "./workers/app.ts"
 assets = {}
 
 [vars]
-PDS_HOSTNAME = "https://pds-dest.aendra.dev"
+PDS_HOSTNAME = "https://devpds1.northsky.social"
 MIGRATOR_BACKEND = "http://localhost:9090"
+PLC_HOSTNAME = "https://devplc.northsky.social"
 
 [env.staging.vars]
 PDS_HOSTNAME = "https://devpds2.northsky.social"

@@ -41,15 +41,26 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
         someone gets access to it they can irrecoverably take over your account.
       </Text>
 
-      <OpenRotationKeyModal
-        did={state.did}
-        handle={state.handle}
-        onClose={modalClose}
-      />
-
-      <Button type="button" onClick={continueMigration} margin={"0 auto"}>
-        {didKeyWizard ? "Continue" : "Continue without generating rotation key"}
-      </Button>
+      <div>
+        <OpenRotationKeyModal
+          did={state.did}
+          handle={state.handle}
+          onClose={modalClose}
+        />
+        <br />
+        <br />
+        <Button
+          size="lg"
+          variant="outline"
+          type="button"
+          onClick={continueMigration}
+          margin={"0 auto"}
+        >
+          {didKeyWizard
+            ? "Continue"
+            : "Continue without generating rotation key"}
+        </Button>
+      </div>
     </fetcher.Form>
   );
 }

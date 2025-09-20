@@ -25,18 +25,24 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   return (
     <fetcher.Form method="post">
       <Heading size="3xl" textAlign={"center"} letterSpacing="tight">
-        <Highlight
-          styles={{ bg: "secondary", color: "brand.bg" }}
-          query="New Account"
-        >
-          Reserve New Account
+        <Highlight query="New Account">
+          {state.do_journey === "create"
+            ? "Create New Account"
+            : "Reserve New Account"}
         </Highlight>
       </Heading>
-      <Text fontSize="md" textAlign={"center"}>
-        We'll need to give to a .northsky.social handle as part of the
-        migration. If you have a custom domain handle, you can change it back
-        right after the migration process is over.
-      </Text>
+      {state.do_journey === "migrate" ? (
+        <Text fontSize="md" textAlign={"center"}>
+          We'll need to give to a <strong>.northsky.social</strong> handle as
+          part of the migration. If you have a custom domain handle, you can
+          change it back right after the migration process is over.
+        </Text>
+      ) : (
+        <Text fontSize="md" textAlign={"center"}>
+          You get a .northsky.social handle to get you started. If you want to
+          use a custom domain handle, you can set that later.
+        </Text>
+      )}
       <br />
       <Field
         label="New handle"

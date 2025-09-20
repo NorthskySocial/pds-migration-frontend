@@ -1,6 +1,7 @@
 import { createCookieSessionStorage } from "react-router";
 
 export type SessionData = {
+  do_journey?: "create" | "migrate";
   handle_origin?: string;
   handle_dest?: string;
   pds_dest?: string;

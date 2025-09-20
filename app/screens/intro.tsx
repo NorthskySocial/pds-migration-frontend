@@ -53,10 +53,10 @@ export default function IntroScreen({ state }: ScreenProps) {
           </Checkbox>
         </Box>
         <HStack>
-          <Button type="submit" name="create">
+          <Button type="submit" name="create" value="create">
             Create new account
           </Button>
-          <Button type="submit" name="migrate">
+          <Button type="submit" name="migrate" value="migrate">
             Migrate existing account
           </Button>
         </HStack>

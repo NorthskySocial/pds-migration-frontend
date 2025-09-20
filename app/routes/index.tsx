@@ -79,6 +79,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const state = {
+    do_journey: session.get("do_journey"),
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
     pds_dest: session.get("pds_dest"),
@@ -106,7 +107,6 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 
   const stage = getStage(state);
-
   return data(
     {
       error: session.get("error"),

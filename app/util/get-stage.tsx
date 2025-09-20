@@ -8,7 +8,7 @@ import { STAGES } from "./stages";
  * @param items
  * @returns
  */
-const all = (...items: (string | boolean | undefined)[]) =>
+const all = (...items: (string | boolean | undefined | null)[]) =>
   items.every((i) => i);
 
 /**
@@ -21,68 +21,76 @@ export function getStage(session: SessionData) {
     return STAGES.INVITE_CODE;
   }
 
-  if (!session.hasBackup) {
-    return STAGES.BACKUP_NOTICE;
-  }
+  if (session.do_journey === "create") {
+    if (session.user_recover_key === undefined) {
+      return STAGES.GENERATE_RECOVERY_KEY;
+    }
 
-  if (
-    !all(
-      session.token_origin,
-      session.did,
-      session.pds_origin,
-      session.token_service
-    )
-  ) {
-    return STAGES.ORIGIN_PDS_LOGIN;
-  }
+    if (!all(session.token_dest, session.handle_dest)) {
+      return STAGES.CREATE_DEST_ACCOUNT;
+    }
 
-  if (session.user_recover_key === undefined) {
-    return STAGES.GENERATE_RECOVERY_KEY;
-  }
+    return STAGES.DONE;
+  } else {
+    if (!session.hasBackup) {
+      return STAGES.BACKUP_NOTICE;
+    }
 
-  if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
-    return STAGES.CREATE_DEST_ACCOUNT;
-  }
+    if (
+      !all(
+        session.token_origin,
+        session.did,
+        session.pds_origin,
+        session.token_service
+      )
+    ) {
+      return STAGES.ORIGIN_PDS_LOGIN;
+    }
 
-  if (!session.exportedRepo) {
-    return STAGES.EXPORT_REPO_ORIGIN;
-  }
+    if (session.user_recover_key === undefined) {
+      return STAGES.GENERATE_RECOVERY_KEY;
+    }
 
-  if (!session.importedRepo) {
-    return STAGES.IMPORT_REPO_DEST;
-  }
+    if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
+      return STAGES.CREATE_DEST_ACCOUNT;
+    }
 
-  if (!session.exportedBlobs) {
-    return STAGES.EXPORT_BLOBS_ORIGIN;
-  }
+    if (!session.exportedRepo) {
+      return STAGES.EXPORT_REPO_ORIGIN;
+    }
 
-  if (!session.importedBlobs) {
-    return STAGES.IMPORT_BLOBS_DEST;
-  }
+    if (!session.importedRepo) {
+      return STAGES.IMPORT_REPO_DEST;
+    }
 
-  if (!session.migratedPrefs) {
-    return STAGES.MIGRATE_PREFERENCES;
-  }
+    if (!session.exportedBlobs) {
+      return STAGES.EXPORT_BLOBS_ORIGIN;
+    }
 
-  if (!session.requestedPlcToken) {
-    return STAGES.REQUEST_PLC;
-  }
+    if (!session.importedBlobs) {
+      return STAGES.IMPORT_BLOBS_DEST;
+    }
 
-  if (!session.destActivated) {
-    return STAGES.ACTIVATE_DEST;
-  }
+    if (!session.migratedPrefs) {
+      return STAGES.MIGRATE_PREFERENCES;
+    }
 
-  if (!session.originDeactivated) {
-    return STAGES.DEACTIVATE_ORIGIN;
-  }
+    if (!session.requestedPlcToken) {
+      return STAGES.REQUEST_PLC;
+    }
 
-  if (!session.migratedPlc) {
-    return STAGES.MIGRATE_PLC;
-  }
+    if (!session.destActivated) {
+      return STAGES.ACTIVATE_DEST;
+    }
 
-  if (all(...Object.values(session))) {
+    if (!session.originDeactivated) {
+      return STAGES.DEACTIVATE_ORIGIN;
+    }
+
+    if (!session.migratedPlc) {
+      return STAGES.MIGRATE_PLC;
+    }
+
     return STAGES.DONE;
   }
-
-  return STAGES.FAILED;
 }
