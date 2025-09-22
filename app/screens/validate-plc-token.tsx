@@ -1,4 +1,4 @@
-import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, Image, } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
@@ -9,10 +9,11 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post">
+            <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
       <Heading size="3xl" letterSpacing="tight">
         <Highlight query="to Bluesky">Check Your Email</Highlight>
       </Heading>
-      <Text fontSize="md" textAlign={"center"}>
+      <Text fontSize="md" textAlign={"left"}>
         Bluesky should have just sent you an e-mail to your inbox. Input that
         code below to continue migration.
       </Text>

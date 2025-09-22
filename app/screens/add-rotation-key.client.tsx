@@ -1,4 +1,4 @@
-import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, Image, } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { OpenRotationKeyModal } from "~/components/rotation-key-modal";
@@ -30,10 +30,12 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
 
   return (
     <fetcher.Form method="post">
+
+      <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
         <Highlight query="your Data">Add a rotation key</Highlight>
       </Heading>
-      <Text fontSize="md" textAlign={"center"} mb="4">
+      <Text fontSize="md" textAlign={"justify"} mb="4">
         For peace of mind, add a <strong>rotation key</strong> that can be used
         to restore access to your account in case anything catastrophic ever
         happens to Northsky. Note,{" "}

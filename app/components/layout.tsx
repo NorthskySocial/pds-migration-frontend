@@ -6,7 +6,7 @@ export const Layout = ({ children }) => (
     <Container>
       <VStack
         margin="0 auto"
-        maxWidth={"350px"}
+        width={"350px"}
         height={"100vh"}
         justifyContent={"space-evenly"}
         alignItems={"center"}

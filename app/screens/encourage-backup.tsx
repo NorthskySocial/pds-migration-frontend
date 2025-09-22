@@ -1,4 +1,4 @@
-import { Heading, Highlight, Text, Button } from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, Image, List, Link} from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Span } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
@@ -8,20 +8,43 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post">
+            <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
         <Highlight query="your Data">Backup your data</Highlight>
       </Heading>
-      <Text fontSize="md" textAlign={"center"} mb="4">
+            <Text fontSize="md" textAlign={"justify"} mb="4">
         We recommend you generate and download a backup of your data before you
-        migrate from Bluesky's PDS to ours.
-      </Text>
-      <Text fontSize="md" textAlign={"center"} mb="4">
-        We recommend using this simple web tool by Rose:{" "}
-        <Span fontSize="lg" fontWeight="bold">
-          <a href="">Bluesky Archival Tool</a>
-        </Span>
-      </Text>
-      <Text fontSize="md" textAlign={"center"} mb="4">
+        migrate from Bluesky's PDS to ours. We recommend using one of these tools:</Text>
+        <List.Root ps="5">
+    <List.Item>
+    <Link variant="underline" target="_blank" href="https://github.com/NorthskySocial/pds-migration/releases">Northsky Migration Tool</Link></List.Item>
+    
+      <List.Root ps="5">
+        <List.Item>Downloadable for Windows + Linux</List.Item>
+        <List.Item>Free local backups to your computer</List.Item>
+        </List.Root>
+    
+    <List.Item><Link variant="underline" target="_blank" href="https://atbackup.pages.dev/">ATBackup</Link></List.Item>
+    
+    <List.Root ps="5">
+        <List.Item>Downloadable or Mac + Windows</List.Item>
+        <List.Item>Free local backups to your computer</List.Item>
+        </List.Root>
+    <List.Item><Link variant="underline" target="_blank" href="https://bsky.storage/">Storacha</Link></List.Item>
+    <List.Root ps="5">
+        <List.Item>Web-based, cloud backup</List.Item>
+        <List.Item>Free up to 5gb, but requires Credit Card to sign up.</List.Item>
+        <List.Item>Not affiliated with Northsky (Use at your own risk!)</List.Item>
+        </List.Root>
+
+        </List.Root>
+      <Text fontSize="md" textAlign={"justify"} mb="4">
+
+        Your backup should contain:
+        <List.Root ps="5">
+        <List.Item>A *.car file of your account and text posts</List.Item>
+        <List.Item>A folder with your media blobs inside it</List.Item>
+        </List.Root>
         Once you have archived your data, press Continue to proceed with
         Migration
       </Text>
@@ -33,6 +56,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
       <Button type="submit" name="submit" margin={"0 auto"}>
         Continue
       </Button>
+
     </fetcher.Form>
   );
 }

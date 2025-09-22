@@ -1,4 +1,4 @@
-import { Heading, Highlight, Text, Input, Button } from "@chakra-ui/react";
+import { Heading, Highlight, Text, Input, Button, Image, } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
@@ -11,15 +11,13 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post">
+      <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
         <Highlight query="to Bluesky">Login to Bluesky</Highlight>
       </Heading>
-      <Text fontSize="md" textAlign={"center"}>
+      <Text fontSize="md" textAlign={"justify"}>
         Please provide us with the following information so we can migrate your
-        data.
-      </Text>
-      <Text fontSize="md" textAlign={"center"}>
-        Bluesky will e-mail you as part of this process, so{" "}
+        data. Bluesky will e-mail you as part of this process, so{" "}
         <strong>ensure your e-mail address is verified</strong> before starting
         migration.
       </Text>
