@@ -3,7 +3,7 @@ import { Container, VStack } from "@chakra-ui/react";
 
 export const Layout = ({ children }) => (
   <Provider>
-    <Container>
+    <Container         width={"350px"}>
       <VStack
         margin="0 auto"
         width={"350px"}

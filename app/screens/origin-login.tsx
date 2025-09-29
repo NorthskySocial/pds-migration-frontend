@@ -1,4 +1,4 @@
-import { Heading, Highlight, Text, Input, Button, Image, } from "@chakra-ui/react";
+import { Heading, Highlight, Text, Input, Button, Image, VStack} from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Switch } from "@/components/ui/switch";
@@ -11,6 +11,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post">
+      <VStack mb="5">
       <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
       <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
         <Highlight query="to Bluesky">Login to Bluesky</Highlight>
@@ -45,7 +46,8 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
       </Field>
       <Button name="submit" type="submit">
         Continue
-      </Button>
+      </Button>      </VStack>
+      
     </fetcher.Form>
   );
 }

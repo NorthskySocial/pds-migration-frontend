@@ -1,4 +1,4 @@
-import { Heading, Highlight, Text, Button, Image, } from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, Image, VStack } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { OpenRotationKeyModal } from "~/components/rotation-key-modal";
@@ -30,39 +30,41 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
 
   return (
     <fetcher.Form method="post">
+      <VStack mb="5">
 
-      <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
-      <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
-        <Highlight query="your Data">Add a rotation key</Highlight>
-      </Heading>
-      <Text fontSize="md" textAlign={"justify"} mb="4">
-        For peace of mind, add a <strong>rotation key</strong> that can be used
-        to restore access to your account in case anything catastrophic ever
-        happens to Northsky. Note,{" "}
-        <strong>you should treat this key like a password</strong> because if
-        someone gets access to it they can irrecoverably take over your account.
-      </Text>
+        <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
+        <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
+          <Highlight query="your Data">Add a rotation key</Highlight>
+        </Heading>
+        <Text fontSize="md" textAlign={"justify"} mb="4">
+          For peace of mind, add a <strong>rotation key</strong> that can be used
+          to restore access to your account in case anything catastrophic ever
+          happens to Northsky. Note,{" "}
+          <strong>you should treat this key like a password</strong> because if
+          someone gets access to it they can irrecoverably take over your account.
+        </Text>
 
-      <div>
-        <OpenRotationKeyModal
-          did={state.did}
-          handle={state.handle}
-          onClose={modalClose}
-        />
-        <br />
-        <br />
-        <Button
-          size="lg"
-          variant="outline"
-          type="button"
-          onClick={continueMigration}
-          margin={"0 auto"}
-        >
-          {didKeyWizard
-            ? "Continue"
-            : "Continue without generating rotation key"}
-        </Button>
-      </div>
+        <div>
+          <OpenRotationKeyModal
+            did={state.did}
+            handle={state.handle}
+            onClose={modalClose}
+          />
+          <br />
+          <br />
+          <Button
+            size="lg"
+            variant="outline"
+            type="button"
+            onClick={continueMigration}
+            margin={"0 auto"}
+          >
+            {didKeyWizard
+              ? "Continue"
+              : "Continue without generating rotation key"}
+          </Button>
+        </div>
+      </VStack>
     </fetcher.Form>
   );
 }

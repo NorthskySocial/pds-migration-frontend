@@ -20,10 +20,10 @@ export default function IntroScreen({ state }: ScreenProps) {
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
-                <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
+        <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
 
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
-          <Highlight query="to Northsky">Migrate to Northsky</Highlight>
+          <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
         </Heading>
         <Text fontSize="md" textAlign={"justify"}>
           The Northsky Social team welcomes you to join us in safer skies.
@@ -43,7 +43,7 @@ export default function IntroScreen({ state }: ScreenProps) {
         </Text>
       </VStack>
       <VStack>
-              <Heading size="xl">Enter your invite code to get started</Heading>
+        <Heading size="xl">Enter your invite code to get started</Heading>
         <Field
           invalid={fetcher?.data?.error}
           errorText={fetcher?.data?.error}
@@ -54,13 +54,13 @@ export default function IntroScreen({ state }: ScreenProps) {
 
         <Box maxW={"md"} mb="4">
           <VStack alignItems={"left"}>
-          <Checkbox required name="agree-to-tos">
-            I agree to the <Link variant="underline" target="_blank" href="https://northskysocial.com/posts/terms-of-service">Northsky Terms of Service</Link>
-          </Checkbox>
+            <Checkbox required name="agree-to-tos">
+              I agree to the <Link variant="underline" target="_blank" href="https://northskysocial.com/posts/terms-of-service">Northsky Terms of Service</Link>
+            </Checkbox>
 
-          <Checkbox required name="agree-to-privacy">
-            I agree to the <Link variant="underline" target="_blank" href="https://northskysocial.com/posts/privacy-policy">Northsky Privacy Policy</Link>
-          </Checkbox>
+            <Checkbox required name="agree-to-privacy">
+              I agree to the <Link variant="underline" target="_blank" href="https://northskysocial.com/posts/privacy-policy">Northsky Privacy Policy</Link>
+            </Checkbox>
           </VStack>
         </Box>
         <HStack>

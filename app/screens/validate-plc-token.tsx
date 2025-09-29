@@ -1,4 +1,4 @@
-import { Heading, Highlight, Text, Button, Image, } from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, Image, VStack} from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
@@ -9,6 +9,7 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post">
+            <VStack mb="5">
             <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
       <Heading size="3xl" letterSpacing="tight">
         <Highlight query="to Bluesky">Check Your Email</Highlight>
@@ -24,6 +25,7 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
       <Button name="submit" type="submit">
         Migrate!
       </Button>
+      </VStack>
     </fetcher.Form>
   );
 }

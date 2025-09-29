@@ -6,6 +6,7 @@ import {
   Button,
   Spinner,
   Image,
+  VStack,
 } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { InputGroup } from "@/components/ui/input-group";
@@ -25,9 +26,9 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   const { id: strength } = passwordStrength(pass);
   return (
     <fetcher.Form method="post">
+            <VStack mb="5">
+      <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
 
-              <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
-      
       <Heading size="3xl" textAlign={"center"} letterSpacing="tight">
         <Highlight query="New Account">
           {state.do_journey === "create"
@@ -133,6 +134,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
       <Button name="submit" type="submit">
         Continue
       </Button>
+      </VStack>
     </fetcher.Form>
   );
 }
