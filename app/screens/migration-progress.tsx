@@ -1,4 +1,4 @@
-import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
+import { Heading, Text, Progress, VStack, Image, } from "@chakra-ui/react";
 import clock_art from "../assets/clock.jpg";
 import { InfoTip } from "@/components/ui/toggle-tip";
 import type { ScreenProps } from "~/util/stages";
@@ -38,7 +38,10 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
   }, [fetcher, stage, error]);
 
   return (
-    <fetcher.Form method="post">
+    <fetcher.Form method="post">      <VStack mb="5">
+
+      <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
+
       <VStack
         margin="0 auto"
         maxWidth={"350px"}
@@ -49,7 +52,7 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           Migrating....
         </Heading>
-        <Text fontSize="md" textAlign={"center"}>
+        <Text fontSize="md" textAlign={"justify"}>
           Your data is being moved to our servers
         </Text>
         <img
@@ -75,6 +78,7 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
           </Progress.Track>
         </Progress.Root>
       </VStack>
+    </VStack>
     </fetcher.Form>
   );
 }

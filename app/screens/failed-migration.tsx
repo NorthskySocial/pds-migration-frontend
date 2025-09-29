@@ -1,24 +1,28 @@
-import { Heading, Text } from "@chakra-ui/react";
+import { Heading, Text, VStack, Image } from "@chakra-ui/react";
 import melted_clock from "../assets/melted.jpg";
 import type { ScreenProps } from "~/util/stages";
 
 export default function FailedMigrationScreen({ state }: ScreenProps) {
   return (
     <>
+          <VStack mb="5">
+
+            <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
       <Heading size="3xl" letterSpacing="tight">
         Migration failed
       </Heading>
-      <Text fontSize="md" textAlign={"center"}>
+      <Text fontSize="md" textAlign={"justify"}>
         An unexpected error has occurred while migrating your data.
       </Text>
       <img
         alt="Image of melting clocks by artist Katie Tightpussy"
         src={melted_clock}
       />
-      <Text fontSize="md" textAlign={"center"}>
+      <Text fontSize="md" textAlign={"justify"}>
         Please reach out to our support team,{" "}
         <a href="mailto:support@northsky.social">support@northsky.social</a>.
       </Text>
+      </VStack>
     </>
   );
 }

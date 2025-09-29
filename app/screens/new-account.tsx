@@ -5,6 +5,8 @@ import {
   Input,
   Button,
   Spinner,
+  Image,
+  VStack,
 } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { InputGroup } from "@/components/ui/input-group";
@@ -24,6 +26,9 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   const { id: strength } = passwordStrength(pass);
   return (
     <fetcher.Form method="post">
+            <VStack mb="5">
+      <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
+
       <Heading size="3xl" textAlign={"center"} letterSpacing="tight">
         <Highlight query="New Account">
           {state.do_journey === "create"
@@ -32,13 +37,13 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         </Highlight>
       </Heading>
       {state.do_journey === "migrate" ? (
-        <Text fontSize="md" textAlign={"center"}>
+        <Text fontSize="md" textAlign={"justify"}>
           We'll need to give to a <strong>.northsky.social</strong> handle as
           part of the migration. If you have a custom domain handle, you can
           change it back right after the migration process is over.
         </Text>
       ) : (
-        <Text fontSize="md" textAlign={"center"}>
+        <Text fontSize="md" textAlign={"justify"}>
           You get a .northsky.social handle to get you started. If you want to
           use a custom domain handle, you can set that later.
         </Text>
@@ -129,6 +134,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
       <Button name="submit" type="submit">
         Continue
       </Button>
+      </VStack>
     </fetcher.Form>
   );
 }
