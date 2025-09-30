@@ -48,7 +48,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
             <List.Item>A *.car file of your account and text posts</List.Item>
             <List.Item>A folder with your media blobs inside it</List.Item>
           </List.Root>
-
+        <br></br>
           Once you have archived your data, press Continue to proceed with
           Migration
         </Text>
