@@ -140,48 +140,69 @@ export async function createDestAccount(
 
     if (!submitted) return { handle_available, handle_dest };
 
-    const body = {
-      pds_host: pds_dest,
-      handle: handle_dest,
-      token: token_service,
-      password: pw_dest,
-      email,
-      did,
-      invite_code: inviteCode,
-    };
+    // Create account directly if service token is not available
+    if (token_service === undefined) {
+      // Get new user token
+      const agent_dest = new AtpAgent({
+        service: pds_dest!,
+        fetch: f as typeof fetch,
+      });
+      const response = await agent_dest.createAccount({
+        email: email,
+        handle: handle_dest,
+        inviteCode: inviteCode,
+        password: pw_dest,
+      });
+      if (!response.success) {
+        console.error(response.data);
+        throw new CreateAccountError('error creating account');
+      }
 
-    const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
-      method: "post",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+      return { token_dest: response.data.accessJwt };
+    } else {
+      const body = {
+        pds_host: pds_dest,
+        handle: handle_dest,
+        token: token_service,
+        password: pw_dest,
+        email,
+        did,
+        invite_code: inviteCode,
+      };
 
-    try {
-      console.log(
-        "create account debugging",
-        createAccountRes,
-        await createAccountRes?.text()
-      );
-    } catch (e) {
-      console.error(e);
+      const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      try {
+        console.log(
+          "create account debugging",
+          createAccountRes,
+          await createAccountRes?.text()
+        );
+      } catch (e) {
+        console.error(e);
+      }
+
+      if (!createAccountRes.ok) {
+        throw new CreateAccountError(createAccountRes.statusText);
+      }
+
+      // Get new user token
+      const agent_dest = new AtpAgent({
+        service: pds_dest!,
+        fetch: f as typeof fetch,
+      });
+
+      const { data } = await agent_dest.login({
+        identifier: handle_dest,
+        password: pw_dest,
+      });
+
+      return { token_dest: data.accessJwt };
     }
-
-    if (!createAccountRes.ok) {
-      throw new CreateAccountError(createAccountRes.statusText);
-    }
-
-    // Get new user token
-    const agent_dest = new AtpAgent({
-      service: pds_dest!,
-      fetch: f as typeof fetch,
-    });
-
-    const { data } = await agent_dest.login({
-      identifier: handle_dest,
-      password: pw_dest,
-    });
-
-    return { token_dest: data.accessJwt };
   }
 }
 
