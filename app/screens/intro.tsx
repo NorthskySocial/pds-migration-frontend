@@ -20,8 +20,6 @@ export default function IntroScreen({ state }: ScreenProps) {
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
-        <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
-
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
         </Heading>
@@ -49,17 +47,35 @@ export default function IntroScreen({ state }: ScreenProps) {
           errorText={fetcher?.data?.error}
           mb="4"
         >
-          <Input required name="invite-code" placeholder="Enter your invite code" />
+          <Input
+            required
+            name="invite-code"
+            placeholder="Enter your invite code"
+          />
         </Field>
 
         <Box maxW={"md"} mb="4">
           <VStack alignItems={"left"}>
             <Checkbox required name="agree-to-tos">
-              I agree to the <Link variant="underline" target="_blank" href="https://northskysocial.com/posts/terms-of-service">Northsky Terms of Service</Link>
+              I agree to the{" "}
+              <Link
+                variant="underline"
+                target="_blank"
+                href="https://northskysocial.com/posts/terms-of-service"
+              >
+                Northsky Terms of Service
+              </Link>
             </Checkbox>
 
             <Checkbox required name="agree-to-privacy">
-              I agree to the <Link variant="underline" target="_blank" href="https://northskysocial.com/posts/privacy-policy">Northsky Privacy Policy</Link>
+              I agree to the{" "}
+              <Link
+                variant="underline"
+                target="_blank"
+                href="https://northskysocial.com/posts/privacy-policy"
+              >
+                Northsky Privacy Policy
+              </Link>
             </Checkbox>
           </VStack>
         </Box>

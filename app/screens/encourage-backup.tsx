@@ -1,4 +1,13 @@
-import { Heading, Highlight, Text, Button, Image, List, Link, VStack } from "@chakra-ui/react";
+import {
+  Heading,
+  Highlight,
+  Text,
+  Button,
+  Image,
+  List,
+  Link,
+  VStack,
+} from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Span } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
@@ -9,37 +18,63 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
-
-        <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="your Data">Backup your data</Highlight>
         </Heading>
         <Text fontSize="md" textAlign={"justify"} mb="4">
-          We recommend you generate and download a backup of your data before you
-          migrate from Bluesky's PDS to ours. We recommend using one of these tools:</Text>
+          We recommend you generate and download a backup of your data before
+          you migrate from Bluesky's PDS to ours. We recommend using one of
+          these tools:
+        </Text>
         <br></br>
         <List.Root ps="5">
           <List.Item>
-            <Link variant="underline" target="_blank" href="https://github.com/NorthskySocial/pds-migration/releases">Northsky Migration Tool</Link></List.Item>
+            <Link
+              variant="underline"
+              target="_blank"
+              href="https://github.com/NorthskySocial/pds-migration/releases"
+            >
+              Northsky Migration Tool
+            </Link>
+          </List.Item>
 
           <List.Root ps="5">
             <List.Item>Downloadable for Windows + Linux</List.Item>
             <List.Item>Free local backups to your computer</List.Item>
           </List.Root>
 
-          <List.Item><Link variant="underline" target="_blank" href="https://atbackup.pages.dev/">ATBackup</Link></List.Item>
+          <List.Item>
+            <Link
+              variant="underline"
+              target="_blank"
+              href="https://atbackup.pages.dev/"
+            >
+              ATBackup
+            </Link>
+          </List.Item>
 
           <List.Root ps="5">
             <List.Item>Downloadable or Mac + Windows</List.Item>
             <List.Item>Free local backups to your computer</List.Item>
           </List.Root>
-          <List.Item><Link variant="underline" target="_blank" href="https://bsky.storage/">Storacha</Link></List.Item>
+          <List.Item>
+            <Link
+              variant="underline"
+              target="_blank"
+              href="https://bsky.storage/"
+            >
+              Storacha
+            </Link>
+          </List.Item>
           <List.Root ps="5">
             <List.Item>Web-based, cloud backup</List.Item>
-            <List.Item>Free up to 5gb, but requires Credit Card to sign up.</List.Item>
-            <List.Item>Not affiliated with Northsky (Use at your own risk!)</List.Item>
+            <List.Item>
+              Free up to 5gb, but requires Credit Card to sign up.
+            </List.Item>
+            <List.Item>
+              Not affiliated with Northsky (Use at your own risk!)
+            </List.Item>
           </List.Root>
-
         </List.Root>
         <br></br>
         <Text fontSize="md" textAlign={"justify"} mb="4">
@@ -48,7 +83,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
             <List.Item>A *.car file of your account and text posts</List.Item>
             <List.Item>A folder with your media blobs inside it</List.Item>
           </List.Root>
-        <br> </br>
+          <br> </br>
           Once you have archived your data, press Continue to proceed with
           Migration
         </Text>
