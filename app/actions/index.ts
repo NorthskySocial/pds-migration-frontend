@@ -245,6 +245,7 @@ export async function importRepo(
     logger.log("Ignoring importRepo during tests");
     return { ok: true };
   }
+
   if (!pds_dest || !did || !token_dest) {
     throw new MigrationError(
       "Unable to resolve new account; please contact support."
@@ -262,7 +263,7 @@ export async function importRepo(
     headers: { "Content-Type": "application/json" },
   });
 
-  logger.debug(res);
+  logger.debug("importRepo", res);
 
   if (!res.ok) {
     throw new MigrationError((await res?.text()) ?? "Unknown migration error");

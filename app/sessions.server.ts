@@ -49,10 +49,10 @@ export const initSession = (hostname?: string) =>
       //
       // expires: new Date(Date.now() + 60_000),
       httpOnly: true,
-      maxAge: 60,
+      maxAge: 60 * 60 * 24,
       path: "/",
       sameSite: "strict",
-      secrets: ["s3cret1"],
+      secrets: ["toastytoast"],
       secure: true,
     },
   });
