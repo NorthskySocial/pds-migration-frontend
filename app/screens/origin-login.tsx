@@ -38,7 +38,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
         </Switch>
         {altPds && (
           <Field required label="Your PDS">
-            <Input name="pds" defaultValue="https://bsky.app" />
+            <Input name="pds" defaultValue="https://bsky.social" />
           </Field>
         )}
         <Field required label="Bluesky login">

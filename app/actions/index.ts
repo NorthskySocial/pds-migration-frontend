@@ -22,7 +22,7 @@ export async function loginOrigin(
   data: FormData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
-  const pds_origin = (data.get("pds") as string) ?? "https://bsky.app";
+  const pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
 
   const origin_agent = new AtpAgent({
     service: pds_origin,
@@ -155,7 +155,7 @@ export async function createDestAccount(
       });
       if (!response.success) {
         console.error(response.data);
-        throw new CreateAccountError('error creating account');
+        throw new CreateAccountError("error creating account");
       }
 
       return { token_dest: response.data.accessJwt };
