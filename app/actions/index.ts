@@ -227,9 +227,10 @@ export async function exportRepo(
     }),
     headers: { "Content-Type": "application/json" },
   });
+  logger.debug("exportRepo", res);
 
   if (!res.ok) {
-    throw new MigrationError((await res.json<{ message: string }>()).message);
+    throw new MigrationError(await res.text());
   }
 
   return { ok: true };
@@ -261,8 +262,10 @@ export async function importRepo(
     headers: { "Content-Type": "application/json" },
   });
 
+  logger.debug(res);
+
   if (!res.ok) {
-    throw new MigrationError((await res.json<{ message: string }>()).message);
+    throw new MigrationError((await res?.text()) ?? "Unknown migration error");
   }
 
   return { ok: true };

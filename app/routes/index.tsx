@@ -122,11 +122,18 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   } catch (e) {
     console.error(e, state);
-    return data({
-      error: (e as Error).message,
-      stage: STAGES.FAILED,
-      state,
-    });
+    return data(
+      {
+        error: (e as Error).message,
+        stage: STAGES.FAILED,
+        state,
+      },
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
   }
 }
 
