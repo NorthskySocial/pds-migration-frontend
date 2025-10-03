@@ -26,7 +26,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           you migrate from Bluesky's PDS to ours. We recommend using one of
           these tools:
         </Text>
-        <br></br>
+        <br />
         <List.Root ps="5">
           <List.Item>
             <Link
@@ -76,14 +76,14 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
             </List.Item>
           </List.Root>
         </List.Root>
-        <br></br>
+        <br />
         <Text fontSize="md" textAlign={"justify"} mb="4">
           Once it has completed, your backup should contain:
           <List.Root ps="5">
             <List.Item>A *.car file of your account and text posts</List.Item>
             <List.Item>A folder with your media blobs inside it</List.Item>
           </List.Root>
-          <br> </br>
+          <br />
           Once you have archived your data, press Continue to proceed with
           Migration
         </Text>
