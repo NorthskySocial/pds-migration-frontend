@@ -15,10 +15,12 @@ PLC_HOSTNAME = "https://devplc.northsky.social"
 PDS_HOSTNAME = "https://devpds2.northsky.social"
 MIGRATOR_BACKEND = "https://migrator.northsky.social"
 PLC_HOSTNAME = "https://devplc.northsky.social"
+DEBUG = "migration-fe"
 
 [env.production.vars]
 PDS_HOSTNAME = "https://northsky.social"
 MIGRATOR_BACKEND = "https://migrator.northsky.social"
+DEBUG = "migration-fe"
 
 [observability]
 enabled = true
