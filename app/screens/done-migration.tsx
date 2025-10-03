@@ -9,8 +9,6 @@ export default function DoneMigrationScreen({
   return (
     <>
       <VStack mb="5">
-
-        <Image height={"150px"} src="../../app/assets/Northsky-IconCentered-Color.png" alt="Northsky" />
         <Heading size="3xl" letterSpacing="tight">
           Migration completed
         </Heading>
@@ -36,7 +34,6 @@ export default function DoneMigrationScreen({
           and password.
         </Text>
       </VStack>
-
     </>
   );
 }

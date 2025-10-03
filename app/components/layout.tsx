@@ -1,9 +1,10 @@
 import { Provider } from "@/components/ui/provider";
-import { Container, VStack } from "@chakra-ui/react";
+import { Container, Image, VStack } from "@chakra-ui/react";
+import logo from "../assets/Northsky-IconCentered-Color.png";
 
 export const Layout = ({ children }) => (
   <Provider>
-    <Container         width={"350px"}>
+    <Container width={"350px"}>
       <VStack
         margin="0 auto"
         width={"350px"}
@@ -11,6 +12,9 @@ export const Layout = ({ children }) => (
         justifyContent={"space-evenly"}
         alignItems={"center"}
       >
+        <VStack mb="5">
+          <Image height={"150px"} src={logo} alt="Northsky" />
+        </VStack>
         {children}
       </VStack>
     </Container>
