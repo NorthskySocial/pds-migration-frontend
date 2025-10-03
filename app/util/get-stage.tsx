@@ -16,7 +16,7 @@ const all = (...items: (string | boolean | undefined | null)[]) =>
  * @param session
  * @returns STAGES
  */
-export function getStage(session: SessionData) {
+export function getStage(session: SessionData): STAGES {
   if (!session.inviteCode) {
     return STAGES.INVITE_CODE;
   }

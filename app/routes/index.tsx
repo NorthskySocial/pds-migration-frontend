@@ -23,6 +23,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
+  logger.debug(session.data);
 
   if (!session.get("pds_dest")) {
     session.set(
@@ -105,20 +106,28 @@ export async function loader({ request }: Route.LoaderArgs) {
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
   };
-
-  const stage = getStage(state);
-  return data(
-    {
-      error: session.get("error"),
-      stage,
-      state,
-    },
-    {
-      headers: {
-        "Set-Cookie": await commitSession(session),
+  try {
+    const stage = getStage(state);
+    return data(
+      {
+        error: session.get("error"),
+        stage,
+        state,
       },
-    }
-  );
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
+  } catch (e) {
+    console.error(e, state);
+    return data({
+      error: (e as Error).message,
+      stage: STAGES.FAILED,
+      state,
+    });
+  }
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
