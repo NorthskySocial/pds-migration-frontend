@@ -153,6 +153,9 @@ export async function createDestAccount(
         inviteCode: inviteCode,
         password: pw_dest,
       });
+
+      logger.log(response);
+
       if (!response.success) {
         console.error(response.data);
         throw new CreateAccountError("error creating account");
@@ -176,15 +179,9 @@ export async function createDestAccount(
         body: JSON.stringify(body),
       });
 
-      try {
-        console.log(
-          "create account debugging",
-          createAccountRes,
-          await createAccountRes?.text()
-        );
-      } catch (e) {
-        console.error(e);
-      }
+      logger.debug("create account debugging", {
+        ...createAccountRes,
+      });
 
       if (!createAccountRes.ok) {
         throw new CreateAccountError(createAccountRes.statusText);

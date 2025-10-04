@@ -8,6 +8,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     ...session.data,
     token_origin: "<HIDDEN>",
     token_dest: "<HIDDEN>",
+    token_service: "<HIDDEN>",
   });
   return data(
     { error: session.get("error") },

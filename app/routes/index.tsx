@@ -115,8 +115,14 @@ export async function loader({ request }: Route.LoaderArgs) {
         ...session.data,
         token_origin: "<HIDDEN>",
         token_dest: "<HIDDEN>",
+        token_service: "<HIDDEN>",
       },
-      { ...state, token_dest: "<HIDDEN>", token_origin: "<HIDDEN>" }
+      {
+        ...state,
+        token_dest: "<HIDDEN>",
+        token_origin: "<HIDDEN>",
+        token_service: "<HIDDEN>",
+      }
     );
     return data(
       {
