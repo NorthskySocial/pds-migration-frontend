@@ -1,11 +1,8 @@
 name: Deploy
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "v*"
+  release:
+    types: [created]
 
 jobs:
   deploy:
@@ -21,7 +18,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # - run: npm test
-      - run: CLOUDFLARE_ENV="${{ github.ref_name == 'main' && 'staging' || 'production' }}" npm run build
+      - run: CLOUDFLARE_ENV="production" npm run build
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
