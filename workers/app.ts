@@ -5,6 +5,7 @@ declare global {
     PDS_HOSTNAME: string;
     MIGRATOR_BACKEND: string;
     PLC_HOSTNAME?: string;
+    HOSTNAME: string;
   }
 }
 

@@ -23,7 +23,6 @@ export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
-  logger.debug(session.data);
 
   if (!session.get("pds_dest")) {
     session.set(
@@ -55,7 +54,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     logger.log(state);
     stage = getStage(state);
   } catch (e) {
-    console.error(e);
+    console.error("error in index action", e);
     if (e instanceof Error) {
       session.flash("error", e.message);
     }
@@ -79,6 +78,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
+  logger.debug(session.data);
   const state = {
     do_journey: session.get("do_journey"),
     handle_origin: session.get("handle_origin"),
