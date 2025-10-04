@@ -68,6 +68,7 @@ export async function loginOrigin(
   const aud = `did:web:${
     pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
   }`;
+  logger.debug({ aud });
 
   // Generate service token
   const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
