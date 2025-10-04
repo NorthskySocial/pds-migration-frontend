@@ -78,7 +78,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-  logger.debug(session.data);
+
   const state = {
     do_journey: session.get("do_journey"),
     handle_origin: session.get("handle_origin"),
@@ -106,8 +106,18 @@ export async function loader({ request }: Route.LoaderArgs) {
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
   };
+
   try {
     const stage = getStage(state);
+    logger.debug(
+      stage,
+      {
+        ...session.data,
+        token_origin: "<HIDDEN>",
+        token_dest: "<HIDDEN>",
+      },
+      { ...state, token_dest: "<HIDDEN>", token_origin: "<HIDDEN>" }
+    );
     return data(
       {
         error: session.get("error"),
