@@ -103,7 +103,14 @@ export async function loginOrigin(
 }
 
 export async function createDestAccount(
-  { did, token_service, pds_dest, email, inviteCode }: Partial<SessionData>,
+  {
+    did,
+    token_service,
+    pds_dest,
+    email,
+    inviteCode,
+    user_recover_key,
+  }: Partial<SessionData>,
   data: FormData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
@@ -171,6 +178,7 @@ export async function createDestAccount(
         email,
         did,
         invite_code: inviteCode,
+        recovery_key: user_recover_key,
       };
 
       const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
@@ -179,7 +187,7 @@ export async function createDestAccount(
         body: JSON.stringify(body),
       });
 
-      logger.debug("create account debugging", {
+      logger.debug("create account debugging", body, {
         headers: createAccountRes.headers,
         body: createAccountRes.body,
         ok: createAccountRes.ok,
