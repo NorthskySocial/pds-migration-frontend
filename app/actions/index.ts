@@ -180,7 +180,12 @@ export async function createDestAccount(
       });
 
       logger.debug("create account debugging", {
-        ...createAccountRes,
+        headers: createAccountRes.headers,
+        body: createAccountRes.body,
+        ok: createAccountRes.ok,
+        status: createAccountRes.status,
+        statusText: createAccountRes.statusText,
+        url: createAccountRes.url,
       });
 
       if (!createAccountRes.ok) {
