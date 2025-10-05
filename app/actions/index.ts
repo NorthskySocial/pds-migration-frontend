@@ -56,7 +56,7 @@ export async function loginOrigin(
   // Do we need to do this? Is DidDoc always returned when logging in??
   const didDoc: DidDocument = await (await f(`${plc_hostname}/${did}`)).json();
 
-  logger.log(didDoc);
+  logger.debug(didDoc);
 
   if (!didDoc || !isValidDidDoc(didDoc)) {
     throw new LoginError("Invalid DID Doc");
@@ -68,6 +68,7 @@ export async function loginOrigin(
   const aud = `did:web:${
     pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
   }`;
+
   logger.debug({ aud });
 
   // Generate service token
@@ -162,10 +163,8 @@ export async function createDestAccount(
         password: pw_dest,
       });
 
-      logger.log(response);
-
       if (!response.success) {
-        console.error(response.data);
+        logger.error(response.data);
         throw new CreateAccountError("error creating account");
       }
 
@@ -197,9 +196,9 @@ export async function createDestAccount(
         url: createAccountRes.url,
       });
 
-      if (!createAccountRes.ok) {
-        throw new CreateAccountError(createAccountRes.statusText);
-      }
+      // if (!createAccountRes.ok) {
+      //   throw new CreateAccountError(createAccountRes.statusText);
+      // }
 
       // Get new user token
       const agent_dest = new AtpAgent({

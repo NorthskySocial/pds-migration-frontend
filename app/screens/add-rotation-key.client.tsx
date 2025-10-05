@@ -12,6 +12,7 @@ import { OpenRotationKeyModal } from "~/components/rotation-key-modal";
 import { useCallback, useState } from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
 import "@1password/save-button";
+import { logger } from "~/util/logger";
 
 export default function EncourageBackupScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
@@ -31,7 +32,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
     try {
       await fetcher.submit({ user_recover_key: null }, { method: "post" });
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   }, [fetcher]);
 

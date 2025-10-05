@@ -9,7 +9,7 @@ export default function DoneMigrationScreen({
   return (
     <>
       <VStack mb="5">
-        {state.get("do_journey") === "migrate" ? (
+        {state.do_journey === "migrate" ? (
           <>
             <Heading size="3xl" letterSpacing="tight">
               Migration completed

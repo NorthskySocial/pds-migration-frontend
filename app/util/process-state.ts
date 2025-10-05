@@ -29,7 +29,6 @@ export const processState = async (
   data: FormData,
   env: CloudflareEnvironment
 ) => {
-  logger.log("processState");
   const state = {
     do_journey: session.get("do_journey"),
     handle_origin: session.get("handle_origin"),

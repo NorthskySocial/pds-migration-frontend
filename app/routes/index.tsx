@@ -19,7 +19,6 @@ import { SCREENS } from "~/screens";
 import { logger } from "~/util/logger";
 
 export async function action({ request, context }: Route.ActionArgs) {
-  logger.log("ACTION");
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
@@ -51,16 +50,15 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   try {
     const state = await processState(session, data, context.cloudflare.env);
-    logger.log(state);
     stage = getStage(state);
   } catch (e) {
-    console.error("error in index action", e);
+    logger.error("error in index action", e);
     if (e instanceof Error) {
       session.flash("error", e.message);
     }
   }
 
-  logger.log("action", stage);
+  logger.debug("action: ", stage);
 
   return redirect(
     stage === STAGES.DONE
