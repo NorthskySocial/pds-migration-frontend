@@ -1,4 +1,4 @@
-import { Button, CloseButton, Dialog, Portal } from "@chakra-ui/react";
+import { Button, CloseButton, Dialog, Portal, Box, VStack } from "@chakra-ui/react";
 import {
   useCallback,
   useEffect,
@@ -67,14 +67,14 @@ export const SuccessText = ({
           .join("\n")}
       </pre>
       <h5 style={{ padding: "1em", textAlign: "center" }}>
-        WRITE THIS DOWN, IDEALLY ON A SHEET OF PAPER YOU CAN PUT SOMEWHERE SAFE
+        Save the word passphrase somewhere secure IMMEDIATELY. This passphrase is very important if you ever need to recover your account.
       </h5>
       <p>The key can't be recovered without the above collection of words!</p>
       <p>
         We're really paranoid about this because you can be impersonated if your
         key falls into the wrong hands.{" "}
         <strong>
-          We don't hold a copy of this anywhere, and it's been generated
+          We don't hold a copy of this anywhere. It has been generated
           entirely on this device.
         </strong>
         If you lose the passphrase but still have access to Northsky, you can
@@ -89,7 +89,10 @@ export const SuccessText = ({
       </p>
       <p>We recommend putting it into a password manager ASAP.</p>
       {/* @ts-expect-error Ambient module def not working */}
+      <Box mb="3" background={"white"} maxW="sm" color="fg" p="2" borderRadius={"2xl"}>
+<VStack align={"center"}>
       <onepassword-save-button
+
         data-onepassword-type="login"
         value={encodeOPSaveRequest({
           title: `Recovery key for ${handle}: ${keypair.did()}`,
@@ -115,6 +118,8 @@ export const SuccessText = ({
         })}
         lang="en"
       />
+</VStack>
+      </Box>
       <p>
         <strong>
           If you lose this key, you won't lose access to your account, but if it
@@ -169,7 +174,7 @@ export const OpenRotationKeyModal = ({
             <Dialog.Header>
               <Dialog.Title>Add rotation key</Dialog.Title>
             </Dialog.Header>
-            <Dialog.Body style={{ background: "black" }}>
+            <Dialog.Body style={{ background: "rgb(31, 11, 53)" }}>
               {key ? (
                 <SuccessText
                   exit={exit}
