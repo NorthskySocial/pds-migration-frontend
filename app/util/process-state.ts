@@ -59,6 +59,43 @@ export const processState = async (
 
   const stage = getStage(state);
 
+  const isCancelling = data.get("cancel");
+
+  console.log("isCancelling: "+isCancelling)
+
+if (isCancelling)
+{
+  //Reset all session variables
+ session.set("do_journey",undefined);
+ session.set("handle_origin",undefined);
+ session.set("handle_dest",undefined);
+ session.set("pds_dest",undefined);
+ session.set("pds_origin",undefined);
+ session.set("token_origin",undefined);
+ session.set("token_dest",undefined);
+ session.set("token_service",undefined);
+ session.set("plc_hostname",undefined);
+ session.set("did",undefined);
+ session.set("inviteCode",undefined);
+ session.set("email",undefined);
+ session.set("user_recover_key",undefined);
+
+    // state flags
+ session.set("hasBackup",false);
+ session.set("exportedRepo",false);
+ session.set("importedRepo",false);
+ session.set("exportedBlobs",false);
+ session.set("importedBlobs",false);
+ session.set("migratedPrefs",false);
+ session.set("requestedPlcToken",false);
+ session.set("originDeactivated",false);
+ session.set("destActivated",false);
+ session.set("migratedPlc",false);
+
+}
+
+else 
+{
   switch (stage) {
     case STAGES.INVITE_CODE: {
       const invite = data.get("invite-code") as string;
@@ -179,6 +216,7 @@ export const processState = async (
       break;
     }
   }
+}
 
   return state;
 };

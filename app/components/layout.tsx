@@ -4,12 +4,12 @@ import logo from "../assets/Northsky-IconCentered-Color.png";
 
 export const Layout = ({ children }) => (
   <Provider>
-    <Container width={"350px"}>
+    <Container maxWidth={"4xl"}>
       <VStack
         margin="0 auto"
-        width={"350px"}
+        width={"3xl"}
         height={"100vh"}
-        justifyContent={"space-evenly"}
+        
         alignItems={"center"}
       >
         <VStack mb="5">

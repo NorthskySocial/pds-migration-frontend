@@ -5,6 +5,7 @@ import {
   Button,
   Image,
   VStack,
+  HStack,
 } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
@@ -59,6 +60,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           />
           <br />
           <br />
+          <HStack>
           <Button
             size="lg"
             variant="outline"
@@ -69,7 +71,12 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
             {didKeyWizard
               ? "Continue"
               : "Continue without generating rotation key"}
-          </Button>
+          </Button>            
+          
+          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+        Cancel
+      </Button>
+      </HStack>
         </div>
       </VStack>
     </fetcher.Form>

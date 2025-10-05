@@ -5,6 +5,7 @@ import {
   Button,
   Image,
   VStack,
+  HStack,
 } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -31,7 +32,15 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
         <Button name="submit" type="submit">
           Migrate!
         </Button>
-      </VStack>
+        <HStack>
+        <Button type="submit" name="submit" margin={"0 auto"}>
+          Continue
+        </Button>
+                  <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+        Cancel
+      </Button>
+        </HStack>
+        </VStack>
     </fetcher.Form>
   );
 }

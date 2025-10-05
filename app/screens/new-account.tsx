@@ -7,6 +7,7 @@ import {
   Spinner,
   Image,
   VStack,
+  HStack,
 } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { InputGroup } from "@/components/ui/input-group";
@@ -129,9 +130,14 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           />
         </Field>
         <br />
-        <Button name="submit" type="submit">
+        <HStack>
+        <Button type="submit" name="submit" margin={"0 auto"}>
           Continue
         </Button>
+                  <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+        Cancel
+      </Button>
+        </HStack>
       </VStack>
     </fetcher.Form>
   );

@@ -23,9 +23,11 @@ export default function IntroScreen({ state }: ScreenProps) {
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
         </Heading>
-        <Text fontSize="md" textAlign={"justify"}>
+        <br></br>
+        <Heading size="xl" textAlign={"center"}>
           The Northsky Social team welcomes you to join us in safer skies.
-        </Text>
+</Heading>
+        <br></br>
         <Text fontSize="md" textAlign={"justify"}>
           Your data will be hosted securely on our servers and your experience
           will be improved by our moderation team and new safety features we
