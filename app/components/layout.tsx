@@ -1,5 +1,6 @@
 import { Provider } from "@/components/ui/provider";
-import { Container, Image, VStack } from "@chakra-ui/react";
+import { ColorModeProvider } from "@/components/ui/color-mode"
+import { Container, Image, VStack,} from "@chakra-ui/react";
 import logo from "../assets/Northsky-IconCentered-Color.png";
 import nsBackground from "../assets/Northsky-Background.jpg";
 
@@ -7,7 +8,8 @@ import nsBackground from "../assets/Northsky-Background.jpg";
 
 export const Layout = ({ children }) => (
   <Provider>
-    <Container maxWidth={"4xl"} bgColor={"rgb(31, 11, 53)"} >
+    <ColorModeProvider forcedTheme="dark">
+    <Container maxWidth={"4xl"} bgColor={"default"} >
       <VStack
         margin="0 auto"
         width={"3xl"}
@@ -21,5 +23,6 @@ export const Layout = ({ children }) => (
         {children}
       </VStack>
     </Container>
+    </ColorModeProvider>
   </Provider>
 );

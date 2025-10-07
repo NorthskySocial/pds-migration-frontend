@@ -9,6 +9,7 @@ import { Secp256k1Keypair } from "@atproto/crypto";
 import { type AutofillType, encodeOPSaveRequest } from "@1password/save-button";
 import { encryptKey, toBase64 } from "~/util/crypto";
 
+
 export const SuccessText = ({
   exit,
   keypair,
@@ -60,12 +61,15 @@ export const SuccessText = ({
       <p>You've successfully generated a key. Its DID is:</p>
       <h4 style={{ padding: "1em" }}>{keypair.did()}</h4>
       <p>We've encrypted it using the following passphrase:</p>
-      <pre style={{ textAlign: "center", padding: "1em" }}>
-        {result.passphrase
-          ?.split(" ")
-          .map((v, i) => `${v}`)
-          .join("\n")}
-      </pre>
+
+        <pre style={{ textAlign: "center", padding: "1em",}}>
+          {result.passphrase
+            ?.split(" ")
+            .map((v, i) => `${v}`)
+            .join("\n")}
+        </pre>
+
+
       <h5 style={{ padding: "1em", textAlign: "center" }}>
         Save the word passphrase somewhere secure IMMEDIATELY. This passphrase is very important if you ever need to recover your account.
       </h5>
@@ -77,6 +81,7 @@ export const SuccessText = ({
           We don't hold a copy of this anywhere. It has been generated
           entirely on this device.
         </strong>
+        {" "}
         If you lose the passphrase but still have access to Northsky, you can
         always generate a new one! But if you lose access to Northsky as well as
         this key, you may not be able to recover your account.
@@ -88,7 +93,10 @@ export const SuccessText = ({
         You want to <u>securely</u> back this up <strong>right now</strong>.
       </p>
       <p>We recommend putting it into a password manager ASAP.</p>
-      {/* @ts-expect-error Ambient module def not working */}
+
+
+      
+      {/*
       <Box mb="3" background={"white"} maxW="sm" color="fg" p="2" borderRadius={"2xl"}>
 <VStack align={"center"}>
       <onepassword-save-button
@@ -118,8 +126,12 @@ export const SuccessText = ({
         })}
         lang="en"
       />
-</VStack>
-      </Box>
+
+      
+    </VStack >
+      </Box >
+
+      */}
       <p>
         <strong>
           If you lose this key, you won't lose access to your account, but if it
@@ -131,11 +143,13 @@ export const SuccessText = ({
         </strong>
       </p>
 
-      {downloaded && (
-        <Button variant="outline" size="lg" onClick={exit}>
-          Continue
-        </Button>
-      )}
+      {
+        downloaded && (
+          <Button variant="outline" size="lg" onClick={exit}>
+            Continue
+          </Button>
+        )
+      }
     </>
   ) : (
     <strong>An error has occurred.</strong>

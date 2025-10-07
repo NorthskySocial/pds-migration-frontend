@@ -22,12 +22,12 @@ export function getStage(session: SessionData): STAGES {
   }
 
   if (session.do_journey === "create") {
-    if (session.user_recover_key === undefined) {
-      return STAGES.GENERATE_RECOVERY_KEY;
-    }
-
     if (!all(session.token_dest, session.handle_dest)) {
       return STAGES.CREATE_DEST_ACCOUNT;
+    }
+
+    if (session.user_recover_key === undefined) {
+      return STAGES.GENERATE_RECOVERY_KEY;
     }
 
     return STAGES.DONE;

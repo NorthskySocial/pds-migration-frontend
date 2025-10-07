@@ -7,6 +7,7 @@ import {
   List,
   Link,
   VStack,
+  HStack,
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box, Span } from "@chakra-ui/react";
@@ -92,9 +93,14 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
             I have backed up my data or do not wish to before migrating.
           </Checkbox>
         </Box>
+        <HStack>
         <Button type="submit" name="submit" margin={"0 auto"}>
           Continue
         </Button>
+                  <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+        Cancel
+      </Button>
+        </HStack>
       </VStack>
     </fetcher.Form>
   );

@@ -14,10 +14,10 @@ export default function DoneMigrationScreen({
             <Heading size="3xl" letterSpacing="tight">
               Migration completed
             </Heading>
-            <Text fontSize="md" textAlign={"center"}>
+            <Text fontSize="md" textAlign={"justify"}>
               Your data has been migrated successfully.
             </Text>
-            <Text fontSize="md" textAlign={"center"}>
+            <Text fontSize="md" textAlign={"justify"}>
               When you next log in, Bluesky will prompt you to re-activate your
               old account.
             </Text>
@@ -25,13 +25,13 @@ export default function DoneMigrationScreen({
               alt="Screenshot of a misleading Bluesky dialog. It says 'Welcome back! You previously deactivated [your handle]. You can reactivate your account to continue logging in. Your profile and posts will be visible to other users.' "
               src={misleading_notice}
             />
-            <Text fontSize="md" textAlign={"center"}>
+            <Text fontSize="md" textAlign={"justify"}>
               If you try Yes,{" "}
               <strong style={{ textDecoration: "underline" }}>
                 it will not work.
               </strong>
             </Text>
-            <Text fontSize="md" textAlign={"center"}>
+            <Text fontSize="md" textAlign={"justify"}>
               Instead, hit <strong>Cancel</strong> and log in with your new
               username and password.
             </Text>
@@ -41,7 +41,7 @@ export default function DoneMigrationScreen({
             <Heading size="3xl" letterSpacing="tight">
               New account creatd!
             </Heading>
-            <Text fontSize="md" textAlign={"center"}>
+            <Text fontSize="md" textAlign={"justify"}>
               You may now login via the Bluesky app using the provided
               credentials. Make sure to set "Hosting Provider" to "Custom" and
               enter: <br />
