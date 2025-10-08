@@ -4,6 +4,7 @@ export type SessionData = {
   do_journey?: "create" | "migrate";
   handle_origin?: string;
   handle_dest?: string;
+  password_origin?:string;
   pds_dest?: string;
   pds_origin?: string;
   token_origin?: string;
