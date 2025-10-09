@@ -199,7 +199,11 @@ export async function createDestAccount(
         recovery_key: user_recover_key,
       };
 
-      const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
+      console.error("Create account body:" + body);
+
+      const createAccountRes = await f(
+        `${MIGRATOR_BACKEND}/create-account`
+        , {
         method: "post",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -214,9 +218,9 @@ export async function createDestAccount(
         url: createAccountRes.url,
       });
 
-      // if (!createAccountRes.ok) {
-      //   throw new CreateAccountError(createAccountRes.statusText);
-      // }
+      if (!createAccountRes.ok) {
+        throw new CreateAccountError(createAccountRes.statusText);
+      }
 
       // Get new user token
       const agent_dest = new AtpAgent({
