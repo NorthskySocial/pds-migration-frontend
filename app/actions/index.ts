@@ -46,7 +46,7 @@ export async function loginOrigin(
   // Login to origin PDS
   const { data: agentSessionData } = await origin_agent.login({
     identifier: handle_origin,
-    password
+    password,
   });
 
   const { did, email, accessJwt: token_origin } = agentSessionData;
@@ -67,8 +67,9 @@ export async function loginOrigin(
   const serviceEndpoint = getPdsEndpoint(didDoc) ?? pds_origin;
 
   const pds_dest_hostname = new URL(pds_dest!).host;
-  const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
-    }`;
+  const aud = `did:web:${
+    pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
+  }`;
 
   logger.debug({ aud });
 
@@ -83,7 +84,7 @@ export async function loginOrigin(
       did,
       token: token_origin,
       aud,
-      exp: 60*60,
+      exp: 60 * 60,
     }),
   });
 
@@ -127,11 +128,13 @@ export async function createDestAccount(
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
-  const handle_dest = `${handle}.${dest_hostname.match("localhost") ? "test" : dest_hostname
-    }`;
+  const handle_dest = `${handle}.${
+    dest_hostname.match("localhost") ? "test" : dest_hostname
+  }`;
   const org_hostname = new URL(pds_origin!).host;
-  const handle_org = `${handle_origin}.${org_hostname.match("localhost") ? "test" : org_hostname
-    }`;
+  const handle_org = `${handle_origin}.${
+    org_hostname.match("localhost") ? "test" : org_hostname
+  }`;
   const pw_org = password_origin as string;
 
   // Check passwords matching
@@ -148,9 +151,11 @@ export async function createDestAccount(
   if (!handle.length) {
     return { handle_available: null, token_dest: null };
   } else {
-
     //debug
-    console.log("Handle available " + `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`);
+    console.log(
+      "Handle available " +
+        `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+    );
 
     const handle_available = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
@@ -165,7 +170,6 @@ export async function createDestAccount(
     // Create account directly if service token is not available
     // This is a new, non migrated account
     if (!did) {
-
       // Get new user token
       const agent_dest = new AtpAgent({
         service: pds_dest!,
@@ -184,7 +188,6 @@ export async function createDestAccount(
       }
 
       return { token_dest: response.data.accessJwt };
-
     } else {
       //This is a migrated account
 
@@ -201,9 +204,7 @@ export async function createDestAccount(
 
       console.error("Create account body:" + body);
 
-      const createAccountRes = await f(
-        `${MIGRATOR_BACKEND}/create-account`
-        , {
+      const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
         method: "post",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -219,7 +220,16 @@ export async function createDestAccount(
       });
 
       if (!createAccountRes.ok) {
-        throw new CreateAccountError(createAccountRes.statusText);
+        try {
+          const err: { error: string; message: string } =
+            await createAccountRes.json();
+          throw new CreateAccountError(`${err.error}: ${err.message}`);
+        } catch (e) {
+          logger.log(e);
+          throw new CreateAccountError(
+            `${createAccountRes.status}: ${createAccountRes.statusText}`
+          );
+        }
       }
 
       // Get new user token
@@ -456,7 +466,7 @@ export async function validatePlcToken(
     if (!migrateRes.ok) {
       throw new MigrationError(
         (await migrateRes.json<{ message: string }>())?.message ??
-        migrateRes.statusText
+          migrateRes.statusText
       );
     }
 
@@ -474,7 +484,7 @@ export async function validatePlcToken(
     if (!activateRes.ok) {
       throw new MigrationError(
         (await activateRes.json<{ message: string }>())?.message ??
-        activateRes.statusText
+          activateRes.statusText
       );
     }
 
@@ -492,7 +502,7 @@ export async function validatePlcToken(
     if (!deactivateRes.ok) {
       throw new MigrationError(
         (await deactivateRes.json<{ message: string }>())?.message ??
-        deactivateRes.statusText
+          deactivateRes.statusText
       );
     }
 

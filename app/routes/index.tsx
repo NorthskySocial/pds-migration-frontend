@@ -52,9 +52,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     const state = await processState(session, data, context.cloudflare.env);
     stage = getStage(state);
   } catch (e) {
-    logger.error("error in index action", e);
     if (e instanceof Error) {
-      session.flash("error", e.message);
+      session.flash("error", e?.message ?? "An unonkwn error has occurred");
+    } else {
+      logger.error("Unknown error in index action: ", e);
     }
   }
 
