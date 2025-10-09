@@ -189,6 +189,9 @@ export async function createDestAccount(
 
       // Login to origin PDS
 
+      console.error("Org Hostname: "+ org_hostname);
+      console.error("Migrator backend: "+ MIGRATOR_BACKEND);
+
       const origin_agent = new AtpAgent({
         service: org_hostname,
         fetch: f as typeof fetch,
