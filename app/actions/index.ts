@@ -83,6 +83,7 @@ export async function loginOrigin(
       did,
       token: token_origin,
       aud,
+      exp: 60*60,
     }),
   });
 
@@ -187,21 +188,6 @@ export async function createDestAccount(
     } else {
       //This is a migrated account
 
-      // Login to origin PDS
-
-      console.error("Org Hostname: "+ org_hostname);
-      console.error("Migrator backend: "+ MIGRATOR_BACKEND);
-
-      const origin_agent = new AtpAgent({
-        service: org_hostname,
-        fetch: f as typeof fetch,
-      });
-
-      const { data: agentSessionData } = await origin_agent.login({
-        identifier: handle_org,
-        password: pw_org,
-      });
-
       const body = {
         pds_host: pds_dest,
         handle: handle_dest,
@@ -212,8 +198,6 @@ export async function createDestAccount(
         invite_code: inviteCode,
         recovery_key: user_recover_key,
       };
-
-
 
       const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
         method: "post",

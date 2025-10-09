@@ -24,6 +24,7 @@ export default function IntroScreen({ state }: ScreenProps) {
           <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
         </Heading>
         <br></br>
+        
         <Heading size="xl" textAlign={"center"}>
           The Northsky Social team welcomes you to join us in safer skies.
 </Heading>
@@ -61,6 +62,7 @@ export default function IntroScreen({ state }: ScreenProps) {
             <Checkbox required name="agree-to-tos">
               I agree to the{" "}
               <Link
+              colorPalette={"emphasized"}
                 variant="underline"
                 target="_blank"
                 href="https://northskysocial.com/posts/terms-of-service"
@@ -72,6 +74,7 @@ export default function IntroScreen({ state }: ScreenProps) {
             <Checkbox required name="agree-to-privacy">
               I agree to the{" "}
               <Link
+              colorPalette={"emphasized"}
                 variant="underline"
                 target="_blank"
                 href="https://northskysocial.com/posts/privacy-policy"
