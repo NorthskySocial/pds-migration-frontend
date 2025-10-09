@@ -106,6 +106,9 @@ export const processState = async (
         state.inviteCode = invite;
         session.set("inviteCode", state.inviteCode);
         session.set("do_journey", state.do_journey);
+
+        //initialize the origin PDS to bluesky
+                session.set("pds_origin", "https://bsky.social");
         break;
       }
 

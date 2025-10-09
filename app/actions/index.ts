@@ -43,12 +43,10 @@ export async function loginOrigin(
   const password_origin = password;
   //Save origin user name and password for later
 
-
-
   // Login to origin PDS
   const { data: agentSessionData } = await origin_agent.login({
     identifier: handle_origin,
-    password,
+    password
   });
 
   const { did, email, accessJwt: token_origin } = agentSessionData;
@@ -149,6 +147,10 @@ export async function createDestAccount(
   if (!handle.length) {
     return { handle_available: null, token_dest: null };
   } else {
+
+    //debug
+    console.log("Handle available " + `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`);
+
     const handle_available = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
@@ -181,6 +183,7 @@ export async function createDestAccount(
       }
 
       return { token_dest: response.data.accessJwt };
+
     } else {
       //This is a migrated account
 
