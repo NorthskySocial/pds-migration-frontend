@@ -1,4 +1,11 @@
-import { Button, CloseButton, Dialog, Portal, Box, VStack } from "@chakra-ui/react";
+import {
+  Button,
+  CloseButton,
+  Dialog,
+  Portal,
+  Box,
+  VStack,
+} from "@chakra-ui/react";
 import {
   useCallback,
   useEffect,
@@ -8,8 +15,7 @@ import {
 import { Secp256k1Keypair } from "@atproto/crypto";
 import { type AutofillType, encodeOPSaveRequest } from "@1password/save-button";
 import { encryptKey, toBase64 } from "~/util/crypto";
-
-
+import { Spoiler } from "@/components/ui/spoiler";
 export const SuccessText = ({
   exit,
   keypair,
@@ -58,30 +64,32 @@ export const SuccessText = ({
 
   return result.salt && result.encrypted && result.passphrase ? (
     <>
-      <p>You've successfully generated a key. Its DID is:</p>
+      <p>Here's a new recovery key. Its DID is:</p>
       <h4 style={{ padding: "1em" }}>{keypair.did()}</h4>
-      <p>We've encrypted it using the following passphrase:</p>
-
-        <pre style={{ textAlign: "center", padding: "1em",}}>
+      <p>It is encrypted using the following passphrase (hover to reveal):</p>
+      <Spoiler>
+        <pre style={{ textAlign: "center", padding: "1em" }}>
           {result.passphrase
             ?.split(" ")
-            .map((v, i) => `${v}`)
+            .map((v) => `${v}`)
             .join("\n")}
         </pre>
-
+      </Spoiler>
 
       <h5 style={{ padding: "1em", textAlign: "center" }}>
-        Save the word passphrase somewhere secure IMMEDIATELY. This passphrase is very important if you ever need to recover your account.
+        Save the word passphrase somewhere secure IMMEDIATELY. Ideally you
+        should write it down on a piece of paper so it isn't saved anywhere
+        online. This passphrase is required if you ever need to recover your
+        account.
       </h5>
       <p>The key can't be recovered without the above collection of words!</p>
       <p>
         We're really paranoid about this because you can be impersonated if your
         key falls into the wrong hands.{" "}
         <strong>
-          We don't hold a copy of this anywhere. It has been generated
-          entirely on this device.
-        </strong>
-        {" "}
+          We don't hold a copy of this anywhere. It has been generated entirely
+          on this device.
+        </strong>{" "}
         If you lose the passphrase but still have access to Northsky, you can
         always generate a new one! But if you lose access to Northsky as well as
         this key, you may not be able to recover your account.
@@ -94,8 +102,6 @@ export const SuccessText = ({
       </p>
       <p>We recommend putting it into a password manager ASAP.</p>
 
-
-      
       {/*
       <Box mb="3" background={"white"} maxW="sm" color="fg" p="2" borderRadius={"2xl"}>
 <VStack align={"center"}>
@@ -143,13 +149,11 @@ export const SuccessText = ({
         </strong>
       </p>
 
-      {
-        downloaded && (
-          <Button variant="outline" size="lg" onClick={exit}>
-            Continue
-          </Button>
-        )
-      }
+      {downloaded && (
+        <Button variant="outline" size="lg" onClick={exit}>
+          Continue
+        </Button>
+      )}
     </>
   ) : (
     <strong>An error has occurred.</strong>
@@ -166,10 +170,9 @@ export const OpenRotationKeyModal = ({
   onClose: (key: Secp256k1Keypair) => void;
 }) => {
   const [key, setKey] = useState<Secp256k1Keypair | null>(null);
-  const generateKeypair = useCallback(async () => {
-    const keypair = await Secp256k1Keypair.create({ exportable: true });
-    setKey(keypair);
-  }, [setKey]);
+  const generateKeypair = useEffect(() => {
+    Secp256k1Keypair.create({ exportable: true }).then(setKey);
+  }, []);
 
   const exit = useCallback(() => key && onClose(key), [key, onClose]);
   return (
@@ -188,7 +191,7 @@ export const OpenRotationKeyModal = ({
             <Dialog.Header>
               <Dialog.Title>Add rotation key</Dialog.Title>
             </Dialog.Header>
-            <Dialog.Body style={{ background: "rgb(31, 11, 53)" }}>
+            <Dialog.Body>
               {key ? (
                 <SuccessText
                   exit={exit}
@@ -196,9 +199,7 @@ export const OpenRotationKeyModal = ({
                   handle={handle}
                   keypair={key}
                 />
-              ) : (
-                <Button onClick={generateKeypair}>Generate new keypair</Button>
-              )}
+              ) : null}
             </Dialog.Body>
             <Dialog.Footer>
               {/* <Dialog.CloseTrigger asChild>

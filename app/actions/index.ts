@@ -170,6 +170,7 @@ export async function createDestAccount(
         );
       }
 
+      // I have no idea what the hell is happening here
       const token_service = (await res.json()) as string;
 
       const body = {
@@ -182,8 +183,6 @@ export async function createDestAccount(
         invite_code: inviteCode,
         recovery_key: user_recover_key,
       };
-
-      console.error("Create account body:" + body);
 
       const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
         method: "post",
