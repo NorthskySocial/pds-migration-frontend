@@ -13,7 +13,11 @@ import {
   type MouseEventHandler,
 } from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
-import { type AutofillType, encodeOPSaveRequest } from "@1password/save-button";
+import {
+  type AutofillType,
+  encodeOPSaveRequest,
+  activateOPButton,
+} from "@1password/save-button";
 import { encryptKey, toBase64 } from "~/util/crypto";
 import { Spoiler } from "@/components/ui/spoiler";
 export const SuccessText = ({
@@ -41,6 +45,10 @@ export const SuccessText = ({
   useEffect(() => {
     encryptKey(keypair).then(setResult);
   }, [keypair]);
+
+  useEffect(() => {
+    activateOPButton();
+  }, [result]);
 
   const downloadKey = useCallback(async () => {
     if (result.encrypted) {
@@ -82,7 +90,9 @@ export const SuccessText = ({
         online. This passphrase is required if you ever need to recover your
         account.
       </h5>
-      <p>The key can't be recovered without the above collection of words!</p>
+      <p>
+        Again: the key can't be recovered without the above collection of words!
+      </p>
       <p>
         We're really paranoid about this because you can be impersonated if your
         key falls into the wrong hands.{" "}
@@ -102,42 +112,46 @@ export const SuccessText = ({
       </p>
       <p>We recommend putting it into a password manager ASAP.</p>
 
-      {/*
-      <Box mb="3" background={"white"} maxW="sm" color="fg" p="2" borderRadius={"2xl"}>
-<VStack align={"center"}>
-      <onepassword-save-button
+      <Box
+        mb="3"
+        background={"white"}
+        maxW="sm"
+        color="fg"
+        p="2"
+        borderRadius={"2xl"}
+      >
+        <VStack align={"center"}>
+          {/* @ts-expect-error Custom Element */}
+          <onepassword-save-button
+            data-onepassword-type="login"
+            value={encodeOPSaveRequest({
+              title: handle
+                ? `Recovery key for ${handle}: ${keypair.did()}`
+                : `Recovery key ${keypair.did()}`,
+              fields: [
+                { autocomplete: "username" as AutofillType, value: did },
+                {
+                  autocomplete: "nickname" as AutofillType,
+                  value: handle,
+                },
+                {
+                  autocomplete: "current-password" as AutofillType,
+                  value: toBase64(new Uint8Array(result.encrypted)),
+                },
+                {
+                  autocomplete: "recovery-code" as AutofillType,
+                  value: result.passphrase,
+                },
+              ],
+              notes: `Generated ${new Date().toISOString()} by Northsky Migrator.\n\nSalt: ${
+                result.salt
+              }`,
+            })}
+            lang="en"
+          />
+        </VStack>
+      </Box>
 
-        data-onepassword-type="login"
-        value={encodeOPSaveRequest({
-          title: `Recovery key for ${handle}: ${keypair.did()}`,
-          fields: [
-            { autocomplete: "username" as AutofillType, value: did },
-            { autocomplete: "nickname" as AutofillType, value: handle },
-            {
-              autocomplete: "current-password" as AutofillType,
-              value: toBase64(new Uint8Array(result.encrypted)),
-            },
-            {
-              autocomplete: "one-time-code" as AutofillType,
-              value: result.salt,
-            },
-            // {
-            //   autocomplete: "one-time-code" as AutofillType,
-            //   value: result.passphrase,
-            // },
-          ],
-          notes: `Generated ${new Date().toISOString()} by Northsky Migrator.\n\nSalt: ${
-            result.salt
-          }`,
-        })}
-        lang="en"
-      />
-
-      
-    </VStack >
-      </Box >
-
-      */}
       <p>
         <strong>
           If you lose this key, you won't lose access to your account, but if it
@@ -170,7 +184,7 @@ export const OpenRotationKeyModal = ({
   onClose: (key: Secp256k1Keypair) => void;
 }) => {
   const [key, setKey] = useState<Secp256k1Keypair | null>(null);
-  const generateKeypair = useEffect(() => {
+  useEffect(() => {
     Secp256k1Keypair.create({ exportable: true }).then(setKey);
   }, []);
 
