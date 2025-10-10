@@ -5,7 +5,7 @@ const f = async (input: URL | string, init?: RequestInit) => {
   if (DEV) {
     logger.log(new URL(input));
     switch (new URL(input).host) {
-      case "pds-dest.aendra.dev": {
+      case "northsky.social": {
         switch (new URL(input).pathname) {
           case "/xrpc/com.atproto.server.createSession": {
             return new Response(
@@ -58,16 +58,36 @@ const f = async (input: URL | string, init?: RequestInit) => {
             });
         }
       }
-      case "pds-origin.aendra.dev": {
+      case "bsky.social": {
         switch (new URL(input).pathname) {
+          case "/xrpc/com.atproto.server.createSession": {
+            return new Response(
+              JSON.stringify({
+                accessJwt: "123",
+                refreshJwt: "123",
+                handle: "handle.test",
+                did: "did:plc:123123123",
+              }),
+              {
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
           default:
             return new Response(JSON.stringify({ ok: true }), {
               headers: { "Content-Type": "application/json" },
             });
         }
       }
+      case "migrator.northsky.social":
       case "localhost:9090": {
         switch (new URL(input).pathname) {
+          case "/service-auth": {
+            return new Response("{}", {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
           default:
             return new Response(JSON.stringify({ ok: true }), {
               headers: { "Content-Type": "application/json" },
