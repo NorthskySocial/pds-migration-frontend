@@ -4,12 +4,11 @@ export type SessionData = {
   do_journey?: "create" | "migrate";
   handle_origin?: string;
   handle_dest?: string;
-  password_origin?:string;
+  password_origin?: string;
   pds_dest?: string;
   pds_origin?: string;
   token_origin?: string;
   token_dest?: string;
-  token_service?: string;
   plc_hostname?: string;
   did?: string;
   inviteCode?: string;

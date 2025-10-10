@@ -36,14 +36,7 @@ export function getStage(session: SessionData): STAGES {
       return STAGES.BACKUP_NOTICE;
     }
 
-    if (
-      !all(
-        session.token_origin,
-        session.did,
-        session.pds_origin,
-        session.token_service
-      )
-    ) {
+    if (!all(session.token_origin, session.did, session.pds_origin)) {
       return STAGES.ORIGIN_PDS_LOGIN;
     }
 
