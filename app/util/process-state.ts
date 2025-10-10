@@ -37,7 +37,6 @@ export const processState = async (
     pds_origin: session.get("pds_origin"),
     token_origin: session.get("token_origin"),
     token_dest: session.get("token_dest"),
-    token_service: session.get("token_service"),
     plc_hostname: session.get("plc_hostname"),
     did: session.get("did"),
     password_origin: session.get("password_origin"),
@@ -62,7 +61,7 @@ export const processState = async (
 
   const isCancelling = data.get("cancel");
 
-  console.log("isCancelling: " + isCancelling)
+  console.log("isCancelling: " + isCancelling);
 
   if (isCancelling) {
     //Reset all session variables
@@ -73,7 +72,6 @@ export const processState = async (
     session.set("pds_origin", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
-    session.set("token_service", undefined);
     session.set("plc_hostname", undefined);
     session.set("did", undefined);
     session.set("inviteCode", undefined);
@@ -92,10 +90,7 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
-
-  }
-
-  else {
+  } else {
     switch (stage) {
       case STAGES.INVITE_CODE: {
         const invite = data.get("invite-code") as string;
@@ -108,7 +103,7 @@ export const processState = async (
         session.set("do_journey", state.do_journey);
 
         //initialize the origin PDS to bluesky
-                session.set("pds_origin", "https://bsky.social");
+        session.set("pds_origin", "https://bsky.social");
         break;
       }
 
@@ -123,16 +118,14 @@ export const processState = async (
           pds_origin,
           email,
           token_origin,
-          token_service,
           handle_origin,
           did,
-          password_origin
+          password_origin,
         } = await loginOrigin(state, data, env);
 
         session.set("pds_origin", pds_origin);
         session.set("email", email);
         session.set("token_origin", token_origin);
-        session.set("token_service", token_service);
         session.set("handle_origin", handle_origin);
         session.set("did", did);
         session.set("password_origin", password_origin);

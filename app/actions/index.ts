@@ -18,9 +18,9 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 
 export async function loginOrigin(
-  { plc_hostname, pds_dest }: SessionData,
+  session: SessionData,
   data: FormData,
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
+  env: CloudflareEnvironment
 ) {
   const pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
 
@@ -46,7 +46,7 @@ export async function loginOrigin(
   // Login to origin PDS
   const { data: agentSessionData } = await origin_agent.login({
     identifier: handle_origin,
-    password
+    password,
   });
 
   const { did, email, accessJwt: token_origin } = agentSessionData;
@@ -55,64 +55,22 @@ export async function loginOrigin(
     throw new LoginError("Unable to resolve DID");
   }
 
-  // Do we need to do this? Is DidDoc always returned when logging in??
-  const didDoc: DidDocument = await (await f(`${plc_hostname}/${did}`)).json();
-
-  logger.debug(didDoc);
-
-  if (!didDoc || !isValidDidDoc(didDoc)) {
-    throw new LoginError("Invalid DID Doc");
-  }
-
-  const serviceEndpoint = getPdsEndpoint(didDoc) ?? pds_origin;
-
-  const pds_dest_hostname = new URL(pds_dest!).host;
-  const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
-    }`;
-
-  logger.debug({ aud });
-
-  // Generate service token
-  const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "post",
-    body: JSON.stringify({
-      pds_host: serviceEndpoint,
-      did,
-      token: token_origin,
-      aud,
-      exp: 60*60,
-    }),
-  });
-
-  if (!res.ok) {
-    throw new LoginError(
-      `Invalid service token received; please contact support with error: ${res.statusText}`
-    );
-  }
-
-  const token_service = (await res.json()) as string;
-
   return {
     did,
     pds_origin,
-    token_service,
     handle_origin,
     password_origin,
     token_origin,
     email,
-    serviceEndpoint,
   };
 }
 
 export async function createDestAccount(
   {
     did,
-    token_service,
     handle_origin,
     password_origin,
+    token_origin,
     pds_origin,
     pds_dest,
     email,
@@ -127,12 +85,9 @@ export async function createDestAccount(
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
-  const handle_dest = `${handle}.${dest_hostname.match("localhost") ? "test" : dest_hostname
-    }`;
-  const org_hostname = new URL(pds_origin!).host;
-  const handle_org = `${handle_origin}.${org_hostname.match("localhost") ? "test" : org_hostname
-    }`;
-  const pw_org = password_origin as string;
+  const handle_dest = `${handle}.${
+    dest_hostname.match("localhost") ? "test" : dest_hostname
+  }`;
 
   // Check passwords matching
   if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
@@ -148,9 +103,11 @@ export async function createDestAccount(
   if (!handle.length) {
     return { handle_available: null, token_dest: null };
   } else {
-
     //debug
-    console.log("Handle available " + `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`);
+    console.log(
+      "Handle available " +
+        `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+    );
 
     const handle_available = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
@@ -165,7 +122,6 @@ export async function createDestAccount(
     // Create account directly if service token is not available
     // This is a new, non migrated account
     if (!did) {
-
       // Get new user token
       const agent_dest = new AtpAgent({
         service: pds_dest!,
@@ -184,9 +140,37 @@ export async function createDestAccount(
       }
 
       return { token_dest: response.data.accessJwt };
+    } /* This is a migrated account */ else {
+      const serviceEndpoint = pds_origin;
 
-    } else {
-      //This is a migrated account
+      const pds_dest_hostname = new URL(pds_dest!).host;
+      const aud = `did:web:${
+        pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
+      }`;
+
+      logger.debug({ aud });
+
+      // Generate service token
+      const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+        body: JSON.stringify({
+          pds_host: serviceEndpoint,
+          did,
+          token: token_origin,
+          aud,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new LoginError(
+          `Invalid service token received; please contact support with error: ${res.statusText}`
+        );
+      }
+
+      const token_service = (await res.json()) as string;
 
       const body = {
         pds_host: pds_dest,
@@ -201,9 +185,7 @@ export async function createDestAccount(
 
       console.error("Create account body:" + body);
 
-      const createAccountRes = await f(
-        `${MIGRATOR_BACKEND}/create-account`
-        , {
+      const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
         method: "post",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -456,7 +438,7 @@ export async function validatePlcToken(
     if (!migrateRes.ok) {
       throw new MigrationError(
         (await migrateRes.json<{ message: string }>())?.message ??
-        migrateRes.statusText
+          migrateRes.statusText
       );
     }
 
@@ -474,7 +456,7 @@ export async function validatePlcToken(
     if (!activateRes.ok) {
       throw new MigrationError(
         (await activateRes.json<{ message: string }>())?.message ??
-        activateRes.statusText
+          activateRes.statusText
       );
     }
 
@@ -492,7 +474,7 @@ export async function validatePlcToken(
     if (!deactivateRes.ok) {
       throw new MigrationError(
         (await deactivateRes.json<{ message: string }>())?.message ??
-        deactivateRes.statusText
+          deactivateRes.statusText
       );
     }
 
