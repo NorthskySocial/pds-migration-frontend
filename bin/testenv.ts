@@ -55,18 +55,14 @@ mailer.transporter.sendMail = async (opts) => {
   return result;
 };
 
-//   const getMailFrom = async (promise): Promise<Mail.Options> => {
-//     const result = await Promise.all([once(mailCatcher, "mail"), promise]);
-//     return result[0][0];
-//   };
-
 const getTokenFromMail = (mail: Mail.Options) =>
   mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1];
 
 mailCatcher.on("mail", (mail) =>
   console.log(
     "\n\n**NEW PLC TOKEN ARRIVED VIA EMAIL**: ",
-    getTokenFromMail(mail)
+    getTokenFromMail(mail),
+    "\n\n"
   )
 );
 
@@ -112,6 +108,6 @@ async function main() {
     }
   }
 
-  main(); //
+  main(); // return to main menu
 }
 main();
