@@ -61,22 +61,22 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           <br />
           <br />
           <HStack>
-          <Button
-            size="lg"
-            variant="outline"
-            type="button"
-            onClick={continueMigration}
-            margin={"0 auto"}
-          >
-            {didKeyWizard
-              ? "Continue"
-              : "Continue without generating rotation key"}
-          </Button>            
-          
-          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-        Cancel
-      </Button>
-      </HStack>
+            <Button
+              size="lg"
+              variant="outline"
+              type="button"
+              onClick={continueMigration}
+              margin={"0 auto"}
+            >
+              {didKeyWizard
+                ? "Continue"
+                : "Continue without generating rotation key"}
+            </Button>
+
+            <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+              Cancel
+            </Button>
+          </HStack>
         </div>
       </VStack>
     </fetcher.Form>
