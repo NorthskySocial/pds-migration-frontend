@@ -7,8 +7,9 @@ main = "./workers/app.ts"
 assets = {}
 
 [vars]
-PDS_HOSTNAME = "https://northsky.social"
-MIGRATOR_BACKEND = "https://migrator.northsky.social"
+PDS_HOSTNAME = "http://localhost:5577"
+PLC_HOSTNAME = "http://localhost:5555"
+MIGRATOR_BACKEND = "http://localhost:9090"
 DEBUG = "migration-fe"
 HOSTNAME = "localhost"
 
