@@ -37,7 +37,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         </Heading>
         {state.do_journey === "migrate" ? (
           <Text fontSize="md" textAlign={"justify"}>
-            We'll need to give to a <strong>.northsky.social</strong> handle as
+            We'll need to give you a <strong>.northsky.social</strong> handle as
             part of the migration. If you have a custom domain handle, you can
             change it back right after the migration process is over.
           </Text>
@@ -131,12 +131,12 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         </Field>
         <br />
         <HStack>
-        <Button type="submit" name="submit" margin={"0 auto"}>
-          Continue
-        </Button>
-                  <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-        Cancel
-      </Button>
+          <Button type="submit" name="submit" margin={"0 auto"}>
+            Continue
+          </Button>
+          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+            Cancel
+          </Button>
         </HStack>
       </VStack>
     </fetcher.Form>
