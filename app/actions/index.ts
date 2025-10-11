@@ -18,9 +18,9 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 
 export async function loginOrigin(
-  { plc_hostname, pds_dest }: SessionData,
+  session: SessionData,
   data: FormData,
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
+  env: CloudflareEnvironment
 ) {
   const pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
 
@@ -55,65 +55,22 @@ export async function loginOrigin(
     throw new LoginError("Unable to resolve DID");
   }
 
-  // Do we need to do this? Is DidDoc always returned when logging in??
-  const didDoc: DidDocument = await (await f(`${plc_hostname}/${did}`)).json();
-
-  logger.debug(didDoc);
-
-  if (!didDoc || !isValidDidDoc(didDoc)) {
-    throw new LoginError("Invalid DID Doc");
-  }
-
-  const serviceEndpoint = getPdsEndpoint(didDoc) ?? pds_origin;
-
-  const pds_dest_hostname = new URL(pds_dest!).host;
-  const aud = `did:web:${
-    pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
-  }`;
-
-  logger.debug({ aud });
-
-  // Generate service token
-  const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    method: "post",
-    body: JSON.stringify({
-      pds_host: serviceEndpoint,
-      did,
-      token: token_origin,
-      aud,
-      exp: 60 * 60,
-    }),
-  });
-
-  if (!res.ok) {
-    throw new LoginError(
-      `Invalid service token received; please contact support with error: ${res.statusText}`
-    );
-  }
-
-  const token_service = (await res.json()) as string;
-
   return {
     did,
     pds_origin,
-    token_service,
     handle_origin,
     password_origin,
     token_origin,
     email,
-    serviceEndpoint,
   };
 }
 
 export async function createDestAccount(
   {
     did,
-    token_service,
     handle_origin,
     password_origin,
+    token_origin,
     pds_origin,
     pds_dest,
     email,
@@ -131,11 +88,6 @@ export async function createDestAccount(
   const handle_dest = `${handle}.${
     dest_hostname.match("localhost") ? "test" : dest_hostname
   }`;
-  const org_hostname = new URL(pds_origin!).host;
-  const handle_org = `${handle_origin}.${
-    org_hostname.match("localhost") ? "test" : org_hostname
-  }`;
-  const pw_org = password_origin as string;
 
   // Check passwords matching
   if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
@@ -188,8 +140,37 @@ export async function createDestAccount(
       }
 
       return { token_dest: response.data.accessJwt };
-    } else {
-      //This is a migrated account
+    } /* This is a migrated account */ else {
+      const serviceEndpoint = pds_origin;
+
+      const pds_dest_hostname = new URL(pds_dest!).host;
+      const aud = `did:web:${
+        pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
+      }`;
+
+      logger.debug({ aud });
+
+      // Generate service token
+      const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "post",
+        body: JSON.stringify({
+          pds_host: serviceEndpoint,
+          did,
+          token: token_origin,
+          aud,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new LoginError(
+          `Invalid service token received; please contact support with error: ${res.statusText}`
+        );
+      }
+
+      const token_service = (await res.json()) as string;
 
       const body = {
         pds_host: pds_dest,

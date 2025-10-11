@@ -85,7 +85,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     pds_origin: session.get("pds_origin"),
     token_origin: session.get("token_origin"),
     token_dest: session.get("token_dest"),
-    token_service: session.get("token_service"),
     plc_hostname: session.get("plc_hostname"),
     did: session.get("did"),
     inviteCode: session.get("inviteCode"),
@@ -113,13 +112,11 @@ export async function loader({ request }: Route.LoaderArgs) {
         ...session.data,
         token_origin: "<HIDDEN>",
         token_dest: "<HIDDEN>",
-        token_service: "<HIDDEN>",
       },
       {
         ...state,
         token_dest: "<HIDDEN>",
         token_origin: "<HIDDEN>",
-        token_service: "<HIDDEN>",
       }
     );
     return data(
