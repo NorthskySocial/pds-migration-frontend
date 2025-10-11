@@ -6,6 +6,11 @@ import type { ScreenProps } from "~/util/stages";
 export default function DoneMigrationScreen({
   state,
 }: ScreenProps): ReactElement {
+
+  const goToBluesky = () => {
+    window.location.href = "https://bsky.app";
+  }
+
   return (
     <>
       <VStack mb="5">
@@ -39,7 +44,7 @@ export default function DoneMigrationScreen({
         ) : (
           <>
             <Heading size="3xl" letterSpacing="tight">
-              New account creatd!
+              New account created!
             </Heading>
             <Text fontSize="md" textAlign={"justify"}>
               You may now login via the Bluesky app using the provided
@@ -47,6 +52,9 @@ export default function DoneMigrationScreen({
               enter: <br />
               <strong>https://northsky.social</strong>
             </Text>
+            <Button size="lg" onClick={goToBluesky}>
+              Login via the Bluesky app
+            </Button>
           </>
         )}
       </VStack>
