@@ -6,12 +6,14 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "dev:test": "react-router dev -- --mode test",
+    "dev:test": "react-router dev --mode test",
     "start": "react-router-serve ./build/server/index.js",
     "test:env": "tsx bin/testenv.ts",
     "test:jest": "jest --maxWorkers=1",
     "test:backend": "docker pull ghcr.io/northskysocial/pds-migration:main && docker run -it northskysocial/pds-migration:main",
-    "test": "npx concurrently --kill-others npm:dev:test npm:test:backend npm:test:env",
+    "test:backend-arm64": "cargo run --bin pdsmigration-web --manifest-path pds-migration/Cargo.toml",
+    "test": "npx concurrently -i --kill-others npm:test:env npm:dev:test npm:test:backend",
+    "test:arm64": "npx concurrently -i --kill-others npm:test:env npm:dev:test npm:test:backend-arm64",
     "typecheck": "wrangler types && react-router typegen && tsc"
   },
   "dependencies": {
