@@ -6,10 +6,12 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
+    "dev:test": "react-router dev -- --mode test",
     "start": "react-router-serve ./build/server/index.js",
+    "test:env": "tsx bin/testenv.ts",
     "test:jest": "jest --maxWorkers=1",
-    "test:backend": "docker pull ghcr.io/northskysocial/pds-migration:latest && docker run -it northskysocial/pds-migration:latest",
-    "test": "npx concurrently --kill-others npm:dev npm:test:jest npm:test:backend",
+    "test:backend": "docker pull ghcr.io/northskysocial/pds-migration:main && docker run -it northskysocial/pds-migration:main",
+    "test": "npx concurrently --kill-others npm:dev:test npm:test:backend npm:test:env",
     "typecheck": "wrangler types && react-router typegen && tsc"
   },
   "dependencies": {
@@ -45,10 +47,12 @@
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react-swc": "^4.0.1",
+    "commander": "^14.0.1",
     "eslint": "^9.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.4.0",
+    "inquirer": "^12.9.6",
     "jest": "^30.1.3",
     "jest-puppeteer": "^11.0.0",
     "nodemailer": "^7.0.6",

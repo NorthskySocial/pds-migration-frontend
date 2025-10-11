@@ -2,7 +2,7 @@ import { logger } from "./logger";
 
 const f = async (input: URL | string, init?: RequestInit) => {
   const { DEV } = import.meta.env;
-  if (DEV) {
+  if (DEV && import.meta.env.MODE !== "test") {
     logger.log(new URL(input));
     switch (new URL(input).host) {
       case "northsky.social": {
