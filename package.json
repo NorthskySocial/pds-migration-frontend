@@ -6,7 +6,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "dev:test": "react-router dev -- --mode test",
+    "dev:test": "react-router dev --mode test",
     "start": "react-router-serve ./build/server/index.js",
     "test:env": "tsx bin/testenv.ts",
     "test:jest": "jest --maxWorkers=1",
