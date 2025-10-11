@@ -11,7 +11,9 @@
     "test:env": "tsx bin/testenv.ts",
     "test:jest": "jest --maxWorkers=1",
     "test:backend": "docker pull ghcr.io/northskysocial/pds-migration:main && docker run -it northskysocial/pds-migration:main",
+    "test:backend-arm64": "cargo run --bin pdsmigration-web --manifest-path pds-migration/Cargo.toml",
     "test": "npx concurrently --kill-others npm:dev:test npm:test:backend npm:test:env",
+    "test:arm64": "npx concurrently --kill-others npm:dev:test npm:test:backend-arm64 npm:test:env",
     "typecheck": "wrangler types && react-router typegen && tsc"
   },
   "dependencies": {

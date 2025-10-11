@@ -24,34 +24,47 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Bluesky">Login to Bluesky</Highlight>
         </Heading>
-        <Text fontSize="md" textAlign={"justify"}>
-          Please provide us with the following information so we can migrate
-          your data. Bluesky will e-mail you as part of this process, so{" "}
-          <strong>ensure your e-mail address is verified</strong> before
-          starting migration.
-        </Text>
-        <Switch
-          name="has-pds"
-          checked={altPds}
-          onCheckedChange={() => setAltPds(!altPds)}
-        >
-          Non-Bluesky PDS?
-        </Switch>
-        {altPds && (
-          <Field required label="Your PDS">
-            <Input name="pds" defaultValue="https://bsky.social" />
-          </Field>
+        {state.require_2fa_code ? (
+          <>
+            <Text fontSize="md" textAlign={"justify"}>
+              Please check your email for a 2FA code and enter it below
+            </Text>
+            <Field required label="Email 2fa code">
+              <Input name="2fa_code" required />
+            </Field>
+          </>
+        ) : (
+          <>
+            <Text fontSize="md" textAlign={"justify"}>
+              Please provide us with the following information so we can migrate
+              your data. Bluesky will e-mail you as part of this process, so{" "}
+              <strong>ensure your e-mail address is verified</strong> before
+              starting migration.
+            </Text>
+            <Switch
+              name="has-pds"
+              checked={altPds}
+              onCheckedChange={() => setAltPds(!altPds)}
+            >
+              Non-Bluesky PDS?
+            </Switch>
+            {altPds && (
+              <Field required label="Your PDS">
+                <Input name="pds" defaultValue="https://bsky.social" />
+              </Field>
+            )}
+            <Field required label="Bluesky login">
+              <Input
+                autoComplete="username"
+                name="bsky-handle"
+                placeholder="username.bsky.social"
+              />
+            </Field>
+            <Field required label="Bluesky password">
+              <PasswordInput autoComplete="password" name="bsky-password" />
+            </Field>
+          </>
         )}
-        <Field required label="Bluesky login">
-          <Input
-            autoComplete="username"
-            name="bsky-handle"
-            placeholder="username.bsky.social"
-          />
-        </Field>
-        <Field required label="Bluesky password">
-          <PasswordInput autoComplete="password" name="bsky-password" />
-        </Field>
         <HStack>
           <Button type="submit" name="submit" margin={"0 auto"}>
             Continue

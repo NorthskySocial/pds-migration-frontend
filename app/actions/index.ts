@@ -7,7 +7,7 @@ import {
   type DidDocument,
 } from "@atproto/common-web";
 
-import { type SessionData } from "~/sessions.server";
+import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import {
   CreateAccountError,
   LoginError,
@@ -16,9 +16,10 @@ import {
 } from "~/errors";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
+import type { Session } from "react-router";
 
 export async function loginOrigin(
-  session: SessionData,
+  session: Session<SessionData, SessionFlashData>,
   data: FormData,
   env: CloudflareEnvironment
 ) {
@@ -40,13 +41,19 @@ export async function loginOrigin(
   if (!password) {
     throw new LoginError("Invalid password");
   }
+
   const password_origin = password;
-  //Save origin user name and password for later
+
+  //Save origin, user name and password for later
+  session.set("handle_origin", handle_origin);
+  session.set("password_origin", password_origin);
+  session.set("pds_origin", pds_origin);
 
   // Login to origin PDS
   const { data: agentSessionData } = await origin_agent.login({
     identifier: handle_origin,
     password,
+    authFactorToken: (data.get("2fa_code") as string) ?? undefined,
   });
 
   const { did, email, accessJwt: token_origin } = agentSessionData;

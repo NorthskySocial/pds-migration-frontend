@@ -16,6 +16,7 @@ import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { logger } from "./logger";
+import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -55,6 +56,7 @@ export const processState = async (
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
+    require_2fa_code: session.get("require_2fa_code") ?? false,
   };
 
   const stage = getStage(state);
@@ -114,22 +116,29 @@ export const processState = async (
       }
 
       case STAGES.ORIGIN_PDS_LOGIN: {
-        const {
-          pds_origin,
-          email,
-          token_origin,
-          handle_origin,
-          did,
-          password_origin,
-        } = await loginOrigin(state, data, env);
+        try {
+          const { pds_origin, email, token_origin, did } = await loginOrigin(
+            session,
+            data,
+            env
+          );
 
-        session.set("pds_origin", pds_origin);
-        session.set("email", email);
-        session.set("token_origin", token_origin);
-        session.set("handle_origin", handle_origin);
-        session.set("did", did);
-        session.set("password_origin", password_origin);
-        break;
+          session.set("pds_origin", pds_origin);
+          session.set("email", email);
+          session.set("token_origin", token_origin);
+          session.set("did", did);
+          break;
+        } catch (e) {
+          if (e instanceof AuthFactorTokenRequiredError) {
+            session.set("require_2fa_code", true);
+            session.flash(
+              "error",
+              "Please check your email for your login code and enter it below"
+            );
+            break;
+          }
+          throw e;
+        }
       }
 
       case STAGES.CREATE_DEST_ACCOUNT: {
