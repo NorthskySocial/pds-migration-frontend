@@ -29,9 +29,7 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
         <Field required label="PLC Token">
           <PasswordInput name="token_plc" />
         </Field>
-        <Button name="submit" type="submit">
-          Migrate!
-        </Button>
+
         <HStack>
         <Button type="submit" name="submit" margin={"0 auto"}>
           Continue
