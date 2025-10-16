@@ -1,6 +1,6 @@
 "use server";
 
-import { type Session } from "react-router";
+import { redirect, type Session } from "react-router";
 import {
   createDestAccount,
   exportBlobs,
@@ -92,6 +92,11 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
+
+    //make sure we're at the root URL
+    let stage = STAGES.INVITE_CODE;
+      return state;
+
   } else {
     switch (stage) {
       case STAGES.INVITE_CODE: {
@@ -154,6 +159,11 @@ export const processState = async (
           session.set("token_dest", token_dest);
         } else if (handle_available) {
           session.set("handle_dest", handle_dest);
+        }
+        //skip check in dev
+        if (import.meta.env.DEV) {
+          logger.log("Forcing handle_dest in dev");
+          session.set("handle_dest", "Test Handle");
         }
 
         break;

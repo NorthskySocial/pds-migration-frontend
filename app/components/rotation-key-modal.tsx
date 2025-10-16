@@ -5,6 +5,7 @@ import {
   Portal,
   Box,
   VStack,
+  Float,
 } from "@chakra-ui/react";
 import {
   useCallback,
@@ -73,8 +74,10 @@ export const SuccessText = ({
   return result.salt && result.encrypted && result.passphrase ? (
     <>
       <p>Here's a new recovery key. Its DID is:</p>
+
       <h4 style={{ padding: "1em" }}>{keypair.did()}</h4>
       <p>It is encrypted using the following passphrase (hover to reveal):</p>
+<br></br>
       <Spoiler>
         <pre style={{ textAlign: "center", padding: "1em" }}>
           {result.passphrase
@@ -104,7 +107,7 @@ export const SuccessText = ({
         always generate a new one! But if you lose access to Northsky as well as
         this key, you may not be able to recover your account.
       </p>
-      <Button style={{ margin: "1em 0" }} onClick={downloadKey}>
+      <Button variant="solid" colorPalette={"purple"} style={{ margin: "1em 0" }} onClick={downloadKey}>
         Download {keypair.did()}.key
       </Button>
       <p>
@@ -114,7 +117,7 @@ export const SuccessText = ({
 
       <Box
         mb="3"
-        background={"white"}
+        background={"purple.300"}
         maxW="sm"
         color="fg"
         p="2"
@@ -164,11 +167,17 @@ export const SuccessText = ({
       </p>
 
       {downloaded && (
-        <Button variant="outline" size="lg" onClick={exit}>
+        <Button variant="solid" colorPalette={"purple"}  size="lg" onClick={exit}>
           Continue
         </Button>
       )}
+<Float>
+              <CloseButton variant="solid" colorPalette={"purple"}  size="lg" onClick={exit}>
+
+        </CloseButton>
+        </Float>
     </>
+
   ) : (
     <strong>An error has occurred.</strong>
   );

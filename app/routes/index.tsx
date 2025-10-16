@@ -61,11 +61,12 @@ export async function action({ request, context }: Route.ActionArgs) {
   logger.debug("action: ", stage);
 
   return redirect(
-    stage === STAGES.DONE
-      ? "/success"
-      : stage === STAGES.FAILED
-        ? "/failed"
-        : "/",
+    // stage === STAGES.DONE
+    //   ? "/success"
+    //   : stage === STAGES.FAILED
+    //     ? "/failed"
+    //     : "/",
+    "/",
     {
       headers: {
         "Set-Cookie": await commitSession(session),
@@ -90,6 +91,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     inviteCode: session.get("inviteCode"),
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
+    require_2fa_code: session.get("require_2fa_code")?? false,
+
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,

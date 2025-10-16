@@ -15,6 +15,7 @@ import { Field } from "@/components/ui/field";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
+
 export default function IntroScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
@@ -24,11 +25,12 @@ export default function IntroScreen({ state }: ScreenProps) {
           <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
         </Heading>
         <br></br>
-        
+
         <Heading size="xl" textAlign={"center"}>
           The Northsky Social team welcomes you to join us in safer skies.
-</Heading>
+        </Heading>
         <br></br>
+
         <Text fontSize="md" textAlign={"justify"}>
           Your data will be hosted securely on our servers and your experience
           will be improved by our moderation team and new safety features we
@@ -62,7 +64,7 @@ export default function IntroScreen({ state }: ScreenProps) {
             <Checkbox required name="agree-to-tos">
               I agree to the{" "}
               <Link
-              colorPalette={"emphasized"}
+                color={"emphasized"}
                 variant="underline"
                 target="_blank"
                 href="https://northskysocial.com/posts/terms-of-service"
@@ -74,7 +76,7 @@ export default function IntroScreen({ state }: ScreenProps) {
             <Checkbox required name="agree-to-privacy">
               I agree to the{" "}
               <Link
-              colorPalette={"emphasized"}
+                color={"emphasized"}
                 variant="underline"
                 target="_blank"
                 href="https://northskysocial.com/posts/privacy-policy"

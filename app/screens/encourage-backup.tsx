@@ -18,10 +18,11 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post">
-      <VStack mb="5">
+      <VStack align={"center"} mb="5">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="your Data">Backup your data</Highlight>
         </Heading>
+              <VStack align={"left"} mb="5">
         <Text fontSize="md" textAlign={"justify"} mb="4">
           We recommend you generate and download a backup of your data before
           you migrate from Bluesky's PDS to ours. We recommend using one of
@@ -30,11 +31,12 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
         <br />
         <List.Root ps="5">
           <List.Item>
-            <Link
-              variant="underline"
-              target="_blank"
-              href="https://github.com/NorthskySocial/pds-migration/releases"
-            >
+              <Link
+                color={"emphasized"}
+                variant="underline"
+                target="_blank"
+                href="https://northskysocial.com/posts/privacy-policy"
+              >
               Northsky Migration Tool
             </Link>
           </List.Item>
@@ -45,11 +47,12 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           </List.Root>
 
           <List.Item>
-            <Link
-              variant="underline"
-              target="_blank"
-              href="https://atbackup.pages.dev/"
-            >
+              <Link
+                color={"emphasized"}
+                variant="underline"
+                target="_blank"
+                href="https://northskysocial.com/posts/privacy-policy"
+              >
               ATBackup
             </Link>
           </List.Item>
@@ -59,11 +62,12 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
             <List.Item>Free local backups to your computer</List.Item>
           </List.Root>
           <List.Item>
-            <Link
-              variant="underline"
-              target="_blank"
-              href="https://bsky.storage/"
-            >
+              <Link
+                color={"emphasized"}
+                variant="underline"
+                target="_blank"
+                href="https://northskysocial.com/posts/privacy-policy"
+              >
               Storacha
             </Link>
           </List.Item>
@@ -88,18 +92,21 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           Once you have archived your data, press Continue to proceed with
           Migration
         </Text>
+        </VStack>
         <Box mb="10" background={"muted"} color="fg" p="4" borderRadius={"2xl"}>
           <Checkbox name="confirm" required>
             I have backed up my data or do not wish to before migrating.
           </Checkbox>
         </Box>
-        <HStack>
-        <Button type="submit" name="submit" margin={"0 auto"}>
-          Continue
-        </Button>
-                  <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-        Cancel
-      </Button>
+<Text fontSize="md" textAlign={"justify"} mb="4">Placeholder: how do you use this backup data, and under what circumstances.</Text>
+
+        <HStack align={"left"} gap={"10"}>
+          <Button type="submit" name="submit">
+            Continue
+          </Button>
+          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+            Cancel
+          </Button>
         </HStack>
       </VStack>
     </fetcher.Form>
