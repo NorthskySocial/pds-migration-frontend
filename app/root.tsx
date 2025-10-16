@@ -9,10 +9,17 @@ import {
 import type { Route } from "./+types/root";
 import "@fontsource-variable/museomoderno/index.css";
 import "@fontsource-variable/geist/index.css";
+import bg from "./assets/Northsky-Background.jpg";
 
 export default function App() {
   return (
     <html
+      style={{
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundAttachment: "fixed",
+      }}
+      className="dark"
       lang="en"
       suppressHydrationWarning /* needed for dark mode support; extends only 1 level deep */
     >
@@ -26,6 +33,7 @@ export default function App() {
         />
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png" />
+
         {/* All `meta` exports on all routes will render here */}
         <Meta />
 
