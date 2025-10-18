@@ -95,8 +95,7 @@ export const processState = async (
 
     //make sure we're at the root URL
     let stage = STAGES.INVITE_CODE;
-      return state;
-
+    return state;
   } else {
     switch (stage) {
       case STAGES.INVITE_CODE: {
@@ -161,7 +160,7 @@ export const processState = async (
           session.set("handle_dest", handle_dest);
         }
         //skip check in dev
-        if (import.meta.env.DEV) {
+        if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
           logger.log("Forcing handle_dest in dev");
           session.set("handle_dest", "Test Handle");
         }

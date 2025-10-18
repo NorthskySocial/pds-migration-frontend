@@ -1,5 +1,4 @@
-import { type AtpAgent } from "@atproto/api";
-import { once, EventEmitter } from "node:events";
+import { EventEmitter } from "node:events";
 import {
   SeedClient,
   TestNetworkNoAppView,
@@ -8,18 +7,50 @@ import {
 } from "@atproto/dev-env";
 import "jest-puppeteer";
 import "expect-puppeteer";
-import Mail from "nodemailer/lib/mailer";
 import { STAGES } from "../app/util/stages";
+import { randomBytes } from "node:crypto";
+
+const generateFakeUsername = () => randomBytes(4).toString("hex");
+
+beforeAll(async () => {
+  await Promise.all([
+    (async () => {
+      let i = 0;
+      do {
+        try {
+          expect(
+            await fetch("http://localhost:9090/health").then((r) => r.text())
+          ).toEqual("OK");
+          console.info("Backend service is online");
+          break;
+        } catch {
+          i++;
+          await new Promise((r) => setTimeout(r, 250));
+        }
+      } while (i < 10);
+    })(),
+    (async () => {
+      let i = 0;
+      do {
+        try {
+          const ready = await fetch("http://localhost:9090");
+          expect(ready.ok).toBeTruthy();
+          console.info("Frontend service is online");
+          break;
+        } catch {
+          i++;
+          await new Promise((r) => setTimeout(r, 250));
+        }
+      } while (i < 10);
+    })(),
+  ]);
+}, 60000);
 
 describe("account migration tool", () => {
   let originNetwork: TestNetworkNoAppView;
   let destPds: TestPds;
-
+  let srcPds: TestPds;
   let sc: SeedClient;
-  let inviteCode: string;
-  let alice: string;
-  const mailCatcher = new EventEmitter();
-  let _origSendMail;
 
   beforeAll(async () => {
     try {
@@ -27,66 +58,104 @@ describe("account migration tool", () => {
         dbPostgresSchema: "account_migration",
         pds: {
           devMode: true,
-          // hostname: PDS_ORIGIN_HOSTNAME,
-          // port: PDS_ORIGIN_PORT,
+          hostname: "localhost",
+          port: 5566,
+        },
+        plc: {
+          port: 5555,
         },
       });
 
-      const ctx = originNetwork.pds.ctx;
-      const mailer = ctx.mailer;
+      await originNetwork.processAll();
+
+      console.info("PLC is online");
+
+      srcPds = originNetwork.pds;
+      console.info("Origin PDS is online");
 
       destPds = await TestPds.create({
         devMode: true,
         didPlcUrl: originNetwork.plc.url,
         inviteRequired: true,
-        // hostname: PDS_DEST_HOSTNAME,
-        // port: PDS_DEST_PORT,
+        hostname: "localhost",
+        port: 5577,
       });
+
+      console.info("Destination PDS is online");
 
       mockNetworkUtilities(destPds);
 
-      // const origin_config: ProxyOptions = {
-      //   from: `${originNetwork.pds.url}:${originNetwork.pds.port}`,
-      //   to: PDS_ORIGIN_HOSTNAME,
-      // };
-
-      // const dest_config: ProxyOptions = {
-      //   from: `${destPds.url}:${destPds.port}`,
-      //   to: PDS_DEST_HOSTNAME,
-      // };
-
-      // startProxy(origin_config);
-      // startProxy(dest_config);
-
       sc = originNetwork.getSeedClient();
 
-      process.on("SIGINT", async function () {
-        await destPds.close();
-        await originNetwork.close();
-        await browser.close();
-        process.exit();
+      // process.on("SIGINT", async function () {
+      //   await destPds.close();
+      //   await originNetwork.close();
+      //   await browser.close();
+      //   process.exit();
+      // });
+    } catch (e) {
+      console.error(e);
+      process.exit();
+    }
+  });
+
+  afterAll(async () => {
+    await destPds.close();
+    await originNetwork.close();
+  });
+
+  describe("happy paths", () => {
+    describe("user creates new account", () => {
+      test("without recovery key", async () => {
+        const {
+          data: { code: inviteCode },
+        } = await destPds.getClient().com.atproto.server.createInviteCode(
+          { useCount: 5 },
+          {
+            encoding: "application/json",
+            headers: destPds.adminAuthHeaders(),
+          }
+        );
+
+        console.log(STAGES.INVITE_CODE);
+        await page.goto(`http://localhost:5173`);
+        await page.waitForSelector('[name="invite-code"]');
+        await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
+        await page.$eval('input[name="agree-to-privacy"]', (e) => e.click());
+        await page.type('[name="invite-code"]', inviteCode);
+        await page.click('button[name="create"]');
+
+        console.log(STAGES.CREATE_DEST_ACCOUNT);
+        const username = generateFakeUsername();
+        await page.waitForSelector('input[name="handle"]');
+        await page.type('input[name="email"]', `${username}@example.com`);
+        await page.type('input[name="handle"]', `${username}-new`);
+        await page.type('input[name="password"]', "passwordPasswordPassword");
+        await page.type(
+          'input[name="password-repeat"]',
+          "passwordPasswordPassword"
+        );
+        await page.click('button[type="submit"]');
+
+        console.log(STAGES.GENERATE_RECOVERY_KEY);
+        await page.waitForSelector('button[name="continue"]');
+        await page.click('button[name="continue"]');
+
+        expect(page).toMatchTextContent("Welcome to Northsky!");
+      });
+    });
+
+    test("user migrates without recovery key", async () => {
+      const username = generateFakeUsername();
+      const src = await sc.createAccount(username, {
+        handle: `${username}.test`,
+        email: `${username}@example.com`,
+        password: "password",
       });
 
-      await originNetwork.processAll();
-      // sampleKey = (await Secp256k1Keypair.create()).did();
-
-      // Catch emails for use in tests
-      _origSendMail = mailer.transporter.sendMail;
-      mailer.transporter.sendMail = async (opts) => {
-        const result = await _origSendMail.call(mailer.transporter, opts);
-        mailCatcher.emit("mail", opts);
-        return result;
-      };
-
-      await sc.createAccount("alice", {
-        handle: "alice.test",
-        email: "alice@test.com",
-        password: "alice",
-      });
-
-      alice = sc.dids.alice;
-
-      const res = await destPds.getClient().com.atproto.server.createInviteCode(
+      const {
+        data: { code: inviteCode },
+      } = await destPds.getClient().com.atproto.server.createInviteCode(
         { useCount: 5 },
         {
           encoding: "application/json",
@@ -94,71 +163,55 @@ describe("account migration tool", () => {
         }
       );
 
-      inviteCode = res.data.code;
-    } catch (e) {
-      console.error(e);
-    }
+      console.log(STAGES.INVITE_CODE);
+      await page.goto(`http://localhost:5173`);
+      await page.waitForSelector('[name="invite-code"]');
+      await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
+      await page.type('[name="invite-code"]', inviteCode);
+      await page.click('button[name="migrate"]');
+
+      console.log(STAGES.BACKUP_NOTICE);
+      await page.waitForSelector('input[name="confirm"]');
+      await page.$eval('input[name="confirm"]', (e) => e.click());
+      await page.click('button[type="submit"]');
+
+      console.log(STAGES.ORIGIN_PDS_LOGIN);
+      await page.waitForSelector('input[name="bsky-handle"]');
+      await page.type('input[name="bsky-handle"]', `${username}.test`);
+      await page.type('input[name="bsky-password"]', "password");
+      await page.click('button[type="submit"]');
+
+      console.log(STAGES.CREATE_DEST_ACCOUNT);
+      await page.waitForSelector('input[name="handle"]');
+      await page.type('input[name="handle"]', `${username}-new`);
+      await page.type('input[name="password"]', "hunter7password");
+      await page.type('input[name="password-repeat"]', "hunter7password");
+      await page.click('button[type="submit"]');
+
+      console.log(STAGES.GENERATE_RECOVERY_KEY);
+      await page.waitForSelector('button[name="continue"]');
+      await page.click('button[name="continue"]');
+
+      await page.waitForSelector('input[name="token_plc"]');
+
+      const res = await originNetwork.pds.ctx.accountManager.db.db
+        .selectFrom("email_token")
+        .selectAll()
+        .where("did", "=", src.did)
+        .where("purpose", "=", "plc_operation")
+        .executeTakeFirst();
+
+      const plcToken = res?.token;
+      console.log("PLC token: ", plcToken);
+
+      await page.type('input[name="token_plc"]', plcToken!);
+
+      await page.waitForSelector('button[type="submit"]');
+      await page.click('button[type="submit"]');
+
+      expect(page).toMatchTextContent(
+        /Your data has been migrated successfully/
+      );
+    });
   });
-
-  afterAll(async () => {
-    await destPds?.close();
-    await originNetwork?.close();
-  });
-
-  test("happy path", async () => {
-    console.log(STAGES.INVITE_CODE);
-    await page.goto(
-      `http://localhost:5173?destination=${destPds.url}&plc=${originNetwork.plc.url}`
-    );
-    await page.waitForSelector('[name="invite-code"]');
-    await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
-    await page.type('[name="invite-code"]', inviteCode);
-    await page.click('button[name="migrate"]');
-
-    console.log(STAGES.BACKUP_NOTICE);
-    await page.waitForSelector('input[name="confirm"]');
-    await page.$eval('input[name="confirm"]', (e) => e.click());
-    await page.click('button[type="submit"]');
-
-    console.log(STAGES.ORIGIN_PDS_LOGIN);
-    await page.waitForSelector('input[name="bsky-handle"]');
-    await page.$eval('input[name="has-pds"]', (e) => e.click());
-    await page.waitForSelector('input[name="pds"]');
-    await page.$eval('input[name="pds"]', (el, [pds]) => (el.value = pds), [
-      originNetwork.pds.url,
-    ]);
-    await page.type('input[name="bsky-handle"]', "alice.test");
-    await page.type('input[name="bsky-password"]', "alice");
-    await page.click('button[type="submit"]');
-
-    console.log(STAGES.CREATE_DEST_ACCOUNT);
-    await page.waitForSelector('input[name="handle"]');
-    await page.type('input[name="handle"]', "new-alice");
-    await page.type('input[name="password"]', "hunter7password");
-    await page.type('input[name="password-repeat"]', "hunter7password");
-    await page.click('button[type="submit"]');
-
-    await page.waitForSelector('input[name="token_plc"]');
-
-    await new Promise((res) => setTimeout(res, 1000));
-
-    const res = await originNetwork.pds.ctx.accountManager.db.db
-      .selectFrom("email_token")
-      .selectAll()
-      .where("did", "=", alice)
-      .where("purpose", "=", "plc_operation")
-      .executeTakeFirst();
-
-    const plcToken = res?.token;
-    console.log("PLC token: ", plcToken);
-
-    await page.type('input[name="token_plc"]', plcToken!);
-
-    await page.waitForSelector('button[type="submit"]');
-    await page.click('button[type="submit"]');
-
-    await page.waitForSelector('button[name="login-to-northsky"]');
-
-    expect(page).toMatchTextContent(/Your data has been migrated successfully/);
-  }, 120000);
 });

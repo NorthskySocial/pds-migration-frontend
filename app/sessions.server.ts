@@ -50,7 +50,7 @@ export const initSession = (hostname?: string) =>
       //
       // expires: new Date(Date.now() + 60_000),
       httpOnly: true,
-      maxAge: 60 * 60 * 24,
+      maxAge: import.meta.env.MODE === "test" ? 60 : 60 * 60 * 24,
       path: "/",
       sameSite: "strict",
       secrets: ["toastytoast"],
