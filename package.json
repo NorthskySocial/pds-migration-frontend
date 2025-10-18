@@ -7,13 +7,14 @@
     "build": "react-router build",
     "dev": "react-router dev",
     "dev:test": "react-router dev --mode test",
+    "dev:test:with-backend": "npx concurrently -i --kill-others npm:test:env npm:dev:test npm:test:backend-arm64",
     "start": "react-router-serve ./build/server/index.js",
     "test:env": "tsx bin/testenv.ts",
     "test:jest": "jest --maxWorkers=1",
-    "test:backend": "docker pull ghcr.io/northskysocial/pds-migration:main && docker run -it northskysocial/pds-migration:main",
-    "test:backend-arm64": "cargo run --bin pdsmigration-web --manifest-path pds-migration/Cargo.toml",
-    "test": "npx concurrently -i --kill-others npm:test:env npm:dev:test npm:test:backend",
-    "test:arm64": "npx concurrently -i --kill-others npm:test:env npm:dev:test npm:test:backend-arm64",
+    "test:backend": "ENDPOINT=https://s3.amazonaws.com docker pull ghcr.io/northskysocial/pds-migration:main && docker run -it northskysocial/pds-migration:main",
+    "test:backend-arm64": "ENDPOINT=https://s3.amazonaws.com cargo run --bin pdsmigration-web --manifest-path pds-migration/Cargo.toml",
+    "test:e2e": "npx concurrently -i --kill-others npm:test:jest npm:dev:test npm:test:backend",
+    "test:e2e:arm64": "npx concurrently -i --kill-others npm:test:jest npm:dev:test npm:test:backend-arm64",
     "typecheck": "wrangler types && react-router typegen && tsc"
   },
   "dependencies": {

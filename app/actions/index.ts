@@ -92,8 +92,9 @@ export async function createDestAccount(
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
-  const handle_dest = `${handle}.${dest_hostname.match("localhost") ? "test" : dest_hostname
-    }`;
+  const handle_dest = `${handle}.${
+    dest_hostname.match("localhost") ? "test" : dest_hostname
+  }`;
 
   // Check passwords matching
   if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
@@ -106,22 +107,25 @@ export async function createDestAccount(
   }
 
   //skip check in dev
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     logger.log("Skipping availability check");
 
-
-    return { handle_available: true, token_dest: "Test Dest Token", token_service: "Test Service Token", handle_dest: "Test Dest Handle"};
+    return {
+      handle_available: true,
+      token_dest: "Test Dest Token",
+      token_service: "Test Service Token",
+      handle_dest: "Test Dest Handle",
+    };
   }
 
   // Check handle availability
   if (!handle.length) {
     return { handle_available: null, token_dest: null };
   } else {
-
     //debug
     console.log(
       "Handle available " +
-      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+        `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     );
 
     const handle_available = await f(
@@ -134,12 +138,16 @@ export async function createDestAccount(
 
     if (!submitted) return { handle_available, handle_dest };
 
-
     //Disable checks if we're in dev mode
-  if (import.meta.env.DEV) {
-    logger.log("Skipping availability check");
-    return { handle_available: true, token_dest: "Test Dest Token", token_service: "Test Service Token", handle_dest: "Test Dest Handle"};
-  }
+    if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
+      logger.log("Skipping availability check");
+      return {
+        handle_available: true,
+        token_dest: "Test Dest Token",
+        token_service: "Test Service Token",
+        handle_dest: "Test Dest Handle",
+      };
+    }
 
     // Create account directly if service token is not available
     // This is a new, non migrated account
@@ -162,15 +170,13 @@ export async function createDestAccount(
       }
 
       return { token_dest: response.data.accessJwt };
-
     } /* This is a migrated account */ else {
-
-
       const serviceEndpoint = pds_origin;
 
       const pds_dest_hostname = new URL(pds_dest!).host;
-      const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
-        }`;
+      const aud = `did:web:${
+        pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
+      }`;
 
       logger.debug({ aud });
 
@@ -195,7 +201,7 @@ export async function createDestAccount(
       }
 
       // I have no idea what the hell is happening here
-      const token_service = (await res.json()) as {token: string};
+      const token_service = (await res.json()) as { token: string };
 
       const body = {
         pds_host: pds_dest,
@@ -246,9 +252,8 @@ export async function exportRepo(
   { pds_origin, did, token_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
-
   //Disable checks if we're in dev mode
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     return { ok: true };
   }
 
@@ -283,7 +288,7 @@ export async function importRepo(
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
   // This breaks during local tests so return early if Vite in dev mode
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     logger.log("Ignoring importRepo during tests");
     return { ok: true };
   }
@@ -318,9 +323,8 @@ export async function exportBlobs(
   { pds_origin, pds_dest, did, token_dest, token_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
-
   //Disable checks if we're in dev mode
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     return { ok: true };
   }
 
@@ -354,7 +358,7 @@ export async function uploadBlobs(
   { pds_dest, did, token_dest }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     logger.log("Not uploading blobs because this is a test");
     return { ok: true };
   }
@@ -386,8 +390,7 @@ export async function migratePreferences(
   { pds_origin, pds_dest, did, token_dest, token_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
-
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     logger.log("Not uploading blobs because this is a test");
     return { ok: true };
   }
@@ -419,8 +422,7 @@ export async function requestPlcToken(
   { pds_origin, did, token_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
-
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     logger.log("Skipping PLC because we're testing");
     return { ok: true };
   }
@@ -459,8 +461,7 @@ export async function validatePlcToken(
   data: FormData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 ) {
-
-  if (import.meta.env.DEV) {
+  if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
     logger.log("Skipping PlcToken");
     return { ok: true };
   }
@@ -488,7 +489,7 @@ export async function validatePlcToken(
     if (!migrateRes.ok) {
       throw new MigrationError(
         (await migrateRes.json<{ message: string }>())?.message ??
-        migrateRes.statusText
+          migrateRes.statusText
       );
     }
 
@@ -506,7 +507,7 @@ export async function validatePlcToken(
     if (!activateRes.ok) {
       throw new MigrationError(
         (await activateRes.json<{ message: string }>())?.message ??
-        activateRes.statusText
+          activateRes.statusText
       );
     }
 
@@ -524,7 +525,7 @@ export async function validatePlcToken(
     if (!deactivateRes.ok) {
       throw new MigrationError(
         (await deactivateRes.json<{ message: string }>())?.message ??
-        deactivateRes.statusText
+          deactivateRes.statusText
       );
     }
 

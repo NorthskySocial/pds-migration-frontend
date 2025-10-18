@@ -91,8 +91,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     inviteCode: session.get("inviteCode"),
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
-    require_2fa_code: session.get("require_2fa_code")?? false,
-
+    require_2fa_code: session.get("require_2fa_code") ?? false,
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -158,7 +157,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   const Stage = SCREENS[stage];
 
   return (
-    <Layout>
+    <Layout stage={stage}>
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <Suspense fallback={<Loading />}>
         {fetcher.state !== "idle" ? (

@@ -4,4 +4,5 @@ export default {
     "^.+.tsx?$": ["ts-jest", {}],
   },
   preset: "jest-puppeteer",
+  testTimeout: 60000,
 };

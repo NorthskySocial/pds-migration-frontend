@@ -31,7 +31,7 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
           async () => {
             await fetcher.submit({}, { method: "post" });
           },
-          import.meta.env.DEV ? 500 : 0
+          import.meta.env.DEV && import.meta.env.MODE !== "test" ? 500 : 0
         );
       }
     })();

@@ -67,6 +67,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
               type="button"
               onClick={continueMigration}
               margin={"0 auto"}
+              name="continue"
             >
               {didKeyWizard
                 ? "Continue"
