@@ -1,4 +1,18 @@
-import { EventEmitter } from "node:events";
+/**
+ * A WARNING:
+ *
+ * You may be tempted to replace this extensive Jest-based test suite with Vitest.
+ *
+ * Don't. I've tried to on like 3 separate occasions.
+ *
+ * It is a lost cause because Vitest is intended for unit testing, so it bundles.
+ *
+ * I *assure* you that is *NOT* what you want to do with this server-side E2E code.
+ *
+ * Leaving this note for myself so I don't attempt this foolishness a fourth time.
+ *
+ * -æ, 18 Oct 2025.
+ */
 import {
   SeedClient,
   TestNetworkNoAppView,
