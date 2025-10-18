@@ -108,7 +108,7 @@ export async function createDestAccount(
   //skip check in dev
   if (import.meta.env.DEV) {
     logger.log("Skipping availability check");
-        
+
 
     return { handle_available: true, token_dest: "Test Dest Token", token_service: "Test Service Token", handle_dest: "Test Dest Handle"};
   }
@@ -195,12 +195,12 @@ export async function createDestAccount(
       }
 
       // I have no idea what the hell is happening here
-      const token_service = (await res.json()) as string;
+      const token_service = (await res.json()) as {token: string};
 
       const body = {
         pds_host: pds_dest,
         handle: handle_dest,
-        token: token_service,
+        token: token_service.token,
         password: pw_dest,
         email,
         did,
