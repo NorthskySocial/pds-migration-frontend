@@ -33,7 +33,7 @@ beforeAll(async () => {
       let i = 0;
       do {
         try {
-          const ready = await fetch("http://localhost:9090");
+          const ready = await fetch("http://localhost:5173");
           expect(ready.ok).toBeTruthy();
           console.info("Frontend service is online");
           break;
@@ -86,13 +86,6 @@ describe("account migration tool", () => {
       mockNetworkUtilities(destPds);
 
       sc = originNetwork.getSeedClient();
-
-      // process.on("SIGINT", async function () {
-      //   await destPds.close();
-      //   await originNetwork.close();
-      //   await browser.close();
-      //   process.exit();
-      // });
     } catch (e) {
       console.error(e);
       process.exit();
