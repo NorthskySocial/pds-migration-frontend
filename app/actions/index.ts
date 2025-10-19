@@ -131,12 +131,6 @@ export async function createDestAccount(
   if (!handle.length) {
     return {handle_available: null, token_dest: null};
   } else {
-    //debug
-    console.log(
-      "Handle available " +
-      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
-    );
-
     const handle_available = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
@@ -176,7 +170,6 @@ export async function createDestAccount(
       });
 
       if (!response.success) {
-        logger.error(response.data);
         throw new CreateAccountError("error creating account");
       }
 
@@ -189,8 +182,6 @@ export async function createDestAccount(
 
       const pds_dest_hostname: string = new URL(pds_dest!).host;
       const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname}`;
-
-      logger.debug({aud});
 
       // Generate service token
       const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
@@ -206,10 +197,7 @@ export async function createDestAccount(
         }),
       });
 
-      console.log("service token", res.status, res.statusText, res.body);
-
       if (!res.ok) {
-        console.log(res);
         throw new LoginError(
           `Invalid service token received; please contact support with error: ${res.statusText}`
         );
@@ -217,10 +205,8 @@ export async function createDestAccount(
 
       // I have no idea what the hell is happening here
       const token_service = (await res.json()) as { token: string };
-      console.log("service token json", token_service);
 
       if (!token_service.token) {
-        console.log('Invalid service token received; please contact support with ');
         throw new LoginError(
           `Invalid service token received; please contact support with error: ${res.statusText}`
         );
@@ -253,7 +239,6 @@ export async function createDestAccount(
       });
 
       if (!createAccountRes.ok) {
-        console.error(createAccountRes);
         throw new CreateAccountError(createAccountRes.statusText);
       }
 
