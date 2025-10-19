@@ -206,10 +206,10 @@ export async function createDestAccount(
         }),
       });
 
-      console.log("service token", res);
+      console.log("service token", res.status, res.statusText, res.body);
 
       if (!res.ok) {
-        console.error(res);
+        console.log(res);
         throw new LoginError(
           `Invalid service token received; please contact support with error: ${res.statusText}`
         );
@@ -220,7 +220,7 @@ export async function createDestAccount(
       console.log("service token json", token_service);
 
       if (!token_service.token) {
-        console.error(res);
+        console.log('Invalid service token received; please contact support with ');
         throw new LoginError(
           `Invalid service token received; please contact support with error: ${res.statusText}`
         );
@@ -253,6 +253,7 @@ export async function createDestAccount(
       });
 
       if (!createAccountRes.ok) {
+        console.error(createAccountRes);
         throw new CreateAccountError(createAccountRes.statusText);
       }
 
