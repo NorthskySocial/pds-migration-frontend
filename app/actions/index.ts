@@ -10,12 +10,15 @@ import {
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import {
   CreateAccountError,
+  HandleNotAvailableError,
   LoginError,
   MigrationError,
   PasswordValidationError,
 } from "~/errors";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
+import { useFetcher } from "react-router";
+import { useState } from "react";
 import type { Session } from "react-router";
 
 export async function loginOrigin(
@@ -72,6 +75,7 @@ export async function loginOrigin(
   };
 }
 
+//Create an account on the Northsky PDS
 export async function createDestAccount(
   {
     did,
@@ -83,6 +87,11 @@ export async function createDestAccount(
     email,
     inviteCode,
     user_recover_key,
+    password_too_short = false,
+    password_match = false,
+    handle_available,
+    email_valid,
+
   }: Partial<SessionData>,
   data: FormData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
@@ -93,25 +102,21 @@ export async function createDestAccount(
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
   const handle_dest = `${handle}.${dest_hostname.match("localhost") ? "test" : dest_hostname
+
     }`;
 
+  //Do sanity check on the fields.
+
+  // Check e-mail is in a good format
+  //say yes for now
+  email_valid = true;
+
   // Check passwords matching
-  if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
-    throw new PasswordValidationError("Passwords do not match");
-  }
+  password_match = (pw_dest === pwConfirm);
 
   // Check password length
-  if (pw_dest?.length < 8 && pw_dest.length > 0) {
-    throw new PasswordValidationError("Password must be at least 8 characters");
-  }
-
-  //skip check in dev
-  if (import.meta.env.DEV) {
-    logger.log("Skipping availability check");
-        
-
-    return { handle_available: true, token_dest: "Test Dest Token", token_service: "Test Service Token", handle_dest: "Test Dest Handle"};
-  }
+  // console.log("Password :",pw_dest, (pw_dest.length < 8),pw_dest.length > 0,(pw_dest.length < 8 && pw_dest.length > 0));
+  password_too_short = (pw_dest.length < 8 && pw_dest.length > 0);
 
   // Check handle availability
   if (!handle.length) {
@@ -121,123 +126,138 @@ export async function createDestAccount(
     //debug
     console.log(
       "Handle available " +
-      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+      `${pds_origin}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     );
 
+
     const handle_available = await f(
-      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+      `${pds_origin}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
       .then<{ message: string; error: string } & { did: string }>((r) =>
         r.json()
       )
       .then((d) => d.message === "Unable to resolve handle" || d.did === did);
 
-    if (!submitted) return { handle_available, handle_dest };
+    // console.log("Handle available: " + handle_available);
+    // console.log("Handle dest: " + handle_dest);
+    // console.log("Submitted:" + submitted)
 
 
-    //Disable checks if we're in dev mode
-  if (import.meta.env.DEV) {
-    logger.log("Skipping availability check");
-    return { handle_available: true, token_dest: "Test Dest Token", token_service: "Test Service Token", handle_dest: "Test Dest Handle"};
-  }
 
-    // Create account directly if service token is not available
-    // This is a new, non migrated account
-    if (!did) {
-      // Get new user token
-      const agent_dest = new AtpAgent({
-        service: pds_dest!,
-        fetch: f as typeof fetch,
-      });
-      const response = await agent_dest.createAccount({
-        email: email,
-        handle: handle_dest,
-        inviteCode: inviteCode,
-        password: pw_dest,
-      });
+    if (!submitted) return { handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short }
 
-      if (!response.success) {
-        logger.error(response.data);
-        throw new CreateAccountError("error creating account");
+    else {
+
+      //Disable checks if we're in dev mode
+      if (import.meta.env.DEV) {
+        logger.log("Skipping availability check");
+
+        return { token_dest: "Test Token", handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short };
       }
 
-      return { token_dest: response.data.accessJwt };
+      // Create account directly if service token is not available
+      // This is a new, non migrated account
+      if (!did) {
 
-    } /* This is a migrated account */ else {
+        // Get new user token
+        const agent_dest = new AtpAgent({
+          service: pds_dest!,
+          fetch: f as typeof fetch,
+        });
+        const response = await agent_dest.createAccount({
+          email: email,
+          handle: handle_dest,
+          inviteCode: inviteCode,
+          password: pw_dest,
+        });
+
+        if (!response.success) {
+          logger.error(response.data);
+          throw new CreateAccountError("error creating account");
+        }
+
+        return { handle_dest: handle_dest, token_dest: response.data.accessJwt };
+
+      } /* This is a migrated account */ else {
 
 
-      const serviceEndpoint = pds_origin;
+        const serviceEndpoint = pds_origin;
 
-      const pds_dest_hostname = new URL(pds_dest!).host;
-      const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
-        }`;
+        const pds_dest_hostname = new URL(pds_dest!).host;
+        const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
+          }`;
 
-      logger.debug({ aud });
+        logger.debug({ aud });
 
-      // Generate service token
-      const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        method: "post",
-        body: JSON.stringify({
-          pds_host: serviceEndpoint,
+        // Generate service token
+        const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "post",
+          body: JSON.stringify({
+            pds_host: serviceEndpoint,
+            did,
+            token: token_origin,
+            aud,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new LoginError(
+            `Invalid service token received; please contact support with error: ${res.statusText}`
+          );
+        }
+
+        // I have no idea what the hell is happening here
+
+        const token_service = (await res.json()) as { token: string };
+
+        const body = {
+          pds_host: pds_dest,
+          handle: handle_dest,
+
+          token: token_service.token || '',
+          password: pw_dest,
+          email,
           did,
-          token: token_origin,
-          aud,
-        }),
-      });
+          invite_code: inviteCode,
+          recovery_key: user_recover_key,
+        };
 
-      if (!res.ok) {
-        throw new LoginError(
-          `Invalid service token received; please contact support with error: ${res.statusText}`
-        );
+        console.log("Stringified" + JSON.stringify(body));
+
+        const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
+          method: "post",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        logger.debug("create account debugging", body, {
+          headers: createAccountRes.headers,
+          body: createAccountRes.body,
+          ok: createAccountRes.ok,
+          status: createAccountRes.status,
+          statusText: createAccountRes.statusText,
+          url: createAccountRes.url,
+        });
+
+        if (!createAccountRes.ok) {
+          throw new CreateAccountError(createAccountRes.statusText);
+        }
+
+        // Get new user token
+        const agent_dest = new AtpAgent({
+          service: pds_dest!,
+          fetch: f as typeof fetch,
+        });
+
+        const { data } = await agent_dest.login({
+          identifier: handle_dest,
+          password: pw_dest,
+        });
+        return { handle_dest: handle_dest, token_dest: data.accessJwt };
       }
-
-      // I have no idea what the hell is happening here
-      const token_service = (await res.json()) as string;
-
-      const body = {
-        pds_host: pds_dest,
-        handle: handle_dest,
-        token: token_service,
-        password: pw_dest,
-        email,
-        did,
-        invite_code: inviteCode,
-        recovery_key: user_recover_key,
-      };
-
-      const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
-        method: "post",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      logger.debug("create account debugging", body, {
-        headers: createAccountRes.headers,
-        body: createAccountRes.body,
-        ok: createAccountRes.ok,
-        status: createAccountRes.status,
-        statusText: createAccountRes.statusText,
-        url: createAccountRes.url,
-      });
-
-      if (!createAccountRes.ok) {
-        throw new CreateAccountError(createAccountRes.statusText);
-      }
-
-      // Get new user token
-      const agent_dest = new AtpAgent({
-        service: pds_dest!,
-        fetch: f as typeof fetch,
-      });
-
-      const { data } = await agent_dest.login({
-        identifier: handle_dest,
-        password: pw_dest,
-      });
-      return { token_dest: data.accessJwt };
     }
   }
 }

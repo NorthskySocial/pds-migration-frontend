@@ -77,7 +77,7 @@ export const SuccessText = ({
 
       <h4 style={{ padding: "1em" }}>{keypair.did()}</h4>
       <p>It is encrypted using the following passphrase (hover to reveal):</p>
-<br></br>
+      <br></br>
       <Spoiler>
         <pre style={{ textAlign: "center", padding: "1em" }}>
           {result.passphrase
@@ -146,9 +146,8 @@ export const SuccessText = ({
                   value: result.passphrase,
                 },
               ],
-              notes: `Generated ${new Date().toISOString()} by Northsky Migrator.\n\nSalt: ${
-                result.salt
-              }`,
+              notes: `Generated ${new Date().toISOString()} by Northsky Migrator.\n\nSalt: ${result.salt
+                }`,
             })}
             lang="en"
           />
@@ -166,16 +165,19 @@ export const SuccessText = ({
         </strong>
       </p>
 
-      {downloaded && (
-        <Button variant="solid" colorPalette={"purple"}  size="lg" onClick={exit}>
+      {(downloaded && (
+        <Button variant="solid" colorPalette={"purple"} size="lg" onClick={exit}>
           Continue
         </Button>
-      )}
-<Float>
-              <CloseButton variant="solid" colorPalette={"purple"}  size="lg" onClick={exit}>
+      )) ||
+        (<Button variant="solid" colorPalette={"purple"} size="lg" onClick={exit} disabled>
+          Continue
+        </Button>)}
+      <Float>
+        <CloseButton variant="solid" colorPalette={"purple"} size="lg" onClick={exit}>
 
         </CloseButton>
-        </Float>
+      </Float>
     </>
 
   ) : (
@@ -210,7 +212,7 @@ export const OpenRotationKeyModal = ({
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content>
+          <Dialog.Content bgColor="brand.default" >
             <Dialog.Header>
               <Dialog.Title>Add rotation key</Dialog.Title>
             </Dialog.Header>

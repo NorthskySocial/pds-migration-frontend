@@ -14,7 +14,7 @@ export type SessionData = {
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-  require_2fa_code: boolean;
+
 
   // state flags
   hasBackup: boolean;
@@ -27,6 +27,12 @@ export type SessionData = {
   originDeactivated: boolean;
   destActivated: boolean;
   migratedPlc: boolean;
+  handle_available: boolean,
+  password_too_short: boolean,
+  password_match: boolean,
+  email_valid: boolean,
+  require_2fa_code: boolean;
+
 };
 
 export type SessionFlashData = {
