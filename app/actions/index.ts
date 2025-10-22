@@ -359,6 +359,7 @@ export async function exportBlobs(
   });
 
   if (!res.ok) {
+    logger.error("error in exporting blobs");
     throw new MigrationError((await res.json<{ message: string }>()).message);
   }
 
