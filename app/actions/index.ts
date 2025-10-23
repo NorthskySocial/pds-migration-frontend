@@ -359,8 +359,24 @@ export async function exportBlobs(
   });
 
   if (!res.ok) {
-    logger.error("error in exporting blobs");
-    throw new MigrationError((await res.json<{ message: string }>()).message);
+    let errorMessage: string;
+    try {
+      const errorData = await res.json<{ message: string }>();
+      errorMessage = errorData.message;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (jsonError) {
+      // If JSON parsing fails, try to get text content
+      try {
+        const textContent = await res.text();
+        errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (textError) {
+        // If both fail, use the status information
+        errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+      }
+    }
+    logger.error(`Export blobs failed: ${errorMessage}`)
+    throw new MigrationError(errorMessage);
   }
 
   return {ok: true};
