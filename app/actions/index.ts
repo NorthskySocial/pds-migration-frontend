@@ -33,6 +33,7 @@ import { useFetcher } from "react-router";
 import { useState } from "react";
 import type { Session } from "react-router";
 import type { type } from "os";
+import type { type } from "os";
 
 export async function loginOrigin(
   session: Session<SessionData, SessionFlashData>,
@@ -64,6 +65,7 @@ export async function loginOrigin(
   session.set("handle_origin", handle_origin);
   session.set("password_origin", password_origin);
   session.set("pds_origin", pds_origin);
+
 
 
   // Login to origin PDS
@@ -104,6 +106,7 @@ export async function loginOrigin(
     password_origin,
     token_origin,
     token_ref_origin,
+    token_ref_origin,
     email,
   };
 }
@@ -112,8 +115,10 @@ export async function loginOrigin(
 export async function createDestAccount(
   {
 
+
     did,
     token_origin,
+    token_ref_origin,
     token_ref_origin,
     pds_origin,
     pds_dest,
@@ -195,10 +200,12 @@ export async function createDestAccount(
     console.log(
       "Handle available " +
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     );
 
 
     const handle_available = await f(
+      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
       .then<{ message: string; error: string } & { did: string }>((r) =>
@@ -215,6 +222,7 @@ export async function createDestAccount(
       /* This is a migrated account */
 
     if (!submitted) return { handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short, agent_dest: null }
+    if (!submitted) return { handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short, agent_dest: null }
 
     else {
 
@@ -222,6 +230,7 @@ export async function createDestAccount(
       if (import.meta.env.DEV) {
         logger.log("Skipping availability check");
 
+        return { token_dest: "Test Token", handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short, agent_dest: null };
         return { token_dest: "Test Token", handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short, agent_dest: null };
       }
 
@@ -247,9 +256,13 @@ export async function createDestAccount(
         }
 
         return { handle_dest: handle_dest, token_dest: response.data.accessJwt, token_ref_dest: response.data.refreshJwt, agent_dest: agent_dest };
+        return { handle_dest: handle_dest, token_dest: response.data.accessJwt, token_ref_dest: response.data.refreshJwt, agent_dest: agent_dest };
 
       }
+      }
 
+      /* This is a migrated account */
+      else {
       /* This is a migrated account */
       else {
 
@@ -288,6 +301,33 @@ export async function createDestAccount(
 
 
 
+        //refresh auth token
+        const agent_origin = new AtpAgent({
+          service: pds_origin!,
+          fetch: f as typeof fetch,
+        });
+
+        console.log("Pre resume token " + token_ref_origin);
+
+
+        const resume_promise = await agent_origin.resumeSession({
+          handle: handle_origin || "",
+          accessJwt: token_origin || "",
+          refreshJwt: token_ref_origin || "",
+          did: did,
+          active: true,
+        })
+
+        if (resume_promise.success) {
+          console.log("Resume successful. " + token_ref_origin);
+        }
+
+        else {
+          console.log("Resume unsuccessful. " + token_ref_origin);
+        }
+
+
+
         // Generate service token
         const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
           headers: {
@@ -297,6 +337,7 @@ export async function createDestAccount(
           body: JSON.stringify({
             pds_host: serviceEndpoint,
             did,
+            token: token_ref_origin,
             token: token_ref_origin,
             aud,
           }),
@@ -308,6 +349,7 @@ export async function createDestAccount(
           );
         }
 
+        //creating the service token here
         //creating the service token here
         const token_service = (await res.json()) as { token: string };
 
@@ -382,10 +424,36 @@ export async function exportRepo(
   }
 
 
+
   if (!pds_origin || !did || !token_origin) {
     throw new MigrationError(
       "Unable to resolve original account; please login again."
     );
+  }
+
+  //refresh auth token
+  const agent_origin = new AtpAgent({
+    service: pds_origin!,
+    fetch: f as typeof fetch,
+  });
+
+  console.log("Pre resume token " + token_ref_origin);
+
+
+  const resume_promise = await agent_origin.resumeSession({
+    handle: handle_origin || "",
+    accessJwt: token_origin || "",
+    refreshJwt: token_ref_origin || "",
+    did: did,
+    active: true,
+  })
+
+  if (resume_promise.success) {
+    console.log("Resume successful. " + token_ref_origin);
+  }
+
+  else {
+    console.log("Resume unsuccessful. " + token_ref_origin);
   }
 
   //refresh auth token
@@ -487,6 +555,33 @@ export async function importRepo(
 
 
 
+  //refresh auth token
+  const agent_origin = new AtpAgent({
+    service: pds_dest!,
+    fetch: f as typeof fetch,
+  });
+
+  console.log("Pre resume token " + token_ref_dest);
+
+
+  const resume_promise = await agent_origin.resumeSession({
+    handle: handle_dest || "",
+    accessJwt: token_dest || "",
+    refreshJwt: token_ref_dest || "",
+    did: did,
+    active: true,
+  })
+
+  if (resume_promise.success) {
+    console.log("Resume successful. " + token_ref_dest);
+  }
+
+  else {
+    console.log("Resume unsuccessful. " + token_ref_dest);
+  }
+
+
+
   // import repo
   const res = await f(`${MIGRATOR_BACKEND}/import-repo`, {
     method: "post",
@@ -532,6 +627,56 @@ export async function exportBlobs(
     throw new MigrationError(
       "Unable to resolve original account; please login again."
     );
+  }
+
+  //refresh origin token
+  const agent_origin = new AtpAgent({
+    service: pds_origin!,
+    fetch: f as typeof fetch,
+  });
+
+  console.log("Pre resume token " + token_ref_origin);
+
+
+  const resume_org_promise = await agent_origin.resumeSession({
+    handle: handle_origin || "",
+    accessJwt: token_origin || "",
+    refreshJwt: token_ref_origin || "",
+    did: did  || "",
+    active: true,
+  })
+
+  if (resume_org_promise.success) {
+    console.log("Resume successful. " + token_ref_origin);
+  }
+
+  else {
+    console.log("Resume unsuccessful. " + token_ref_origin);
+  }
+
+  //refresh dest token
+  const agent_dest = new AtpAgent({
+    service: pds_dest!,
+    fetch: f as typeof fetch,
+  });
+
+  console.log("Pre resume token " + token_ref_dest);
+
+
+  const resume_promise = await agent_dest.resumeSession({
+    handle: handle_dest || "",
+    accessJwt: token_dest || "",
+    refreshJwt: token_ref_dest || "",
+    did: did  || "",
+    active: true,
+  })
+
+  if (resume_promise.success) {
+    console.log("Resume successful. " + token_ref_dest);
+  }
+
+  else {
+    console.log("Resume unsuccessful. " + token_ref_dest);
   }
 
   //refresh origin token
@@ -669,6 +814,30 @@ export async function uploadBlobs(
   else {
     console.log("Resume unsuccessful. " + token_ref_dest);
   }
+  //refresh dest token
+  const agent_dest = new AtpAgent({
+    service: pds_dest!,
+    fetch: f as typeof fetch,
+  });
+
+  console.log("Pre resume token " + token_ref_dest);
+
+
+  const resume_promise = await agent_dest.resumeSession({
+    handle: handle_dest || "",
+    accessJwt: token_dest || "",
+    refreshJwt: token_ref_dest || "",
+    did: did  || "",
+    active: true,
+  })
+
+  if (resume_promise.success) {
+    console.log("Resume successful. " + token_ref_dest);
+  }
+
+  else {
+    console.log("Resume unsuccessful. " + token_ref_dest);
+  }
   // upload blobs
   const res = await f(`${MIGRATOR_BACKEND}/upload-blobs`, {
     method: "post",
@@ -711,6 +880,33 @@ export async function migratePreferences(
   if (!pds_origin || !pds_dest || !did || !token_dest || !token_origin) {
     throw new MigrationError("Not able to migrate preferences");
   }
+
+
+  //refresh origin token
+  const agent_origin = new AtpAgent({
+    service: pds_origin!,
+    fetch: f as typeof fetch,
+  });
+
+  console.log("Pre resume token " + token_ref_origin);
+
+
+  const resume_org_promise = await agent_origin.resumeSession({
+    handle: handle_origin || "",
+    accessJwt: token_origin || "",
+    refreshJwt: token_ref_origin || "",
+    did: did  || "",
+    active: true,
+  })
+
+  if (resume_org_promise.success) {
+    console.log("Resume successful. " + token_ref_origin);
+  }
+
+  else {
+    console.log("Resume unsuccessful. " + token_ref_origin);
+  }
+
 
 
   //refresh origin token
