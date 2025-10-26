@@ -1,8 +1,11 @@
 "use server";
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import {AtpAgent} from "@atproto/api";
 =======
+=======
+>>>>>>> Stashed changes
 import { AtpAgent, } from "@atproto/api";
 import { type AtpSessionData, type AtpSessionEvent } from "@atproto/api";
 
@@ -68,7 +71,13 @@ export async function loginOrigin(
   });
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   const {did, email, accessJwt: token_origin} = agentSessionData;
+=======
+  console.log("Agent Sesson Data " + agentSessionData);
+
+  const { did, email, accessJwt: token_origin, refreshJwt: token_ref_origin } = agentSessionData;
+>>>>>>> Stashed changes
 =======
   console.log("Agent Sesson Data " + agentSessionData);
 
@@ -110,6 +119,7 @@ export async function createDestAccount(
   }: Partial<SessionData>,
   data: FormData,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
   if (pds_origin === undefined) {
@@ -128,6 +138,11 @@ export async function createDestAccount(
     console.error("token_origin is undefined");
     throw new CreateAccountError("Invalid origin token");
   }
+=======
+
+  { MIGRATOR_BACKEND }: CloudflareEnvironment
+) {
+>>>>>>> Stashed changes
 =======
 
   { MIGRATOR_BACKEND }: CloudflareEnvironment
@@ -332,9 +347,12 @@ export async function createDestAccount(
 
 export async function exportRepo(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   {pds_origin, did, token_origin}: SessionData,
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 =======
+=======
+>>>>>>> Stashed changes
   { pds_origin, did, token_origin, token_ref_origin, handle_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 >>>>>>> Stashed changes
@@ -399,9 +417,12 @@ export async function exportRepo(
 
 export async function importRepo(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   {pds_dest, did, token_dest}: SessionData,
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 =======
+=======
+>>>>>>> Stashed changes
   { pds_dest, did, token_dest, token_ref_dest, handle_dest }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 >>>>>>> Stashed changes
@@ -467,9 +488,12 @@ export async function importRepo(
 
 export async function exportBlobs(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 =======
+=======
+>>>>>>> Stashed changes
   { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_dest, handle_origin}: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 >>>>>>> Stashed changes
@@ -575,9 +599,12 @@ export async function exportBlobs(
 
 export async function uploadBlobs(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   {pds_dest, did, token_dest}: SessionData,
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 =======
+=======
+>>>>>>> Stashed changes
   { pds_dest, did, token_dest, token_ref_dest,handle_dest }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 >>>>>>> Stashed changes
@@ -635,9 +662,12 @@ export async function uploadBlobs(
 
 export async function migratePreferences(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 =======
+=======
+>>>>>>> Stashed changes
   { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
 >>>>>>> Stashed changes
