@@ -1,8 +1,5 @@
 "use server";
 
-<<<<<<< Updated upstream
-import {AtpAgent} from "@atproto/api";
-=======
 import { AtpAgent, } from "@atproto/api";
 import { type AtpSessionData, type AtpSessionEvent } from "@atproto/api";
 
@@ -11,7 +8,6 @@ import {
   isValidDidDoc,
   type DidDocument,
 } from "@atproto/common-web";
->>>>>>> Stashed changes
 
 import {type SessionData, type SessionFlashData} from "~/sessions.server";
 import {
@@ -67,13 +63,9 @@ export async function loginOrigin(
     authFactorToken: (data.get("2fa_code") as string) ?? undefined,
   });
 
-<<<<<<< Updated upstream
-  const {did, email, accessJwt: token_origin} = agentSessionData;
-=======
   console.log("Agent Sesson Data " + agentSessionData);
 
   const { did, email, accessJwt: token_origin, refreshJwt: token_ref_origin } = agentSessionData;
->>>>>>> Stashed changes
 
   if (!did) {
     throw new LoginError("Unable to resolve DID");
@@ -97,6 +89,7 @@ export async function createDestAccount(
     did,
     token_origin,
     token_ref_origin,
+    handle_origin,
     pds_origin,
     pds_dest,
     email,
@@ -109,7 +102,6 @@ export async function createDestAccount(
 
   }: Partial<SessionData>,
   data: FormData,
-<<<<<<< Updated upstream
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
   if (pds_origin === undefined) {
@@ -128,11 +120,6 @@ export async function createDestAccount(
     console.error("token_origin is undefined");
     throw new CreateAccountError("Invalid origin token");
   }
-=======
-
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
-) {
->>>>>>> Stashed changes
 
   const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
@@ -179,10 +166,6 @@ export async function createDestAccount(
     // console.log("Handle available: " + handle_available);
     // console.log("Handle dest: " + handle_dest);
     // console.log("Submitted:" + submitted)
-
-
-    } else {
-      /* This is a migrated account */
 
     if (!submitted) return { handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short, agent_dest: null }
 
@@ -331,13 +314,8 @@ export async function createDestAccount(
 }
 
 export async function exportRepo(
-<<<<<<< Updated upstream
-  {pds_origin, did, token_origin}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
-=======
   { pds_origin, did, token_origin, token_ref_origin, handle_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
->>>>>>> Stashed changes
 ) {
 
   //Disable checks if we're in dev mode
@@ -398,13 +376,8 @@ export async function exportRepo(
 }
 
 export async function importRepo(
-<<<<<<< Updated upstream
-  {pds_dest, did, token_dest}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
-=======
   { pds_dest, did, token_dest, token_ref_dest, handle_dest }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
->>>>>>> Stashed changes
 ) {
   // This breaks during local tests so return early if Vite in dev mode
   if (import.meta.env.DEV) {
@@ -466,13 +439,8 @@ export async function importRepo(
 }
 
 export async function exportBlobs(
-<<<<<<< Updated upstream
-  {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
-=======
   { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_dest, handle_origin}: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
->>>>>>> Stashed changes
 ) {
 
   //Disable checks if we're in dev mode
@@ -574,13 +542,8 @@ export async function exportBlobs(
 }
 
 export async function uploadBlobs(
-<<<<<<< Updated upstream
-  {pds_dest, did, token_dest}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
-=======
   { pds_dest, did, token_dest, token_ref_dest,handle_dest }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
->>>>>>> Stashed changes
 ) {
   if (import.meta.env.DEV) {
     logger.log("Not uploading blobs because this is a test");
@@ -634,13 +597,8 @@ export async function uploadBlobs(
 }
 
 export async function migratePreferences(
-<<<<<<< Updated upstream
-  {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
-=======
   { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_origin }: SessionData,
   { MIGRATOR_BACKEND }: CloudflareEnvironment
->>>>>>> Stashed changes
 ) {
 
   if (import.meta.env.DEV) {
