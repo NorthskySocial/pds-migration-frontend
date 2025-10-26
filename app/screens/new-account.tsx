@@ -100,11 +100,11 @@ export default function NewAccountScreen({ state }: ScreenProps) {
 
           <Field.HelperText>
             {handlePrint &&(
-              `Congrats! 🎉 ${inHandle.toLowerCase()}.northsky.social is available!`)}
+              `Congrats! 🎉 ${inHandle.toLowerCase()} is available!`)}
           </Field.HelperText>
 
           <Field.ErrorText>{!handlePrint &&
-            `${inHandle.toLowerCase()}.northsky.social is not available!`}</Field.ErrorText>
+            `${inHandle.toLowerCase()} is not available!`}</Field.ErrorText>
           <div>
             {fetcher.state !== "idle" ? (
               <Spinner />
@@ -164,7 +164,8 @@ export default function NewAccountScreen({ state }: ScreenProps) {
 
         <br />
         <HStack>
-          <Button type="submit" name="submit" margin={"0 auto"} disabled={inPasswordMatch||!inPasswordShort||inHandleAvailable||inEmailValid}>
+          <Button type="submit" name="submit" margin={"0 auto"}>
+          {/* <Button type="submit" name="submit" margin={"0 auto"} disabled={inPasswordMatch||!inPasswordShort||inHandleAvailable||inEmailValid}> */}
             Continue
           </Button>
           <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
