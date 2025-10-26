@@ -1,3 +1,4 @@
+import type AtpAgent from "@atproto/api";
 import { createCookieSessionStorage } from "react-router";
 
 export type SessionData = {
@@ -9,13 +10,14 @@ export type SessionData = {
   pds_origin?: string;
   token_origin?: string;
   token_dest?: string;
+  token_ref_origin?: string;
+  token_ref_dest?: string;
+
   plc_hostname?: string;
   did?: string;
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-
-
   // state flags
   hasBackup: boolean;
   exportedRepo: boolean;

@@ -148,6 +148,7 @@ export const processState = async (
           session.set("email", email);
           session.set("token_origin", token_origin);
           session.set("did", did);
+
           break;
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
@@ -169,13 +170,12 @@ export const processState = async (
           session.set("email", state.email);
         }
 
-        const { handle_available, token_dest, handle_dest, email_valid, password_match, password_too_short } =
+        const {handle_available, token_dest, handle_dest, email_valid, password_match, password_too_short } =
           await createDestAccount(state, data, env);
 
-        if (token_dest) {
+          if (token_dest) {
           session.set("token_dest", token_dest);
         }
-
 
         if (handle_available) {
           console.log("Setting handle");
