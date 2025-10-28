@@ -1,28 +1,17 @@
 "use server";
 
-import { AtpAgent, } from "@atproto/api";
-import { type AtpSessionData, type AtpSessionEvent } from "@atproto/api";
-
-import {
-  getPdsEndpoint,
-  isValidDidDoc,
-  type DidDocument,
-} from "@atproto/common-web";
+import {AtpAgent} from "@atproto/api";
 
 import {type SessionData, type SessionFlashData} from "~/sessions.server";
 import {
   CreateAccountError,
-  HandleNotAvailableError,
   LoginError,
   MigrationError,
   PasswordValidationError,
 } from "~/errors";
 import {logger} from "~/util/logger";
 import f from "~/util/mock-fetch";
-import { useFetcher } from "react-router";
-import { useState } from "react";
-import type { Session } from "react-router";
-import type { type } from "os";
+import type {Session} from "react-router";
 
 export async function loginOrigin(
   session: Session<SessionData, SessionFlashData>,
@@ -55,7 +44,6 @@ export async function loginOrigin(
   session.set("password_origin", password_origin);
   session.set("pds_origin", pds_origin);
 
-
   // Login to origin PDS
   const {data: agentSessionData} = await origin_agent.login({
     identifier: handle_origin,
@@ -63,9 +51,7 @@ export async function loginOrigin(
     authFactorToken: (data.get("2fa_code") as string) ?? undefined,
   });
 
-  console.log("Agent Sesson Data " + agentSessionData);
-
-  const { did, email, accessJwt: token_origin, refreshJwt: token_ref_origin } = agentSessionData;
+  const {did, email, accessJwt: token_origin} = agentSessionData;
 
   if (!did) {
     throw new LoginError("Unable to resolve DID");
@@ -77,84 +63,59 @@ export async function loginOrigin(
     handle_origin,
     password_origin,
     token_origin,
-    token_ref_origin,
     email,
   };
 }
 
-//Create an account on the Northsky PDS
 export async function createDestAccount(
   {
-
     did,
-    token_origin,
-    token_ref_origin,
     handle_origin,
+    password_origin,
+    token_origin,
     pds_origin,
     pds_dest,
     email,
     inviteCode,
     user_recover_key,
-    password_too_short = false,
-    password_match = false,
-    handle_available,
-    email_valid,
-
   }: Partial<SessionData>,
   data: FormData,
   {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
-  if (pds_origin === undefined) {
-    console.error("pds_origin is undefined");
-    throw new CreateAccountError("Invalid origin PDS");
-  }
-  if (pds_dest === undefined) {
-    console.error("pds_dest is undefined");
-    throw new CreateAccountError("Invalid destination PDS");
-  }
-  if (email === undefined) {
-    console.error("email is undefined");
-    throw new CreateAccountError("Invalid email");
-  }
-  if (token_origin === undefined) {
-    console.error("token_origin is undefined");
-    throw new CreateAccountError("Invalid origin token");
-  }
-
   const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
   const handle_dest = `${handle}.${dest_hostname.match("localhost") ? "test" : dest_hostname
-
-    }`;
-
-  //Do sanity check on the fields.
-
-  // Check e-mail is in a good format
-  //say yes for now
-  email_valid = true;
+  }`;
 
   // Check passwords matching
-  password_match = (pw_dest === pwConfirm);
+  if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
+    throw new PasswordValidationError("Passwords do not match");
+  }
 
   // Check password length
-  // console.log("Password :",pw_dest, (pw_dest.length < 8),pw_dest.length > 0,(pw_dest.length < 8 && pw_dest.length > 0));
-  password_too_short = (pw_dest.length < 8 && pw_dest.length > 0);
+  if (pw_dest?.length < 8 && pw_dest.length > 0) {
+    throw new PasswordValidationError("Password must be at least 8 characters");
+  }
+
+  //skip check in dev
+  if (import.meta.env.DEV) {
+    logger.log("Skipping availability check");
+
+    return {
+      handle_available: true,
+      token_dest: "Test Dest Token",
+      token_service: "Test Service Token",
+      handle_dest: "Test Dest Handle"
+    };
+  }
 
   // Check handle availability
   if (!handle.length) {
     return {handle_available: null, token_dest: null};
   } else {
-
-    //debug
-    console.log(
-      "Handle available " +
-      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
-    );
-
-
     const handle_available = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
@@ -167,24 +128,31 @@ export async function createDestAccount(
     // console.log("Handle dest: " + handle_dest);
     // console.log("Submitted:" + submitted)
 
-    if (!submitted) return { handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short, agent_dest: null }
 
-    else {
+    if (!submitted) {
+      return {
+        handle_dest_available: handle_available,
+        handle_dest: handle_dest,
+      }
+    } else {
 
       //Disable checks if we're in dev mode
       if (import.meta.env.DEV) {
         logger.log("Skipping availability check");
-
-        return { token_dest: "Test Token", handle_dest_available: handle_available, handle_dest: handle_dest, email_valid: email_valid, password_match: password_match, password_too_short: password_too_short, agent_dest: null };
+        return {
+          handle_available: true,
+          token_dest: "Test Dest Token",
+          token_service: "Test Service Token",
+          handle_dest: "Test Dest Handle"
+        };
       }
 
       // Create account directly if service token is not available
       // This is a new, non migrated account
       if (!did) {
-
         // Get new user token
         const agent_dest = new AtpAgent({
-          service: pds_dest!,
+          service: pds_dest,
           fetch: f as typeof fetch,
         });
         const response = await agent_dest.createAccount({
@@ -195,51 +163,18 @@ export async function createDestAccount(
         });
 
         if (!response.success) {
-          logger.error(response.data);
           throw new CreateAccountError("error creating account");
         }
 
-        return { handle_dest: handle_dest, token_dest: response.data.accessJwt, token_ref_dest: response.data.refreshJwt, agent_dest: agent_dest };
+        return {token_dest: response.data.accessJwt};
 
-      }
+      } else {
+        /* This is a migrated account */
 
-      /* This is a migrated account */
-      else {
+        const serviceEndpoint: string = pds_origin;
 
-        const serviceEndpoint = pds_origin;
-
-        const pds_dest_hostname = new URL(pds_dest!).host;
-        const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname
-          }`;
-
-        logger.debug({ aud });
-
-        //refresh auth token
-        const agent_origin = new AtpAgent({
-          service: pds_origin!,
-          fetch: f as typeof fetch,
-        });
-
-        console.log("Pre resume token " + token_ref_origin);
-
-
-        const resume_promise = await agent_origin.resumeSession({
-          handle: handle_origin || "",
-          accessJwt: token_origin || "",
-          refreshJwt: token_ref_origin || "",
-          did: did,
-          active: true,
-        })
-
-        if (resume_promise.success) {
-          console.log("Resume successful. " + token_ref_origin);
-        }
-
-        else {
-          console.log("Resume unsuccessful. " + token_ref_origin);
-        }
-
-
+        const pds_dest_hostname: string = new URL(pds_dest!).host;
+        const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname}`;
 
         // Generate service token
         const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
@@ -250,7 +185,7 @@ export async function createDestAccount(
           body: JSON.stringify({
             pds_host: serviceEndpoint,
             did,
-            token: token_ref_origin,
+            token: token_origin,
             aud,
           }),
         });
@@ -261,14 +196,19 @@ export async function createDestAccount(
           );
         }
 
-        //creating the service token here
+        // I have no idea what the hell is happening here
         const token_service = (await res.json()) as { token: string };
+
+        if (!token_service.token) {
+          throw new LoginError(
+            `Invalid service token received; please contact support with error: ${res.statusText}`
+          );
+        }
 
         const body = {
           pds_host: pds_dest,
           handle: handle_dest,
-
-          token: token_service.token || '',
+          token: token_service.token,
           password: pw_dest,
           email,
           did,
@@ -276,11 +216,9 @@ export async function createDestAccount(
           recovery_key: user_recover_key,
         };
 
-        console.log("Stringified" + JSON.stringify(body));
-
         const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
           method: "post",
-          headers: { "Content-Type": "application/json" },
+          headers: {"Content-Type": "application/json"},
           body: JSON.stringify(body),
         });
 
@@ -303,19 +241,19 @@ export async function createDestAccount(
           fetch: f as typeof fetch,
         });
 
-        const { data } = await agent_dest.login({
+        const {data} = await agent_dest.login({
           identifier: handle_dest,
           password: pw_dest,
         });
-        return { handle_dest: handle_dest, token_dest: data.accessJwt };
+        return {token_dest: data.accessJwt};
       }
     }
   }
 }
 
 export async function exportRepo(
-  { pds_origin, did, token_origin, token_ref_origin, handle_origin }: SessionData,
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
+  {pds_origin, did, token_origin}: SessionData,
+  {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
 
   //Disable checks if we're in dev mode
@@ -323,36 +261,10 @@ export async function exportRepo(
     return {ok: true};
   }
 
-
   if (!pds_origin || !did || !token_origin) {
     throw new MigrationError(
       "Unable to resolve original account; please login again."
     );
-  }
-
-  //refresh auth token
-  const agent_origin = new AtpAgent({
-    service: pds_origin!,
-    fetch: f as typeof fetch,
-  });
-
-  console.log("Pre resume token " + token_ref_origin);
-
-
-  const resume_promise = await agent_origin.resumeSession({
-    handle: handle_origin || "",
-    accessJwt: token_origin || "",
-    refreshJwt: token_ref_origin || "",
-    did: did,
-    active: true,
-  })
-
-  if (resume_promise.success) {
-    console.log("Resume successful. " + token_ref_origin);
-  }
-
-  else {
-    console.log("Resume unsuccessful. " + token_ref_origin);
   }
 
   // export repo
@@ -375,8 +287,8 @@ export async function exportRepo(
 }
 
 export async function importRepo(
-  { pds_dest, did, token_dest, token_ref_dest, handle_dest }: SessionData,
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
+  {pds_dest, did, token_dest}: SessionData,
+  {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
   // This breaks during local tests so return early if Vite in dev mode
   if (import.meta.env.DEV) {
@@ -389,33 +301,6 @@ export async function importRepo(
       "Unable to resolve new account; please contact support."
     );
   }
-
-  //refresh auth token
-  const agent_origin = new AtpAgent({
-    service: pds_dest!,
-    fetch: f as typeof fetch,
-  });
-
-  console.log("Pre resume token " + token_ref_dest);
-
-
-  const resume_promise = await agent_origin.resumeSession({
-    handle: handle_dest || "",
-    accessJwt: token_dest || "",
-    refreshJwt: token_ref_dest || "",
-    did: did,
-    active: true,
-  })
-
-  if (resume_promise.success) {
-    console.log("Resume successful. " + token_ref_dest);
-  }
-
-  else {
-    console.log("Resume unsuccessful. " + token_ref_dest);
-  }
-
-
 
   // import repo
   const res = await f(`${MIGRATOR_BACKEND}/import-repo`, {
@@ -438,8 +323,8 @@ export async function importRepo(
 }
 
 export async function exportBlobs(
-  { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_dest, handle_origin}: SessionData,
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
+  {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
+  {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
 
   //Disable checks if we're in dev mode
@@ -451,56 +336,6 @@ export async function exportBlobs(
     throw new MigrationError(
       "Unable to resolve original account; please login again."
     );
-  }
-
-  //refresh origin token
-  const agent_origin = new AtpAgent({
-    service: pds_origin!,
-    fetch: f as typeof fetch,
-  });
-
-  console.log("Pre resume token " + token_ref_origin);
-
-
-  const resume_org_promise = await agent_origin.resumeSession({
-    handle: handle_origin || "",
-    accessJwt: token_origin || "",
-    refreshJwt: token_ref_origin || "",
-    did: did  || "",
-    active: true,
-  })
-
-  if (resume_org_promise.success) {
-    console.log("Resume successful. " + token_ref_origin);
-  }
-
-  else {
-    console.log("Resume unsuccessful. " + token_ref_origin);
-  }
-
-  //refresh dest token
-  const agent_dest = new AtpAgent({
-    service: pds_dest!,
-    fetch: f as typeof fetch,
-  });
-
-  console.log("Pre resume token " + token_ref_dest);
-
-
-  const resume_promise = await agent_dest.resumeSession({
-    handle: handle_dest || "",
-    accessJwt: token_dest || "",
-    refreshJwt: token_ref_dest || "",
-    did: did  || "",
-    active: true,
-  })
-
-  if (resume_promise.success) {
-    console.log("Resume successful. " + token_ref_dest);
-  }
-
-  else {
-    console.log("Resume unsuccessful. " + token_ref_dest);
   }
 
   // missing blobs
@@ -517,24 +352,7 @@ export async function exportBlobs(
   });
 
   if (!res.ok) {
-    let errorMessage: string;
-    try {
-      const errorData = await res.json<{ message: string }>();
-      errorMessage = errorData.message;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (jsonError) {
-      // If JSON parsing fails, try to get text content
-      try {
-        const textContent = await res.text();
-        errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (textError) {
-        // If both fail, use the status information
-        errorMessage = `HTTP ${res.status}: ${res.statusText}`;
-      }
-    }
-    logger.error(`Export blobs failed: ${errorMessage}`)
-    throw new MigrationError(errorMessage);
+    throw new MigrationError((await res.json<{ message: string }>()).message);
   }
   logger.info("Export blobs succeeded");
 
@@ -542,8 +360,8 @@ export async function exportBlobs(
 }
 
 export async function uploadBlobs(
-  { pds_dest, did, token_dest, token_ref_dest,handle_dest }: SessionData,
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
+  {pds_dest, did, token_dest}: SessionData,
+  {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
   if (import.meta.env.DEV) {
     logger.log("Not uploading blobs because this is a test");
@@ -554,30 +372,7 @@ export async function uploadBlobs(
       "Unable to resolve original account; please login again."
     );
   }
-  //refresh dest token
-  const agent_dest = new AtpAgent({
-    service: pds_dest!,
-    fetch: f as typeof fetch,
-  });
 
-  console.log("Pre resume token " + token_ref_dest);
-
-
-  const resume_promise = await agent_dest.resumeSession({
-    handle: handle_dest || "",
-    accessJwt: token_dest || "",
-    refreshJwt: token_ref_dest || "",
-    did: did  || "",
-    active: true,
-  })
-
-  if (resume_promise.success) {
-    console.log("Resume successful. " + token_ref_dest);
-  }
-
-  else {
-    console.log("Resume unsuccessful. " + token_ref_dest);
-  }
   // upload blobs
   const res = await f(`${MIGRATOR_BACKEND}/upload-blobs`, {
     method: "post",
@@ -597,8 +392,8 @@ export async function uploadBlobs(
 }
 
 export async function migratePreferences(
-  { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_origin }: SessionData,
-  { MIGRATOR_BACKEND }: CloudflareEnvironment
+  {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
+  {MIGRATOR_BACKEND}: CloudflareEnvironment
 ) {
 
   if (import.meta.env.DEV) {
@@ -609,33 +404,6 @@ export async function migratePreferences(
   if (!pds_origin || !pds_dest || !did || !token_dest || !token_origin) {
     throw new MigrationError("Not able to migrate preferences");
   }
-
-
-  //refresh origin token
-  const agent_origin = new AtpAgent({
-    service: pds_origin!,
-    fetch: f as typeof fetch,
-  });
-
-  console.log("Pre resume token " + token_ref_origin);
-
-
-  const resume_org_promise = await agent_origin.resumeSession({
-    handle: handle_origin || "",
-    accessJwt: token_origin || "",
-    refreshJwt: token_ref_origin || "",
-    did: did  || "",
-    active: true,
-  })
-
-  if (resume_org_promise.success) {
-    console.log("Resume successful. " + token_ref_origin);
-  }
-
-  else {
-    console.log("Resume unsuccessful. " + token_ref_origin);
-  }
-
   // migrate preferences
   const res = await f(`${MIGRATOR_BACKEND}/migrate-preferences`, {
     method: "post",
