@@ -274,7 +274,6 @@ export async function exportRepo(
   }
 
   // export repo
-
   const res = await f(`${MIGRATOR_BACKEND}/export-repo`, {
     method: "post",
     body: JSON.stringify({
@@ -378,6 +377,7 @@ export async function exportBlobs(
     logger.error(`Export blobs failed: ${errorMessage}`)
     throw new MigrationError(errorMessage);
   }
+  logger.info("Export blobs succeeded");
 
   return {ok: true};
 }
