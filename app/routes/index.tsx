@@ -61,6 +61,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   logger.debug("action: ", stage);
 
   return redirect(
+
+    //Disabled success / failure routes to get the cancel button to work. I don't know if this will break things. (Nic Chop)
     // stage === STAGES.DONE
     //   ? "/success"
     //   : stage === STAGES.FAILED
@@ -91,9 +93,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     inviteCode: session.get("inviteCode"),
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
-    require_2fa_code: session.get("require_2fa_code")?? false,
-
-
+    
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
     exportedRepo: session.get("exportedRepo") ?? false,
@@ -105,6 +105,12 @@ export async function loader({ request }: Route.LoaderArgs) {
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
+    handle_available: session.get("handle_available") ?? false,
+    password_too_short: session.get("password_too_short") ?? false,
+    password_match: session.get("password_match") ?? false,
+    email_valid: session.get("email_valid") ?? false,
+    require_2fa_code: session.get("require_2fa_code") ?? false,
+
   };
 
   try {
