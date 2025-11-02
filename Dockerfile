@@ -1,56 +1,22 @@
-FROM debian:bookworm
-
-RUN apt-get update
-
-RUN apt install -y curl
-
-# Use bash for the shell
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Create a script file sourced by both interactive and non-interactive bash shells
-ENV BASH_ENV /root/.bash_env
-RUN touch "${BASH_ENV}"
-RUN echo '. "${BASH_ENV}"' >> ~/.bashrc
-
-# Download and install nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | PROFILE="${BASH_ENV}" bash
-
+FROM node:20-alpine AS development-dependencies-env
+COPY . /app
 WORKDIR /app
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci
 
-ARG GITHUB_TOKEN
+FROM node:20-alpine AS production-dependencies-env
+COPY ./package.json package-lock.json /app/
+WORKDIR /app
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci --omit=dev
 
-RUN echo -e "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}\n@northskysocial:registry=https://npm.pkg.github.com/" > ~/.npmrc
+FROM node:20-alpine AS build-env
+COPY . /app/
+COPY --from=development-dependencies-env /app/node_modules /app/node_modules
+WORKDIR /app
+RUN npm run build -- --mode=docker
 
-COPY .nvmrc .
-
-RUN nvm install
-
-COPY .gitignore . 
-COPY .gitmodules .
-COPY package.json . 
-COPY package-lock.json .
-
-RUN npm install
-
-
-ADD ./public ./public
-
-COPY jest-puppeteer.config.js . 
-COPY jest.config.js . 
-COPY wrangler.toml .
-COPY vite.config.ts . 
-COPY tsconfig.tests.json . 
-COPY tsconfig.json . 
-COPY tsconfig.build.json . 
-COPY react-router.config.ts . 
-
-ADD ./test ./test
-ADD ./util ./util
-ADD ./workers ./workers
-ADD ./app ./app
-
-RUN npm run typecheck
-
-EXPOSE 5173:5173
-
-CMD [ "/bin/bash", "-c", "npm run dev -- --host"]
+FROM node:20-alpine
+COPY ./package.json package-lock.json /app/
+COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+COPY --from=build-env /app/build /app/build
+WORKDIR /app
+CMD ["npm", "run", "start"]

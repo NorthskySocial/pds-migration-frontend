@@ -26,7 +26,9 @@ export async function action({ request, context }: Route.ActionArgs) {
   if (!session.get("pds_dest")) {
     session.set(
       "pds_dest",
-      search.get("destination") ?? context.cloudflare.env.PDS_HOSTNAME
+      search.get("destination") ??
+        process?.env?.PDS_HOSTNAME ??
+        context.cloudflare.env.PDS_HOSTNAME
     );
   }
 
@@ -34,6 +36,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     session.set(
       "plc_hostname",
       search.get("plc") ??
+        process?.env?.PLC_HOSTNAME ??
         context.cloudflare.env.PLC_HOSTNAME ??
         "https://plc.directory"
     );
@@ -91,8 +94,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     inviteCode: session.get("inviteCode"),
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
-    require_2fa_code: session.get("require_2fa_code")?? false,
-
+    require_2fa_code: session.get("require_2fa_code") ?? false,
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
