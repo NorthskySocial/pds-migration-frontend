@@ -15,8 +15,7 @@ import type {Session} from "react-router";
 
 export async function loginOrigin(
   session: Session<SessionData, SessionFlashData>,
-  data: FormData,
-  env: CloudflareEnvironment
+  data: FormData
 ) {
   const pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
 
@@ -78,7 +77,7 @@ export async function createDestAccount(
     user_recover_key,
   }: Partial<SessionData>,
   data: FormData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
   if (pds_origin === undefined) {
     console.error("pds_origin is undefined");
@@ -259,7 +258,7 @@ export async function createDestAccount(
 
 export async function exportRepo(
   {pds_origin, did, token_origin}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
 
   //Disable checks if we're in dev mode
@@ -294,7 +293,7 @@ export async function exportRepo(
 
 export async function importRepo(
   {pds_dest, did, token_dest}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
   // This breaks during local tests so return early if Vite in dev mode
   if (import.meta.env.DEV) {
@@ -330,7 +329,7 @@ export async function importRepo(
 
 export async function exportBlobs(
   {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
 
   //Disable checks if we're in dev mode
@@ -384,7 +383,7 @@ export async function exportBlobs(
 
 export async function uploadBlobs(
   {pds_dest, did, token_dest}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
   if (import.meta.env.DEV) {
     logger.log("Not uploading blobs because this is a test");
@@ -416,7 +415,7 @@ export async function uploadBlobs(
 
 export async function migratePreferences(
   {pds_origin, pds_dest, did, token_dest, token_origin}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
 
   if (import.meta.env.DEV) {
@@ -449,7 +448,7 @@ export async function migratePreferences(
 
 export async function requestPlcToken(
   {pds_origin, did, token_origin}: SessionData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
 
   if (import.meta.env.DEV) {
@@ -489,7 +488,7 @@ export async function validatePlcToken(
     user_recover_key,
   }: SessionData,
   data: FormData,
-  {MIGRATOR_BACKEND}: CloudflareEnvironment
+  MIGRATOR_BACKEND: string
 ) {
 
   if (import.meta.env.DEV) {
