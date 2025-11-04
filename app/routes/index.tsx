@@ -52,7 +52,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   let stage = STAGES.INVITE_CODE;
 
   try {
-    const state = await processState(session, data, context.cloudflare.env);
+    const migratorBackend = process?.env?.MIGRATOR_BACKEND ?? context.cloudflare.env.MIGRATOR_BACKEND;
+    const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
   } catch (e) {
     logger.error("error in index action", e);

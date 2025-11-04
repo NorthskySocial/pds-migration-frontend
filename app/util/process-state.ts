@@ -28,7 +28,7 @@ import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com
 export const processState = async (
   session: Session<SessionData, SessionFlashData>,
   data: FormData,
-  env: CloudflareEnvironment
+  migratorBackend: string
 ) => {
   const state = {
     do_journey: session.get("do_journey"),
@@ -94,6 +94,7 @@ export const processState = async (
     session.set("migratedPlc", false);
 
     //make sure we're at the root URL
+    // TODO: do we have to do anything with `stage` here?
     let stage = STAGES.INVITE_CODE;
       return state;
 
@@ -124,8 +125,7 @@ export const processState = async (
         try {
           const { pds_origin, email, token_origin, did } = await loginOrigin(
             session,
-            data,
-            env
+            data
           );
 
           session.set("pds_origin", pds_origin);
@@ -153,7 +153,7 @@ export const processState = async (
         }
 
         const { handle_available, token_dest, handle_dest } =
-          await createDestAccount(state, data, env);
+          await createDestAccount(state, data, migratorBackend);
 
         if (token_dest) {
           session.set("token_dest", token_dest);
@@ -170,7 +170,7 @@ export const processState = async (
       }
 
       case STAGES.EXPORT_REPO_ORIGIN: {
-        const { ok } = await exportRepo(state, env);
+        const { ok } = await exportRepo(state, migratorBackend);
         if (ok) {
           session.set("exportedRepo", ok);
         }
@@ -178,28 +178,28 @@ export const processState = async (
       }
 
       case STAGES.IMPORT_REPO_DEST: {
-        const { ok } = await importRepo(state, env);
+        const { ok } = await importRepo(state, migratorBackend);
         if (ok) {
           session.set("importedRepo", ok);
         }
         break;
       }
       case STAGES.EXPORT_BLOBS_ORIGIN: {
-        const { ok } = await exportBlobs(state, env);
+        const { ok } = await exportBlobs(state, migratorBackend);
         if (ok) {
           session.set("exportedBlobs", ok);
         }
         break;
       }
       case STAGES.IMPORT_BLOBS_DEST: {
-        const { ok } = await uploadBlobs(state, env);
+        const { ok } = await uploadBlobs(state, migratorBackend);
         if (ok) {
           session.set("importedBlobs", ok);
         }
         break;
       }
       case STAGES.MIGRATE_PREFERENCES: {
-        const { ok } = await migratePreferences(state, env);
+        const { ok } = await migratePreferences(state, migratorBackend);
         if (ok) {
           session.set("migratedPrefs", ok);
         }
@@ -214,7 +214,7 @@ export const processState = async (
       }
 
       case STAGES.REQUEST_PLC: {
-        const { ok } = await requestPlcToken(state, env);
+        const { ok } = await requestPlcToken(state, migratorBackend);
         if (ok) {
           session.set("requestedPlcToken", ok);
         }
@@ -224,7 +224,7 @@ export const processState = async (
       case STAGES.ACTIVATE_DEST:
       case STAGES.DEACTIVATE_ORIGIN:
       case STAGES.MIGRATE_PLC: {
-        const { ok } = await validatePlcToken(state, data, env);
+        const { ok } = await validatePlcToken(state, data, migratorBackend);
         if (ok) {
           session.set("destActivated", ok);
           session.set("originDeactivated", ok);
