@@ -82,9 +82,10 @@ There are two Docker entry points:
 
 1) Frontend-only image (Dockerfile at repo root)
 - Builds a Debian-based image, installs Node via NVM (from `.nvmrc`), installs deps, copies app code, runs `npm run typecheck`, and starts `npm run dev` on port `5173`.
+- A pre-requisite is to create a `.npmrc` file setup with a Github Packages token to access `@NorthskySocial` scoped packages (follow these guides for [authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages) and [installing](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#installing-a-package) on the same `.npmrc` file).
 - Example:
   ```bash
-  docker build -t migration-fe:latest .
+  docker build --secret id=npmrc,src=.npmrc -t migration-fe:latest .
   docker run --rm -p 5173:5173 --env-file ./.env migration-fe:latest
   ```
   - The `.env` can define variables analogous to those in `wrangler.toml` if your app reads them in dev. If unsure, pass PDS/PLC via URL params as used in tests.
