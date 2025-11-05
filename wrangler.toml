@@ -24,7 +24,7 @@ HOSTNAME = "migrate.staging.northsky.social"
 PDS_HOSTNAME = "https://northsky.social"
 MIGRATOR_BACKEND = "https://migrator.northsky.social"
 DEBUG = "migration-fe"
-HOSTNAME = "migrate.northsky.social"
+HOSTNAME = "cfmigrate.northsky.social"
 
 [observability]
 enabled = true
