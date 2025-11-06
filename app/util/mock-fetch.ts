@@ -171,7 +171,10 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
 
     return new Response();
   } else {
-    return fetch(input, init);
+    return fetch(input, {
+      ...init,
+      signal: AbortSignal.timeout(Infinity)
+    });
   }
 };
 
