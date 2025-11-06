@@ -171,9 +171,10 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
 
     return new Response();
   } else {
+    const timeoutMs = 600 * 1000;
     return fetch(input, {
       ...init,
-      signal: AbortSignal.timeout(Infinity)
+      signal: AbortSignal.timeout(timeoutMs)
     });
   }
 };
