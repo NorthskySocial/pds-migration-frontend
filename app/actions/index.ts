@@ -92,7 +92,7 @@ export async function createDestAccount(
     console.error("email is undefined");
     throw new CreateAccountError("Invalid email");
   }
-  if (is_creation_flow && token_origin === undefined) {
+  if (!is_creation_flow && token_origin === undefined) {
     console.error("token_origin is undefined");
     throw new CreateAccountError("Invalid origin token");
   }
