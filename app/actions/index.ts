@@ -77,7 +77,8 @@ export async function createDestAccount(
     user_recover_key,
   }: Partial<SessionData>,
   data: FormData,
-  MIGRATOR_BACKEND: string
+  MIGRATOR_BACKEND: string,
+  is_creation_flow: boolean
 ) {
   if (pds_origin === undefined) {
     console.error("pds_origin is undefined");
@@ -91,7 +92,7 @@ export async function createDestAccount(
     console.error("email is undefined");
     throw new CreateAccountError("Invalid email");
   }
-  if (token_origin === undefined) {
+  if (is_creation_flow && token_origin === undefined) {
     console.error("token_origin is undefined");
     throw new CreateAccountError("Invalid origin token");
   }

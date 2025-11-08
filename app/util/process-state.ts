@@ -152,8 +152,9 @@ export const processState = async (
           session.set("email", state.email);
         }
 
+        const is_creation_flow = state.do_journey === "create";
         const { handle_available, token_dest, handle_dest } =
-          await createDestAccount(state, data, migratorBackend);
+          await createDestAccount(state, data, migratorBackend, is_creation_flow);
 
         if (token_dest) {
           session.set("token_dest", token_dest);
