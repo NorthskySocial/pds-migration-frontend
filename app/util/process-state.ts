@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect, type Session } from "react-router";
+import { type Session } from "react-router";
 import {
   createDestAccount,
   exportBlobs,
@@ -17,6 +17,7 @@ import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { logger } from "./logger";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
+import f from "./mock-fetch";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -30,7 +31,8 @@ export const processState = async (
   data: FormData,
   migratorBackend: string
 ) => {
-  const state = {
+  // @TODO replace this with session.data
+  const state: SessionData = {
     do_journey: session.get("do_journey"),
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
@@ -44,6 +46,9 @@ export const processState = async (
     inviteCode: session.get("inviteCode"),
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
+    export_job_id: session.get("export_job_id"),
+    export_total: null,
+    export_pct_done: null,
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -96,8 +101,7 @@ export const processState = async (
     //make sure we're at the root URL
     // TODO: do we have to do anything with `stage` here?
     let stage = STAGES.INVITE_CODE;
-      return state;
-
+    return state;
   } else {
     switch (stage) {
       case STAGES.INVITE_CODE: {
@@ -154,7 +158,12 @@ export const processState = async (
 
         const is_creation_flow = state.do_journey === "create";
         const { handle_available, token_dest, handle_dest } =
-          await createDestAccount(state, data, migratorBackend, is_creation_flow);
+          await createDestAccount(
+            state,
+            data,
+            migratorBackend,
+            is_creation_flow
+          );
 
         if (token_dest) {
           session.set("token_dest", token_dest);
@@ -186,10 +195,38 @@ export const processState = async (
         break;
       }
       case STAGES.EXPORT_BLOBS_ORIGIN: {
-        const { ok } = await exportBlobs(state, migratorBackend);
-        if (ok) {
-          session.set("exportedBlobs", ok);
+        if (!state.export_job_id) {
+          const { job_id } = (await exportBlobs(state, migratorBackend)) ?? {};
+          if (job_id) {
+            session.set("export_job_id", job_id);
+            state.export_job_id = job_id;
+          }
+        } else if (state.export_job_id && !state.exportedBlobs) {
+          const res = await f(`${migratorBackend}/jobs/${state.export_job_id}`);
+
+          // I don't know where to put this def
+          const { progress, status } = await res.json<{
+            created_at: number;
+            finished_at: number;
+            id: string;
+            kind: "ExportBlobs";
+            progress: {
+              invalid_blob_ids: string[];
+              invalid_blobs: number;
+              successful_blobs: number;
+              successful_blobs_ids: string[];
+              total: number;
+            };
+            started_at: number;
+            status: string;
+          }>();
+          state.export_progress = progress;
+
+          if (status.toLowerCase() === "success") {
+            session.set("exportedBlobs", true);
+          }
         }
+
         break;
       }
       case STAGES.IMPORT_BLOBS_DEST: {
