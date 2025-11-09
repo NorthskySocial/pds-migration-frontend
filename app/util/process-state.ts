@@ -11,12 +11,14 @@ import {
   requestPlcToken,
   uploadBlobs,
   validatePlcToken,
+  resumeMigration,
 } from "~/actions";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { logger } from "./logger";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
+import { PasswordValidationError } from "~/errors";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -28,7 +30,7 @@ import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com
 export const processState = async (
   session: Session<SessionData, SessionFlashData>,
   data: FormData,
-  migratorBackend: string
+  env: CloudflareEnvironment
 ) => {
   const state = {
     do_journey: session.get("do_journey"),
@@ -55,8 +57,13 @@ export const processState = async (
     requestedPlcToken: session.get("requestedPlcToken") ?? false,
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
+    resumeMigration: session.get("resumeMigration") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
     require_2fa_code: session.get("require_2fa_code") ?? false,
+    handle_available: session.get("handle_available") ?? false,
+    password_too_short: session.get("password_too_short") ?? false,
+    password_match: session.get("password_match") ?? false,
+    email_valid: session.get("email_valid") ?? false,
   };
 
   const stage = getStage(state);
@@ -74,6 +81,8 @@ export const processState = async (
     session.set("pds_origin", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
+    session.set("token_ref_origin", undefined);
+    session.set("token_ref_dest", undefined);
     session.set("plc_hostname", undefined);
     session.set("did", undefined);
     session.set("inviteCode", undefined);
@@ -88,15 +97,20 @@ export const processState = async (
     session.set("exportedBlobs", false);
     session.set("importedBlobs", false);
     session.set("migratedPrefs", false);
+    session.set("resumeMigration", false);
     session.set("requestedPlcToken", false);
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
+    session.set("handle_available", false);
+    session.set("email_valid", false);
+    session.set("password_match", false);
+    session.set("password_too_short", false);
+    session.set("require_2fa_code", false);
 
     //make sure we're at the root URL
-    // TODO: do we have to do anything with `stage` here?
     let stage = STAGES.INVITE_CODE;
-      return state;
+    return state;
 
   } else {
     switch (stage) {
@@ -105,13 +119,20 @@ export const processState = async (
         state.do_journey =
           (data.get("create") as "create" | null) ||
           (data.get("migrate") as "migrate" | null) ||
-          "create";
+          (data.get("resume") as "resume" | null) ||
+          "fail";
         state.inviteCode = invite;
         session.set("inviteCode", state.inviteCode);
         session.set("do_journey", state.do_journey);
 
         //initialize the origin PDS to bluesky
         session.set("pds_origin", "https://bsky.social");
+        session.set("handle_dest", "");
+        session.set("email", "");
+        session.set("password_match", true);
+        session.set("password_too_short", false);
+        session.set("email_valid", true);
+        session.set("handle_available", true);
         break;
       }
 
@@ -125,13 +146,15 @@ export const processState = async (
         try {
           const { pds_origin, email, token_origin, did } = await loginOrigin(
             session,
-            data
+            data,
+            env
           );
 
           session.set("pds_origin", pds_origin);
           session.set("email", email);
           session.set("token_origin", token_origin);
           session.set("did", did);
+
           break;
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
@@ -147,31 +170,40 @@ export const processState = async (
       }
 
       case STAGES.CREATE_DEST_ACCOUNT: {
+
         if (!state.email) {
           state.email = data.get("email") as string;
           session.set("email", state.email);
         }
 
-        const is_creation_flow = state.do_journey === "create";
-        const { handle_available, token_dest, handle_dest } =
-          await createDestAccount(state, data, migratorBackend, is_creation_flow);
+        const { handle_available, token_dest, handle_dest, email_valid, password_match, password_too_short } =
+          await createDestAccount(state, data, env);
 
         if (token_dest) {
           session.set("token_dest", token_dest);
-        } else if (handle_available) {
-          session.set("handle_dest", handle_dest);
-        }
-        //skip check in dev
-        if (import.meta.env.DEV) {
-          logger.log("Forcing handle_dest in dev");
-          session.set("handle_dest", "Test Handle");
         }
 
+        if (handle_available) {
+          console.log("Setting handle");
+          session.set("handle_available", handle_available);
+        }
+        if (handle_dest) {
+          session.set("handle_dest", handle_dest);
+        }
+        if (email_valid) {
+          session.set("email_valid", email_valid);
+        }
+        if (password_match) {
+          session.set("password_match", password_match);
+        }
+        if (password_too_short) {
+          session.set("password_too_short", password_too_short);
+        }
         break;
       }
 
       case STAGES.EXPORT_REPO_ORIGIN: {
-        const { ok } = await exportRepo(state, migratorBackend);
+        const { ok } = await exportRepo(state, env);
         if (ok) {
           session.set("exportedRepo", ok);
         }
@@ -179,30 +211,38 @@ export const processState = async (
       }
 
       case STAGES.IMPORT_REPO_DEST: {
-        const { ok } = await importRepo(state, migratorBackend);
+        const { ok } = await importRepo(state, env);
         if (ok) {
           session.set("importedRepo", ok);
         }
         break;
       }
       case STAGES.EXPORT_BLOBS_ORIGIN: {
-        const { ok } = await exportBlobs(state, migratorBackend);
+        const { ok } = await exportBlobs(state, env);
         if (ok) {
           session.set("exportedBlobs", ok);
         }
         break;
       }
       case STAGES.IMPORT_BLOBS_DEST: {
-        const { ok } = await uploadBlobs(state, migratorBackend);
+        const { ok } = await uploadBlobs(state, env);
         if (ok) {
           session.set("importedBlobs", ok);
         }
         break;
       }
       case STAGES.MIGRATE_PREFERENCES: {
-        const { ok } = await migratePreferences(state, migratorBackend);
+        const { ok } = await migratePreferences(state, env);
         if (ok) {
           session.set("migratedPrefs", ok);
+        }
+        break;
+      }
+
+      case STAGES.RESUME_MIGRATION: {
+        const { ok } = await resumeMigration(state, env);
+        if (ok) {
+          session.set("resumeMigration", ok);
         }
         break;
       }
@@ -215,7 +255,7 @@ export const processState = async (
       }
 
       case STAGES.REQUEST_PLC: {
-        const { ok } = await requestPlcToken(state, migratorBackend);
+        const { ok } = await requestPlcToken(state, env);
         if (ok) {
           session.set("requestedPlcToken", ok);
         }
@@ -225,7 +265,7 @@ export const processState = async (
       case STAGES.ACTIVATE_DEST:
       case STAGES.DEACTIVATE_ORIGIN:
       case STAGES.MIGRATE_PLC: {
-        const { ok } = await validatePlcToken(state, data, migratorBackend);
+        const { ok } = await validatePlcToken(state, data, env);
         if (ok) {
           session.set("destActivated", ok);
           session.set("originDeactivated", ok);
