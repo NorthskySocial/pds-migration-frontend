@@ -72,3 +72,20 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  deploy_to_kubernetes:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-push-image
+    steps:
+      - name: Trigger release through webhook
+        uses: fjogeleit/http-request-action@v1.3.0
+        with:
+          url: ${{ secrets.DEPLOYMENT_WEBHOOK_URL }}
+          method: 'POST'
+          headers: |
+            Accept: application/vnd.github+json
+            Content-Type: application/json
+            Authorization: Bearer ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
+            X-GitHub-Api-Version: 2022-11-28
+          body: '{"event_type": "restart-migration-fe"}'
