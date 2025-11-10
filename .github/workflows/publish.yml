@@ -79,13 +79,8 @@ jobs:
     needs: build-and-push-image
     steps:
       - name: Trigger release through webhook
-        uses: fjogeleit/http-request-action@v1.3.0
+        uses: peter-evans/repository-dispatch@v4
         with:
-          url: ${{ secrets.DEPLOYMENT_WEBHOOK_URL }}
-          method: 'POST'
-          headers: |
-            Accept: application/vnd.github+json
-            Content-Type: application/json
-            Authorization: Bearer ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
-            X-GitHub-Api-Version: 2022-11-28
-          body: '{"event_type": "restart-migration-fe"}'
+          token: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
+          repository: ${{ secrets.DEPLOYMENT_WEBHOOK_REPOSITORY }}
+          event-type: restart-migration-fe
