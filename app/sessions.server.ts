@@ -15,6 +15,14 @@ export type SessionData = {
   email?: string;
   user_recover_key?: string | null;
   require_2fa_code: boolean;
+  export_job_id?: string;
+  export_progress?: {
+    invalid_blob_ids: string[];
+    invalid_blobs: number;
+    successful_blobs: number;
+    successful_blobs_ids: string[];
+    total: number;
+  };
 
   // state flags
   hasBackup: boolean;

@@ -1,4 +1,4 @@
-import type { SessionData } from "react-router";
+import type { SessionData } from "~/sessions.server";
 
 /**
  * enum of all migrator stages

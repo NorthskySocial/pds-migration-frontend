@@ -1,4 +1,4 @@
-import { Heading, Text, Progress, VStack, Image } from "@chakra-ui/react";
+import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
 import clock_art from "../assets/clock.jpg";
 import { InfoTip } from "@/components/ui/toggle-tip";
 import type { ScreenProps } from "~/util/stages";
@@ -6,7 +6,11 @@ import { useFetcher } from "react-router";
 import { stageInfo, STAGES } from "~/util/stages";
 import { useEffect } from "react";
 
-export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
+export default function MigrationProgressScreen({
+  stage,
+  state: { export_progress },
+  error,
+}: ScreenProps) {
   const fetcher = useFetcher();
   if (!stage) throw new Error("Invalid stage received");
 
@@ -58,6 +62,29 @@ export default function MigrationProgressScreen({ stage, error }: ScreenProps) {
             src={clock_art}
             className="katie-clock"
           />
+
+          {stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress && (
+            <Progress.Root
+              width="100%"
+              max={export_progress?.total}
+              min={0}
+              value={
+                (export_progress.invalid_blobs +
+                  export_progress.successful_blobs) /
+                export_progress.total
+              }
+              striped
+              animated
+            >
+              <Progress.Label mb="2">
+                Export blobs progress
+                <InfoTip>This might take awhile</InfoTip>
+              </Progress.Label>
+              <Progress.Track>
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
+          )}
 
           <Progress.Root
             width="100%"
