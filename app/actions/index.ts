@@ -9,7 +9,7 @@ import {
   type DidDocument,
 } from "@atproto/common-web";
 
-import {type SessionData, type SessionFlashData} from "~/sessions.server";
+import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import {
   CreateAccountError,
   HandleNotAvailableError,
@@ -17,7 +17,7 @@ import {
   MigrationError,
   PasswordValidationError,
 } from "~/errors";
-import {logger} from "~/util/logger";
+import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import { useFetcher } from "react-router";
 import { useState } from "react";
@@ -56,7 +56,7 @@ export async function loginOrigin(
 
 
   // Login to origin PDS
-  const {data: agentSessionData} = await origin_agent.login({
+  const { data: agentSessionData } = await origin_agent.login({
     identifier: handle_origin,
     password,
     authFactorToken: (data.get("2fa_code") as string) ?? undefined,
@@ -147,7 +147,7 @@ export async function createDestAccount(
 
   // Check handle availability
   if (!handle.length) {
-    return {handle_available: null, token_dest: null};
+    return { handle_available: null, token_dest: null };
   } else {
 
     //debug
@@ -315,10 +315,9 @@ export async function exportRepo(
   { pds_origin, did, token_origin, token_ref_origin, handle_origin }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-
   //Disable checks if we're in dev mode
   if (import.meta.env.DEV) {
-    return {ok: true};
+    return { ok: true };
   }
 
 
@@ -362,7 +361,7 @@ export async function exportRepo(
       did,
       token: token_origin,
     }),
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
   });
   logger.debug("exportRepo", res);
 
@@ -370,7 +369,7 @@ export async function exportRepo(
     throw new MigrationError(await res.text());
   }
 
-  return {ok: true};
+  return { ok: true };
 }
 
 export async function importRepo(
@@ -380,7 +379,7 @@ export async function importRepo(
   // This breaks during local tests so return early if Vite in dev mode
   if (import.meta.env.DEV) {
     logger.log("Ignoring importRepo during tests");
-    return {ok: true};
+    return { ok: true };
   }
 
   if (!pds_dest || !did || !token_dest) {
@@ -424,7 +423,7 @@ export async function importRepo(
       did,
       token: token_dest,
     }),
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
   });
 
   logger.debug("importRepo", res);
@@ -433,17 +432,16 @@ export async function importRepo(
     throw new MigrationError((await res?.text()) ?? "Unknown migration error");
   }
 
-  return {ok: true};
+  return { ok: true };
 }
 
 export async function exportBlobs(
   { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_dest, handle_origin}: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-
   //Disable checks if we're in dev mode
   if (import.meta.env.DEV) {
-    return {ok: true};
+    return { ok: true };
   }
 
   if (![pds_origin, pds_dest, did, token_dest, token_origin].every((i) => i)) {
@@ -515,28 +513,36 @@ export async function exportBlobs(
     headers: {"Content-Type": "application/json"},
   });
 
-  if (!res.ok) {
-    let errorMessage: string;
-    try {
-      const errorData = await res.json<{ message: string }>();
-      errorMessage = errorData.message;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (jsonError) {
-      // If JSON parsing fails, try to get text content
+    if (!res.ok) {
+      let errorMessage: string;
       try {
-        const textContent = await res.text();
-        errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
+        const errorData = await res.json<{ message: string }>();
+        errorMessage = errorData.message;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (textError) {
-        // If both fail, use the status information
-        errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+      } catch (jsonError) {
+        // If JSON parsing fails, try to get text content
+        try {
+          const textContent = await res.text();
+          errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (textError) {
+          // If both fail, use the status information
+          errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+        }
       }
+      logger.error(`Export blobs failed: ${errorMessage}`);
+      throw new MigrationError(errorMessage);
     }
     logger.error(`Export blobs failed: ${errorMessage}`)
     throw new MigrationError(errorMessage);
   }
 
-  return {ok: true};
+    const { job_id } = await res.json<{ job_id: string }>();
+
+    return { job_id };
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 export async function uploadBlobs(
@@ -545,7 +551,7 @@ export async function uploadBlobs(
 ) {
   if (import.meta.env.DEV) {
     logger.log("Not uploading blobs because this is a test");
-    return {ok: true};
+    return { ok: true };
   }
   if (!pds_dest || !did || !token_dest) {
     throw new MigrationError(
@@ -584,14 +590,14 @@ export async function uploadBlobs(
       did,
       token: token_dest,
     }),
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
   });
 
   if (!res.ok) {
     throw new MigrationError((await res.json<{ message: string }>()).message);
   }
 
-  return {ok: true};
+  return { ok: true };
 }
 
 
@@ -615,10 +621,9 @@ export async function migratePreferences(
   { pds_origin, pds_dest, did, token_dest, token_origin, token_ref_dest, token_ref_origin,handle_origin }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-
   if (import.meta.env.DEV) {
     logger.log("Not uploading blobs because this is a test");
-    return {ok: true};
+    return { ok: true };
   }
 
   if (!pds_origin || !pds_dest || !did || !token_dest || !token_origin) {
@@ -661,24 +666,23 @@ export async function migratePreferences(
       origin: pds_origin,
       origin_token: token_origin,
     }),
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
   });
 
   if (!res.ok) {
     throw new MigrationError((await res.json<{ message: string }>()).message);
   }
 
-  return {ok: true};
+  return { ok: true };
 }
 
 export async function requestPlcToken(
-  {pds_origin, did, token_origin}: SessionData,
+  { pds_origin, did, token_origin }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-
   if (import.meta.env.DEV) {
     logger.log("Skipping PLC because we're testing");
-    return {ok: true};
+    return { ok: true };
   }
   if (!pds_origin || !did || !token_origin) {
     throw new MigrationError(
@@ -693,14 +697,14 @@ export async function requestPlcToken(
       did,
       token: token_origin,
     }),
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
   });
 
   if (!res.ok) {
     throw new MigrationError((await res.json<{ message: string }>()).message);
   }
 
-  return {ok: true};
+  return { ok: true };
 }
 
 export async function validatePlcToken(
@@ -715,10 +719,9 @@ export async function validatePlcToken(
   data: FormData,
   MIGRATOR_BACKEND: string
 ) {
-
   if (import.meta.env.DEV) {
     logger.log("Skipping PlcToken");
-    return {ok: true};
+    return { ok: true };
   }
   const submitted = data.has("submit");
   const plcToken = data.get("token_plc") as string;
@@ -738,13 +741,13 @@ export async function validatePlcToken(
     const migrateRes = await f(`${MIGRATOR_BACKEND}/migrate-plc`, {
       method: "post",
       body: JSON.stringify(payload),
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     });
 
     if (!migrateRes.ok) {
       throw new MigrationError(
         (await migrateRes.json<{ message: string }>())?.message ??
-        migrateRes.statusText
+          migrateRes.statusText
       );
     }
 
@@ -756,13 +759,13 @@ export async function validatePlcToken(
         did,
         token: token_dest,
       }),
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     });
 
     if (!activateRes.ok) {
       throw new MigrationError(
         (await activateRes.json<{ message: string }>())?.message ??
-        activateRes.statusText
+          activateRes.statusText
       );
     }
 
@@ -774,18 +777,18 @@ export async function validatePlcToken(
         did,
         token: token_origin,
       }),
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
     });
 
     if (!deactivateRes.ok) {
       throw new MigrationError(
         (await deactivateRes.json<{ message: string }>())?.message ??
-        deactivateRes.statusText
+          deactivateRes.statusText
       );
     }
 
-    return {ok: true};
+    return { ok: true };
   }
 
-  return {ok: false};
+  return { ok: false };
 }

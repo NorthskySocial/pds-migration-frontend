@@ -7,7 +7,11 @@ import {
   redirect,
   useFetcher,
 } from "react-router";
-import { getSession, commitSession } from "../sessions.server";
+import {
+  getSession,
+  commitSession,
+  type SessionData,
+} from "../sessions.server";
 import { Layout } from "~/components/layout";
 import { Suspense } from "react";
 import { getStage } from "~/util/get-stage";
@@ -17,6 +21,7 @@ import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
 import { logger } from "~/util/logger";
+import f from "~/util/mock-fetch";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -52,7 +57,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   let stage = STAGES.INVITE_CODE;
 
   try {
-    const migratorBackend = process?.env?.MIGRATOR_BACKEND ?? context.cloudflare.env.MIGRATOR_BACKEND;
+    const migratorBackend =
+      process?.env?.MIGRATOR_BACKEND ?? context.cloudflare.env.MIGRATOR_BACKEND;
     const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
   } catch (e) {
@@ -82,7 +88,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
 
-  const state = {
+  // TODO: why can't we replace with session.data???
+  const state: SessionData = {
     do_journey: session.get("do_journey"),
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
