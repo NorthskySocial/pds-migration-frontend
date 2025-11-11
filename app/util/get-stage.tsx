@@ -31,7 +31,8 @@ export function getStage(session: SessionData): STAGES {
     }
 
     return STAGES.DONE;
-  } else {
+  }
+  else if (session.do_journey === "migrate") {
     if (!session.hasBackup) {
       return STAGES.BACKUP_NOTICE;
     }
@@ -83,7 +84,32 @@ export function getStage(session: SessionData): STAGES {
     if (!session.migratedPlc) {
       return STAGES.MIGRATE_PLC;
     }
-
-    return STAGES.DONE;
   }
+  else if (session.do_journey === "resume") {
+
+    if (!session.resumeMigration) {
+      return STAGES.RESUME_MIGRATION;
+    }
+    if (!session.requestedPlcToken) {
+      return STAGES.REQUEST_PLC;
+    }
+
+    if (!session.destActivated) {
+      return STAGES.ACTIVATE_DEST;
+    }
+
+    if (!session.originDeactivated) {
+      return STAGES.DEACTIVATE_ORIGIN;
+    }
+
+    if (!session.migratedPlc) {
+      return STAGES.MIGRATE_PLC;
+    }
+
+
+
+
+  }
+
+  return STAGES.DONE;
 }

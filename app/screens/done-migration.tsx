@@ -103,7 +103,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
 
             </VStack>
           </GridItem>
-          <GridItem>
+          {/* <GridItem>
             <VStack>
               <Image src={nsNewAccount} alt="Adding a new account"></Image>
               <Image src={nsSignIn2} alt="Bluesky sign in dialog"></Image>
@@ -112,7 +112,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
               <Image src={nsSignIn} alt="Bluesky sign in dialog"></Image>
               <Image src={nsChooseProvider} alt="Choose your Provder"></Image>
             </VStack>
-          </GridItem>
+          </GridItem> */}
         </Grid>
         <Center>
           <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
