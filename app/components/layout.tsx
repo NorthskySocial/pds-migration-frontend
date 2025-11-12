@@ -15,7 +15,7 @@ export const Layout = ({ children }) => (
         flexDirection={"column"}
         justifyContent={"center"}
       >
-        <VStack padding="1em" maxWidth={"3xl"} alignItems={"center"}>
+        <VStack padding="1em" width={"3xl"} alignItems={"center"}>
           <VStack mb="5">
             <Image height={"150px"} src={logo} alt="Northsky" />
           </VStack>

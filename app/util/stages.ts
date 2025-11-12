@@ -13,7 +13,6 @@ export enum STAGES {
   EXPORT_BLOBS_ORIGIN = "EXPORT_BLOBS_ORIGIN",
   IMPORT_BLOBS_DEST = "IMPORT_BLOBS_DEST",
   MIGRATE_PREFERENCES = "MIGRATE_PREFERENCES",
-  RESUME_MIGRATION = "RESUME_MIGRATION",
   GENERATE_RECOVERY_KEY = "GENERATE_RECOVERY_KEY",
   REQUEST_PLC = "REQUEST_PLC",
   ACTIVATE_DEST = "ACTIVATE_DEST",
@@ -82,11 +81,6 @@ export const stageInfo = {
   [STAGES.MIGRATE_PREFERENCES]: {
     stageIdx: 5,
     stageTitle: "Migrating preferences...",
-    stageDescription: "Copying all your preferences to new PDS",
-  },
-    [STAGES.RESUME_MIGRATION]: {
-    stageIdx: 8,
-    stageTitle: "Resuming Migration...",
     stageDescription: "Copying all your preferences to new PDS",
   },
   [STAGES.GENERATE_RECOVERY_KEY]: {

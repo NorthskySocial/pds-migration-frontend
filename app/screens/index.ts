@@ -10,7 +10,6 @@ export const ValidatePLCToken = lazy(() => import("./validate-plc-token"));
 export const DoneMigration = lazy(() => import("./done-migration"));
 export const FailedMigration = lazy(() => import("./failed-migration"));
 export const AddRotationKey = lazy(() => import("./add-rotation-key.client"));
-export const ResumeMigration = lazy(() => import("./migration-resume"));
 export const SCREENS = {
   [STAGES.INVITE_CODE]: Intro,
   [STAGES.BACKUP_NOTICE]: EncourageBackup,
@@ -23,7 +22,6 @@ export const SCREENS = {
   [STAGES.IMPORT_BLOBS_DEST]: MigrationProgress,
   [STAGES.MIGRATE_PREFERENCES]: MigrationProgress,
   [STAGES.REQUEST_PLC]: MigrationProgress,
-  [STAGES.RESUME_MIGRATION]: ResumeMigration,
   [STAGES.ACTIVATE_DEST]: ValidatePLCToken,
   [STAGES.DEACTIVATE_ORIGIN]: ValidatePLCToken,
   [STAGES.MIGRATE_PLC]: ValidatePLCToken,
