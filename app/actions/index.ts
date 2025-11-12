@@ -497,7 +497,7 @@ export async function exportBlobs(
   }
 
   // missing blobs
-  const res = await f(`${MIGRATOR_BACKEND}/export-blobs`, {
+  const res = await f(`${MIGRATOR_BACKEND}/jobs/export-blobs`, {
     method: "post",
     body: JSON.stringify({
       did,
