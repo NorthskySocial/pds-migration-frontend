@@ -103,6 +103,8 @@ export const processState = async (
     let stage = STAGES.INVITE_CODE;
     return state;
   } else {
+    console.log("Processing stage: " + stage);
+
     switch (stage) {
       case STAGES.INVITE_CODE: {
         const invite = data.get("invite-code") as string;
@@ -220,6 +222,9 @@ export const processState = async (
             started_at: number;
             status: string;
           }>();
+
+          console.log("Export blobs (progress, status, status code): ", progress, status, res.status);
+
           state.export_progress = progress;
 
           if (status.toLowerCase() === "success") {
