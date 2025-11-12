@@ -458,7 +458,6 @@ export async function exportBlobs(
 
   console.log("Pre resume token " + token_ref_origin);
 
-
   const resume_org_promise = await agent_origin.resumeSession({
     handle: handle_origin || "",
     accessJwt: token_origin || "",
@@ -470,7 +469,6 @@ export async function exportBlobs(
   if (resume_org_promise.success) {
     console.log("Resume successful. " + token_ref_origin);
   }
-
   else {
     console.log("Resume unsuccessful. " + token_ref_origin);
   }
@@ -483,7 +481,6 @@ export async function exportBlobs(
 
   console.log("Pre resume token " + token_ref_dest);
 
-
   const resume_promise = await agent_dest.resumeSession({
     handle: handle_dest || "",
     accessJwt: token_dest || "",
@@ -495,7 +492,6 @@ export async function exportBlobs(
   if (resume_promise.success) {
     console.log("Resume successful. " + token_ref_dest);
   }
-
   else {
     console.log("Resume unsuccessful. " + token_ref_dest);
   }
@@ -513,6 +509,8 @@ export async function exportBlobs(
     headers: {"Content-Type": "application/json"},
   });
 
+  try
+  {
     if (!res.ok) {
       let errorMessage: string;
       try {
@@ -533,9 +531,6 @@ export async function exportBlobs(
       logger.error(`Export blobs failed: ${errorMessage}`);
       throw new MigrationError(errorMessage);
     }
-    logger.error(`Export blobs failed: ${errorMessage}`)
-    throw new MigrationError(errorMessage);
-  }
 
     const { job_id } = await res.json<{ job_id: string }>();
 
