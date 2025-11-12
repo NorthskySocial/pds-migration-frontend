@@ -103,9 +103,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
     require_2fa_code: session.get("require_2fa_code") ?? false,
-    export_job_id: session.get("export_job_id"),
-    export_total: null,
-    export_pct_done: null,
+    handle_available: session.get("handle_available") ?? false,
+    password_too_short: session.get("password_too_short")?? false,
+    password_match: session.get("password_match")?? false,
+    email_valid: session.get("email_valid")?? false,
+    
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -114,6 +116,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     exportedBlobs: session.get("exportedBlobs") ?? false,
     importedBlobs: session.get("importedBlobs") ?? false,
     migratedPrefs: session.get("migratedPrefs") ?? false,
+    resumeMigration: session.get("resumeMigration") ?? false,
     requestedPlcToken: session.get("requestedPlcToken") ?? false,
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
