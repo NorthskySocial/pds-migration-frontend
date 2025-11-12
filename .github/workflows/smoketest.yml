@@ -54,7 +54,7 @@ jobs:
         run: npm run typecheck
 
       - name: Build application
-        run: npm run build
+        run: npm run build -- --mode=docker
         env:
           NODE_ENV: production
 
