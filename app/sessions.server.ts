@@ -23,6 +23,7 @@ export type SessionData = {
     successful_blobs_ids: string[];
     total: number;
   };
+  last_export_check?: number;
 
   // state flags
   hasBackup: boolean;
