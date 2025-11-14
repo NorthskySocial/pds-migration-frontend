@@ -107,7 +107,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     password_too_short: session.get("password_too_short")?? false,
     password_match: session.get("password_match")?? false,
     email_valid: session.get("email_valid")?? false,
-    
+    export_job_id: session.get("export_job_id"),
+    export_total: null,
+    export_pct_done: null,
+    last_export_check: session.get("last_export_check"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,

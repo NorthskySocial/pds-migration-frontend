@@ -50,6 +50,7 @@ export const processState = async (
     export_job_id: session.get("export_job_id"),
     export_total: null,
     export_pct_done: null,
+    last_export_check: session.get("last_export_check"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -117,6 +118,8 @@ export const processState = async (
     return state;
 
   } else {
+    console.log("Processing stage: " + stage);
+
     switch (stage) {
       case STAGES.INVITE_CODE: {
         const invite = data.get("invite-code") as string;
@@ -229,28 +232,41 @@ export const processState = async (
             state.export_job_id = job_id;
           }
         } else if (state.export_job_id && !state.exportedBlobs) {
-          const res = await f(`${migratorBackend}/jobs/${state.export_job_id}`);
+          const now = Date.now();
+          const lastCheck = state.last_export_check ?? 0;
+          const CHECK_INTERVAL_MS = 2000;
 
-          // I don't know where to put this def
-          const { progress, status } = await res.json<{
-            created_at: number;
-            finished_at: number;
-            id: string;
-            kind: "ExportBlobs";
-            progress: {
-              invalid_blob_ids: string[];
-              invalid_blobs: number;
-              successful_blobs: number;
-              successful_blobs_ids: string[];
-              total: number;
+          // Only check job status if enough time has passed
+          if (now - lastCheck >= CHECK_INTERVAL_MS) {
+            console.log("Checking export job status (last attempt, now): ", lastCheck, now);
+
+            const res = await f(`${migratorBackend}/jobs/${state.export_job_id}`);
+
+            // I don't know where to put this def
+            const { progress, status } = await res.json() as {
+              created_at: number;
+              finished_at: number;
+              id: string;
+              kind: "ExportBlobs";
+              progress: {
+                invalid_blob_ids: string[];
+                invalid_blobs: number;
+                successful_blobs: number;
+                successful_blobs_ids: string[];
+                total: number;
+              };
+              started_at: number;
+              status: string;
             };
-            started_at: number;
-            status: string;
-          }>();
-          state.export_progress = progress;
 
-          if (status.toLowerCase() === "success") {
-            session.set("exportedBlobs", true);
+            console.log("Export blobs (progress, status, status code): ", progress, status, res.status);
+
+            state.export_progress = progress;
+            session.set("last_export_check", now);
+
+            if (status.toLowerCase() === "success") {
+              session.set("exportedBlobs", true);
+            }
           }
         }
 
