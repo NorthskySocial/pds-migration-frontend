@@ -75,7 +75,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
             <Input
               name="handle"
               onKeyDown={(event) => {
-                if (!/[a-z0-9]/i.test(event.key)) {
+                if (!/[a-z0-9\-]/i.test(event.key)) {
                   return event.preventDefault();
                 }
               }}
