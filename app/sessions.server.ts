@@ -1,7 +1,8 @@
+import type AtpAgent from "@atproto/api";
 import { createCookieSessionStorage } from "react-router";
 
 export type SessionData = {
-  do_journey?: "create" | "migrate";
+  do_journey?: "create" | "migrate" | "recover";
   handle_origin?: string;
   handle_dest?: string;
   password_origin?: string;
@@ -9,21 +10,21 @@ export type SessionData = {
   pds_origin?: string;
   token_origin?: string;
   token_dest?: string;
+  token_ref_origin?: string;
+  token_ref_dest?: string;
   plc_hostname?: string;
   did?: string;
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-  require_2fa_code: boolean;
-  export_job_id?: string;
-  export_progress?: {
-    invalid_blob_ids: string[];
-    invalid_blobs: number;
-    successful_blobs: number;
-    successful_blobs_ids: string[];
-    total: number;
-  };
+  export_progress?: object | null;
+  export_job_id?: string | null;
+  export_total?: number | null;
+  export_pct_done?: string | null;
   last_export_check?: number;
+
+
+
 
   // state flags
   hasBackup: boolean;
@@ -32,11 +33,15 @@ export type SessionData = {
   exportedBlobs: boolean;
   importedBlobs: boolean;
   migratedPrefs: boolean;
+  resumeMigration: boolean;
   requestedPlcToken: boolean;
   originDeactivated: boolean;
   destActivated: boolean;
   migratedPlc: boolean;
+  require_2fa_code: boolean;
+
 };
+
 
 export type SessionFlashData = {
   error: string;
@@ -44,6 +49,9 @@ export type SessionFlashData = {
     stageTitle: string;
     stageDescription: string;
   };
+  handle_not_available?: boolean| false;
+  password_mismatch?: boolean| false;
+  password_too_short?: boolean| false;
 };
 
 export const initSession = (hostname?: string) =>

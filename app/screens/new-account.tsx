@@ -25,6 +25,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   const [pass, setPass] = useState("");
   const [passVerify, setPassVerify] = useState("");
   const { id: strength } = passwordStrength(pass);
+
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
@@ -50,9 +51,9 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         {!state.email && (
           <Field
             required
-            invalid={fetcher.data?.error_password_length}
+            invalid={fetcher.data?.error_email_invalid}
             label="Email address"
-            errorText={fetcher.data?.error_password_length}
+            errorText={fetcher.data?.error_email_invalid}
           >
             <Input name="email" required placeholder="user@example.com" />
           </Field>
@@ -63,7 +64,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           invalid={fetcher.data && !fetcher.data?.handle_available}
           errorText={!fetcher.data?.ok && fetcher.data?.handle_available}
           helperText={
-            fetcher.data?.handle_available &&
+            state. &&
             `Congrats! 🎉 ${fetcher.data?.handle.toLowerCase()}.northsky.social is available!`
           }
         >

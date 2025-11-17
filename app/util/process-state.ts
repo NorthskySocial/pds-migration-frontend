@@ -18,6 +18,7 @@ import { STAGES } from "./stages";
 import { logger } from "./logger";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 import f from "./mock-fetch";
+import {HandleNotAvailableError, } from "../errors";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -51,6 +52,7 @@ export const processState = async (
     export_pct_done: null,
     last_export_check: session.get("last_export_check"),
 
+
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
     exportedRepo: session.get("exportedRepo") ?? false,
@@ -59,6 +61,7 @@ export const processState = async (
     importedBlobs: session.get("importedBlobs") ?? false,
     migratedPrefs: session.get("migratedPrefs") ?? false,
     requestedPlcToken: session.get("requestedPlcToken") ?? false,
+    resumeMigration: session.get("resumeMigration") ?? false,
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
@@ -119,6 +122,8 @@ export const processState = async (
 
         //initialize the origin PDS to bluesky
         session.set("pds_origin", "https://bsky.social");
+        session.set("handle_dest", "");
+        session.set("email", "");
         break;
       }
 
@@ -160,7 +165,14 @@ export const processState = async (
         }
 
         const is_creation_flow = state.do_journey === "create";
-        const { handle_available, token_dest, handle_dest } =
+
+
+        // const { handle_available, token_dest, handle_dest} =
+
+        //   await createDestAccount(state, data, env, is_creation_flow);
+        try{
+        const { handle_available, token_dest, handle_dest} =
+        
           await createDestAccount(
             state,
             data,
@@ -170,13 +182,18 @@ export const processState = async (
 
         if (token_dest) {
           session.set("token_dest", token_dest);
-        } else if (handle_available) {
-          session.set("handle_dest", handle_dest);
+        } 
+
         }
-        //skip check in dev
-        if (import.meta.env.DEV) {
-          logger.log("Forcing handle_dest in dev");
-          session.set("handle_dest", "Test Handle");
+catch (e) {
+          if (e instanceof HandleNotAvailableError) {
+            session.flash(
+              "handle_not_available",
+              true,
+            );
+            break;
+          }
+          throw e;
         }
 
         break;
