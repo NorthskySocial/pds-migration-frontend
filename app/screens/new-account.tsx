@@ -26,7 +26,6 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   const [passVerify, setPassVerify] = useState("");
   const { id: strength } = passwordStrength(pass);
 
-console.log("Handle available inside form: " +  state.handle_not_available);
 
   return (
     <fetcher.Form method="post">
@@ -53,9 +52,7 @@ console.log("Handle available inside form: " +  state.handle_not_available);
         {!state.email && (
           <Field
             required
-            invalid={fetcher.data?.error_email_invalid}
             label="Email address"
-            errorText={fetcher.data?.error_email_invalid}
           >
             <Input name="email" required placeholder="user@example.com" />
           </Field>
@@ -63,13 +60,13 @@ console.log("Handle available inside form: " +  state.handle_not_available);
         <br />
         <Field
           label="New handle"
-          invalid={!state.handle_not_available && state.handle_dest.length>0}
-          errorText={!state.handle_not_available && state.handle_dest.length>0 &&
-            `Uhoh! 🎉 ${state.handle_dest?.toLowerCase()}.northsky.social is not available!`
+          invalid={!state.handle_not_available && state.handle_dest.length > 0}
+          errorText={!state.handle_not_available && state.handle_dest.length > 0 &&
+            `Uhoh! 🎉 ${state.handle_dest?.toLowerCase()}sdf is not available!`
           }
           helperText=
-        {state.handle_not_available && state.handle_dest.length>0 &&
-            (`Congrats! 🎉 ${state.handle_dest?.toLowerCase()}.northsky.social is available!`)
+          {state.handle_not_available && state.handle_dest.length > 0 &&
+            (`Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`)
           }
         >
           <InputGroup
@@ -101,11 +98,15 @@ console.log("Handle available inside form: " +  state.handle_not_available);
           </div>
         </Field>
         <br />
+
+
         <Field
           required
-          invalid={fetcher.data?.error_password_length}
+          invalid={state.password_too_short}
+          errorText={state.password_too_short &&
+            (`Password is too short!`)
+          }
           label="Password"
-          errorText={fetcher.data?.error_password_length}
         >
           <PasswordInput
             name="password"
@@ -122,10 +123,10 @@ console.log("Handle available inside form: " +  state.handle_not_available);
           required
           label="Repeat password"
           invalid={
-            fetcher.data?.error_password_match ||
+            state.password_mismatch ||
             (pass !== passVerify && passVerify.length > 0)
           }
-          errorText={fetcher.data?.error_password_match}
+          errorText={"Passwords do not match"}
         >
           <PasswordInput
             name="password-repeat"

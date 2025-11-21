@@ -2,7 +2,7 @@ import type AtpAgent from "@atproto/api";
 import { createCookieSessionStorage } from "react-router";
 
 export type SessionData = {
-  do_journey?: "create" | "migrate" | "recover";
+  do_journey?: "create" | "migrate" | "resume" | "fail";
   handle_origin?: string;
   handle_dest?: string;
   password_origin?: string;

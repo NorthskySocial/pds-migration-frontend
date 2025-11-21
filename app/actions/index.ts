@@ -133,19 +133,13 @@ export async function createDestAccount(
   //do dumb handle availability if we're in dev
   if (import.meta.env.DEV) {
     //return a stub for 0 length handles
-    if (!handle.length) {
+    if (!handle_dest.length) {
       console.log("Empty Handle");
-      return { handle_available: false, token_dest: "", handle_dest: handle_dest };
+      return { handle_available: false, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
     } else {
       //Return a valid handle if it includes the name Dave
       if (handle_dest.includes("dave")) {
         handle_dest_available = true;
-
-      console.log("Valid handle");
-      } else {
-        handle_dest_available = false;
-              console.log("invalid handle");
-
       }
     }
   }
@@ -154,8 +148,8 @@ export async function createDestAccount(
   //Actual production check
   else {
     // Check handle availability
-    if (!handle.length) {
-      return { handle_not_available: true, token_dest: "", handle_dest: handle_dest };
+    if (!handle_dest.length) {
+      return { handle_not_available: true, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
     } else {
       console.log("Checking handle " + handle_dest);
       const handle_available = await f(
@@ -173,15 +167,15 @@ export async function createDestAccount(
       throw new HandleNotAvailableError("Handle " + handle_dest + " is not available.");
   }
 
-  console.log("Handle available: "+ handle_dest_available + " Handle: "+handle_dest);
+  console.log("Handle available: " + handle_dest_available + " Handle: " + handle_dest);
 
-  if (!submitted) return { handle_not_available: handle_dest_available, token_dest: "", handle_dest: handle_dest }
+  if (!submitted) return { handle_not_available: handle_dest_available, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch }
 
 
   //Disable checks if we're in dev mode
   if (import.meta.env.DEV) {
     logger.log("Skipping availability check");
-    return { handle_available: handle_dest_available, token_dest: "", handle_dest: handle_dest }
+    return { handle_available: handle_dest_available, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch }
   }
 
   // Create account directly if service token is not available
@@ -208,7 +202,7 @@ export async function createDestAccount(
       identifier: handle_dest,
       password: pw_dest,
     });
-    return { handle_not_available: handle_dest_available, token_dest: data.accessJwt, handle_dest: handle_dest };
+    return { handle_not_available: handle_dest_available, token_dest: data.accessJwt, handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
 
   } else {
     /* This is a migrated account */
@@ -288,11 +282,11 @@ export async function createDestAccount(
       password: pw_dest,
     });
     nsToken = data.accessJwt;
-    return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest };
+    return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
 
   }
 
-  return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest };
+  return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
 }
 
 export async function exportRepo(
@@ -517,6 +511,19 @@ export async function requestPlcToken(
   return { ok: true };
 }
 
+export async function resumeMigration(
+  { pds_origin, pds_dest, did, token_dest, token_origin }: SessionData,
+  MIGRATOR_BACKEND: string
+) {
+  if (import.meta.env.DEV) {
+    logger.log("Not resuming because this is a test");
+    return { ok: true };
+  }
+  //Just returning true for now
+  //Actual resume work needs to go in here
+
+  return { ok: true };
+}
 export async function validatePlcToken(
   {
     pds_dest,
@@ -599,6 +606,8 @@ export async function validatePlcToken(
 
     return { ok: true };
   }
+
+
 
   return { ok: false };
 }

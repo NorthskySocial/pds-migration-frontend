@@ -21,6 +21,16 @@ export function getStage(session: SessionData): STAGES {
     return STAGES.INVITE_CODE;
   }
 
+  //Resume path
+    if (session.do_journey === "resume") {
+
+    if (session.resumeMigration === undefined) {
+      return STAGES.RESUME_MIGRATION;
+    }
+    return STAGES.DONE;
+  }
+
+  //creation path
   if (session.do_journey === "create") {
     if (!all(session.token_dest, session.handle_dest)) {
       return STAGES.CREATE_DEST_ACCOUNT;
@@ -31,7 +41,10 @@ export function getStage(session: SessionData): STAGES {
     }
 
     return STAGES.DONE;
-  } else {
+  }
+
+  //migration path
+  if (session.do_journey === "migrate") {
     if (!session.hasBackup) {
       return STAGES.BACKUP_NOTICE;
     }
@@ -83,7 +96,9 @@ export function getStage(session: SessionData): STAGES {
     if (!session.migratedPlc) {
       return STAGES.MIGRATE_PLC;
     }
-
     return STAGES.DONE;
   }
+
+//safety return
+  return STAGES.DONE;
 }

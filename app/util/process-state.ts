@@ -11,6 +11,7 @@ import {
   requestPlcToken,
   uploadBlobs,
   validatePlcToken,
+  resumeMigration
 } from "~/actions";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
@@ -52,8 +53,8 @@ export const processState = async (
     export_pct_done: null,
     last_export_check: session.get("last_export_check"),
     handle_not_available: session.get("handle_not_available"),
-password_mismatch: session.get("password_mismatch"),
-password_too_short: session.get("password_too_short"),
+    password_mismatch: session.get("password_mismatch"),
+    password_too_short: session.get("password_too_short"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -103,6 +104,7 @@ password_too_short: session.get("password_too_short"),
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
+        session.set("resumeMigration", false);
 
     //make sure we're at the root URL
     // TODO: do we have to do anything with `stage` here?
@@ -117,10 +119,13 @@ password_too_short: session.get("password_too_short"),
         state.do_journey =
           (data.get("create") as "create" | null) ||
           (data.get("migrate") as "migrate" | null) ||
-          "create";
+          (data.get("resume") as "resume" | null) ||
+          "resume";
+        console.log("Do_journey " + state.do_journey);
         state.inviteCode = invite;
         session.set("inviteCode", state.inviteCode);
         session.set("do_journey", state.do_journey);
+
 
         //initialize the origin PDS to bluesky
         session.set("pds_origin", "https://bsky.social");
@@ -168,13 +173,8 @@ password_too_short: session.get("password_too_short"),
 
         const is_creation_flow = state.do_journey === "create";
 
-        //reset the session variables
-        session.set("handle_not_available", false);
-        session.set("password_mismatch", false);
-        session.set("password_too_short", false);
-
         try {
-          const { handle_not_available, token_dest, handle_dest } =
+          const { handle_not_available, token_dest, handle_dest, passwordTooShort, passwordMismatch } =
 
             await createDestAccount(
               state,
@@ -183,18 +183,11 @@ password_too_short: session.get("password_too_short"),
               is_creation_flow
             );
 
-            console.log("Handle not available: " + handle_not_available + "Destination handle " + handle_dest
-            );
-
           session.set("handle_not_available", handle_not_available)
-
-          if (handle_dest) {
-            session.set("handle_dest", handle_dest);
-          }
-
-          if (token_dest) {
-            session.set("token_dest", token_dest);
-          }
+          session.set("handle_dest", handle_dest);
+          session.set("token_dest", token_dest);
+          session.set("password_too_short", passwordTooShort);
+          session.set("password_mismatch", passwordMismatch);
 
         }
         catch (e) {
@@ -202,25 +195,6 @@ password_too_short: session.get("password_too_short"),
 
           console.log("Error branch");
 
-          //If the handle isn't available:
-          if (e instanceof HandleNotAvailableError) {
-
-            session.set("handle_not_available", true);
-            break;
-          }
-
-          // //If the password is too short
-          // if (e instanceof PasswordTooShortError) {
-
-          //   session.set("password_too_short", true);
-          //   break;
-          // }
-          // //If the passwords don't match
-          // if (e instanceof PasswordMatchError) {
-
-          //   session.set("password_mismatch", true);
-          //   break;
-          // }
           throw e;
         }
 
@@ -328,6 +302,14 @@ password_too_short: session.get("password_too_short"),
           session.set("destActivated", ok);
           session.set("originDeactivated", ok);
           session.set("migratedPlc", ok);
+        }
+        break;
+      }
+
+      case STAGES.RESUME_MIGRATION: {
+        const { ok } = await resumeMigration(state, migratorBackend);
+        if (ok) {
+          session.set("resumeMigration", ok);
         }
         break;
       }
