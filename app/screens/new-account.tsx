@@ -26,6 +26,8 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   const [passVerify, setPassVerify] = useState("");
   const { id: strength } = passwordStrength(pass);
 
+console.log("Handle available inside form: " +  state.handle_not_available);
+
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
@@ -61,11 +63,13 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         <br />
         <Field
           label="New handle"
-          invalid={fetcher.data && !fetcher.data?.handle_available}
-          errorText={!fetcher.data?.ok && fetcher.data?.handle_available}
-          helperText={
-            state. &&
-            `Congrats! 🎉 ${fetcher.data?.handle.toLowerCase()}.northsky.social is available!`
+          invalid={!state.handle_not_available && state.handle_dest.length>0}
+          errorText={!state.handle_not_available && state.handle_dest.length>0 &&
+            `Uhoh! 🎉 ${state.handle_dest?.toLowerCase()}.northsky.social is not available!`
+          }
+          helperText=
+        {state.handle_not_available && state.handle_dest.length>0 &&
+            (`Congrats! 🎉 ${state.handle_dest?.toLowerCase()}.northsky.social is available!`)
           }
         >
           <InputGroup

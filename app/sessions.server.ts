@@ -22,7 +22,9 @@ export type SessionData = {
   export_total?: number | null;
   export_pct_done?: string | null;
   last_export_check?: number;
-
+  handle_not_available?: boolean| false;
+  password_mismatch?: boolean| false;
+  password_too_short?: boolean| false;
 
 
 
@@ -49,9 +51,7 @@ export type SessionFlashData = {
     stageTitle: string;
     stageDescription: string;
   };
-  handle_not_available?: boolean| false;
-  password_mismatch?: boolean| false;
-  password_too_short?: boolean| false;
+
 };
 
 export const initSession = (hostname?: string) =>

@@ -18,7 +18,7 @@ import { STAGES } from "./stages";
 import { logger } from "./logger";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 import f from "./mock-fetch";
-import {HandleNotAvailableError, } from "../errors";
+import { HandleNotAvailableError, PasswordTooShortError, PasswordMatchError } from "../errors";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -51,7 +51,9 @@ export const processState = async (
     export_total: null,
     export_pct_done: null,
     last_export_check: session.get("last_export_check"),
-
+    handle_not_available: session.get("handle_not_available"),
+password_mismatch: session.get("password_mismatch"),
+password_too_short: session.get("password_too_short"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -166,33 +168,59 @@ export const processState = async (
 
         const is_creation_flow = state.do_journey === "create";
 
+        //reset the session variables
+        session.set("handle_not_available", false);
+        session.set("password_mismatch", false);
+        session.set("password_too_short", false);
 
-        // const { handle_available, token_dest, handle_dest} =
+        try {
+          const { handle_not_available, token_dest, handle_dest } =
 
-        //   await createDestAccount(state, data, env, is_creation_flow);
-        try{
-        const { handle_available, token_dest, handle_dest} =
-        
-          await createDestAccount(
-            state,
-            data,
-            migratorBackend,
-            is_creation_flow
-          );
+            await createDestAccount(
+              state,
+              data,
+              migratorBackend,
+              is_creation_flow
+            );
 
-        if (token_dest) {
-          session.set("token_dest", token_dest);
-        } 
+            console.log("Handle not available: " + handle_not_available + "Destination handle " + handle_dest
+            );
+
+          session.set("handle_not_available", handle_not_available)
+
+          if (handle_dest) {
+            session.set("handle_dest", handle_dest);
+          }
+
+          if (token_dest) {
+            session.set("token_dest", token_dest);
+          }
 
         }
-catch (e) {
+        catch (e) {
+          //set session variables from thrown errors
+
+          console.log("Error branch");
+
+          //If the handle isn't available:
           if (e instanceof HandleNotAvailableError) {
-            session.flash(
-              "handle_not_available",
-              true,
-            );
+
+            session.set("handle_not_available", true);
             break;
           }
+
+          // //If the password is too short
+          // if (e instanceof PasswordTooShortError) {
+
+          //   session.set("password_too_short", true);
+          //   break;
+          // }
+          // //If the passwords don't match
+          // if (e instanceof PasswordMatchError) {
+
+          //   session.set("password_mismatch", true);
+          //   break;
+          // }
           throw e;
         }
 

@@ -5,6 +5,20 @@ export class PasswordValidationError extends Error {
   }
 }
 
+export class PasswordTooShortError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
+export class PasswordMatchError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = this.constructor.name;
+  }
+}
+
 export class EMailValidationError extends Error {
   constructor(message: string) {
     super(message);

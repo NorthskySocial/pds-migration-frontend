@@ -9,7 +9,7 @@ import {
   MigrationError,
   PasswordValidationError,
   HandleNotAvailableError,
-  PasswordMismatchError,
+  PasswordMatchError,
   PasswordTooShortError,
   EMailValidationError
 } from "~/errors";
@@ -105,6 +105,7 @@ export async function createDestAccount(
     throw new CreateAccountError("Invalid origin token");
   }
 
+  console.log("In creation");
   const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
@@ -113,46 +114,75 @@ export async function createDestAccount(
   const handle_dest = `${handle}.${dest_hostname.match("localhost") ? "test" : dest_hostname
     }`;
   let handle_dest_available = false;
+  let passwordMismatch = false;
+  let passwordTooShort = false;
   let nsToken = "";
 
   // Check passwords matching
   if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
-    throw new PasswordMismatchError("Passwords do not match");
+    passwordMismatch = true;
+    console.log("Password mismatch");
   }
 
   // Check password length
   if (pw_dest?.length < 8 && pw_dest.length > 0) {
-    throw new PasswordValidationError("Password must be at least 8 characters");
+    passwordTooShort = true;
+    console.log("Password too short");
   }
 
-  // Check handle availability
-  if (!handle.length) {
-    return { handle_available: null, token_dest: null, handle_dest: handle_dest};
-  } else {
-        console.log("Checking handle " + handle_dest);
-    const handle_available = await f(
-      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
-    )
-      .then<{ message: string; error: string } & { did: string }>((r) =>
-        r.json()
+  //do dumb handle availability if we're in dev
+  if (import.meta.env.DEV) {
+    //return a stub for 0 length handles
+    if (!handle.length) {
+      console.log("Empty Handle");
+      return { handle_available: false, token_dest: "", handle_dest: handle_dest };
+    } else {
+      //Return a valid handle if it includes the name Dave
+      if (handle_dest.includes("dave")) {
+        handle_dest_available = true;
+
+      console.log("Valid handle");
+      } else {
+        handle_dest_available = false;
+              console.log("invalid handle");
+
+      }
+    }
+  }
+
+
+  //Actual production check
+  else {
+    // Check handle availability
+    if (!handle.length) {
+      return { handle_not_available: true, token_dest: "", handle_dest: handle_dest };
+    } else {
+      console.log("Checking handle " + handle_dest);
+      const handle_available = await f(
+        `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
       )
-      .then((d) => d.message === "Unable to resolve handle" || d.did === did);
+        .then<{ message: string; error: string } & { did: string }>((r) =>
+          r.json()
+        )
+        .then((d) => d.message === "Unable to resolve handle" || d.did === did);
 
 
-    console.log("Handle available: " + handle_available)
-
+      console.log("Handle available: " + handle_available)
+    }
     if (!handle_dest_available)
       throw new HandleNotAvailableError("Handle " + handle_dest + " is not available.");
   }
 
-  if (!submitted) return { handle_available: handle_dest_available, token_dest: "", handle_dest: handle_dest }
+  console.log("Handle available: "+ handle_dest_available + " Handle: "+handle_dest);
+
+  if (!submitted) return { handle_not_available: handle_dest_available, token_dest: "", handle_dest: handle_dest }
 
 
   //Disable checks if we're in dev mode
-  // if (import.meta.env.DEV) {
-  //   logger.log("Skipping availability check");
-  //   return { handle_available: handle_dest_available, token_dest: "", handle_dest: handle_dest }
-  // }
+  if (import.meta.env.DEV) {
+    logger.log("Skipping availability check");
+    return { handle_available: handle_dest_available, token_dest: "", handle_dest: handle_dest }
+  }
 
   // Create account directly if service token is not available
   // This is a new, non migrated account
@@ -178,7 +208,7 @@ export async function createDestAccount(
       identifier: handle_dest,
       password: pw_dest,
     });
-    return { handle_available: handle_dest_available, token_dest: data.accessJwt, handle_dest: handle_dest };
+    return { handle_not_available: handle_dest_available, token_dest: data.accessJwt, handle_dest: handle_dest };
 
   } else {
     /* This is a migrated account */
@@ -258,11 +288,11 @@ export async function createDestAccount(
       password: pw_dest,
     });
     nsToken = data.accessJwt;
-    return { handle_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest };
+    return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest };
 
   }
 
-  return { handle_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest };
+  return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest };
 }
 
 export async function exportRepo(
