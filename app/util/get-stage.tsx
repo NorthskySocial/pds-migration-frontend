@@ -17,17 +17,34 @@ const all = (...items: (string | boolean | undefined | null)[]) =>
  * @returns STAGES
  */
 export function getStage(session: SessionData): STAGES {
-  if (!session.inviteCode) {
+  if (!((session.inviteCode) || (session.do_journey?.includes("resume")))) {
     return STAGES.INVITE_CODE;
   }
 
   //Resume path
-    if (session.do_journey === "resume") {
 
-    if (session.resumeMigration === undefined) {
+  console.log("Do journey is "+session.do_journey);
+
+  if (session.do_journey === "resume") {
+    if (!session.resumeMigration) {
       return STAGES.RESUME_MIGRATION;
     }
-    return STAGES.DONE;
+
+    if (!session.requestedPlcToken) {
+      return STAGES.REQUEST_PLC;
+    }
+
+    if (!session.destActivated) {
+      return STAGES.ACTIVATE_DEST;
+    }
+
+    if (!session.originDeactivated) {
+      return STAGES.DEACTIVATE_ORIGIN;
+    }
+
+    if (!session.migratedPlc) {
+      return STAGES.MIGRATE_PLC;
+    }
   }
 
   //creation path
