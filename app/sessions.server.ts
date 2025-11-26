@@ -1,4 +1,3 @@
-import type AtpAgent from "@atproto/api";
 import { createCookieSessionStorage } from "react-router";
 
 export type SessionData = {
@@ -17,16 +16,20 @@ export type SessionData = {
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-  export_progress?: object | null;
+  export_progress?: {
+    invalid_blob_ids: string[];
+    invalid_blobs: number;
+    successful_blobs: number;
+    successful_blobs_ids: string[];
+    total: number;
+  } | null;
   export_job_id?: string | null;
   export_total?: number | null;
   export_pct_done?: string | null;
   last_export_check?: number;
-  handle_not_available?: boolean| false;
-  password_mismatch?: boolean| false;
-  password_too_short?: boolean| false;
-
-
+  handle_not_available?: boolean | null;
+  password_mismatch?: boolean | null;
+  password_too_short?: boolean | null;
 
   // state flags
   hasBackup: boolean;
@@ -41,17 +44,10 @@ export type SessionData = {
   destActivated: boolean;
   migratedPlc: boolean;
   require_2fa_code: boolean;
-
 };
 
-
 export type SessionFlashData = {
-  error: string;
-  progress?: {
-    stageTitle: string;
-    stageDescription: string;
-  };
-
+  error?: string;
 };
 
 export const initSession = (hostname?: string) =>

@@ -3,20 +3,9 @@
 import { AtpAgent } from "@atproto/api";
 
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
-import {
-  CreateAccountError,
-  LoginError,
-  MigrationError,
-  PasswordValidationError,
-  HandleNotAvailableError,
-  PasswordMatchError,
-  PasswordTooShortError,
-  EMailValidationError
-} from "~/errors";
+import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
-import { useFetcher } from "react-router";
-import { useState } from "react";
 import type { Session } from "react-router";
 
 export async function loginOrigin(
@@ -72,7 +61,6 @@ export async function loginOrigin(
   };
 }
 
-
 export async function createDestAccount(
   {
     did,
@@ -82,7 +70,6 @@ export async function createDestAccount(
     email,
     inviteCode,
     user_recover_key,
-
   }: Partial<SessionData>,
   data: FormData,
   MIGRATOR_BACKEND: string,
@@ -111,48 +98,53 @@ export async function createDestAccount(
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
-  const handle_dest = `${handle}.${dest_hostname.match("localhost") ? "test" : dest_hostname
-    }`;
-  let handle_dest_available = false;
-  let passwordMismatch = false;
-  let passwordTooShort = false;
+  const handle_dest = `${handle}.${
+    dest_hostname.match("localhost") ? "test" : dest_hostname
+  }`;
+  let handleIsAvailable = null;
+  let passwordMismatch = null;
+  let passwordTooShort = null;
   let nsToken = "";
 
   // Check passwords matching
   if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
     passwordMismatch = true;
     console.log("Password mismatch");
+  } else {
+    passwordMismatch = false;
   }
 
   // Check password length
   if (pw_dest?.length < 8 && pw_dest.length > 0) {
     passwordTooShort = true;
     console.log("Password too short");
+  } else if (pw_dest.length > 0) {
+    passwordTooShort = false;
   }
 
-  //do dumb handle availability if we're in dev
+  //do fake handle availability check if we're in dev
   if (import.meta.env.DEV) {
-    //return a stub for 0 length handles
     if (!handle_dest.length) {
       console.log("Empty Handle");
-      return { handle_available: false, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
+      handleIsAvailable = null;
     } else {
       //Return a valid handle if it includes the name Dave
       if (handle_dest.includes("dave")) {
-        handle_dest_available = true;
+        handleIsAvailable = false;
+      } else {
+        handleIsAvailable = true;
       }
     }
   }
-
 
   //Actual production check
   else {
     // Check handle availability
     if (!handle_dest.length) {
-      return { handle_not_available: true, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
+      handleIsAvailable = null;
     } else {
       console.log("Checking handle " + handle_dest);
-      const handle_available = await f(
+      handleIsAvailable = await f(
         `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
       )
         .then<{ message: string; error: string } & { did: string }>((r) =>
@@ -160,27 +152,29 @@ export async function createDestAccount(
         )
         .then((d) => d.message === "Unable to resolve handle" || d.did === did);
 
-
-      console.log("Handle available: " + handle_available)
+      console.log(`Handle ${handle_dest} available? ` + handleIsAvailable);
     }
-    if (!handle_dest_available)
-      throw new HandleNotAvailableError("Handle " + handle_dest + " is not available.");
   }
 
-  console.log("Handle available: " + handle_dest_available + " Handle: " + handle_dest);
-
-  if (!submitted) return { handle_not_available: handle_dest_available, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch }
-
-
-  //Disable checks if we're in dev mode
-  if (import.meta.env.DEV) {
-    logger.log("Skipping availability check");
-    return { handle_available: handle_dest_available, token_dest: "", handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch }
+  // Return early if the user hasn't clicked submit
+  // Or if password/handle validation fails
+  // This is to handle user feedback for e.g. password length/check and handle availability
+  if (
+    !submitted ||
+    !handleIsAvailable ||
+    passwordTooShort ||
+    passwordMismatch
+  ) {
+    return {
+      handle_not_available: !handleIsAvailable,
+      handle_dest: handle_dest,
+      passwordTooShort: passwordTooShort,
+      passwordMismatch: passwordMismatch,
+    };
   }
 
   // Create account directly if service token is not available
   // This is a new, non migrated account
-
   if (!did) {
     // Get new user token
     const agent_dest = new AtpAgent({
@@ -195,15 +189,21 @@ export async function createDestAccount(
     });
 
     if (!response.success) {
-      throw new CreateAccountError("error creating account");
+      throw new CreateAccountError("Error creating account on destination PDS");
     }
 
     const { data } = await agent_dest.login({
       identifier: handle_dest,
       password: pw_dest,
     });
-    return { handle_not_available: handle_dest_available, token_dest: data.accessJwt, handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
 
+    return {
+      token_dest: data.accessJwt,
+      handle_dest: handle_dest,
+      handle_not_available: !handleIsAvailable,
+      passwordTooShort: passwordTooShort,
+      passwordMismatch: passwordMismatch,
+    };
   } else {
     /* This is a migrated account */
 
@@ -217,7 +217,7 @@ export async function createDestAccount(
       headers: {
         "Content-Type": "application/json",
       },
-      method: "post",
+      method: "POST",
       body: JSON.stringify({
         pds_host: serviceEndpoint,
         did,
@@ -232,8 +232,7 @@ export async function createDestAccount(
       );
     }
 
-    // I have no idea what the hell is happening here
-    const token_service = (await res.json()) as { token: string };
+    const token_service = await res.json<{ token: string }>();
 
     if (!token_service.token) {
       throw new LoginError(
@@ -241,7 +240,7 @@ export async function createDestAccount(
       );
     }
 
-    const body = {
+    const createAccountRequestBody = {
       pds_host: pds_dest,
       handle: handle_dest,
       token: token_service.token,
@@ -253,12 +252,13 @@ export async function createDestAccount(
     };
 
     const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
-      method: "post",
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(createAccountRequestBody),
     });
 
-    logger.debug("create account debugging", body, {
+    // @TODO IMPORTANT: this likely leaks sensitive info into logs and should likely be rewritten or removed ASAP
+    logger.debug("create account debugging", createAccountRequestBody, {
       headers: createAccountRes.headers,
       body: createAccountRes.body,
       ok: createAccountRes.ok,
@@ -277,16 +277,21 @@ export async function createDestAccount(
       fetch: f as typeof fetch,
     });
 
-    const { data } = await agent_dest.login({
+    const { data: destLoginData } = await agent_dest.login({
       identifier: handle_dest,
       password: pw_dest,
     });
-    nsToken = data.accessJwt;
-    return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
 
+    nsToken = destLoginData.accessJwt;
+
+    return {
+      token_dest: nsToken,
+      handle_dest: handle_dest,
+      handle_not_available: handleIsAvailable,
+      passwordTooShort: passwordTooShort,
+      passwordMismatch: passwordMismatch,
+    };
   }
-
-  return { handle_not_available: handle_dest_available, token_dest: nsToken, handle_dest: handle_dest, passwordTooShort: passwordTooShort, passwordMismatch: passwordMismatch };
 }
 
 export async function exportRepo(
@@ -511,6 +516,7 @@ export async function requestPlcToken(
   return { ok: true };
 }
 
+// TODO aendra
 export async function resumeMigration(
   { pds_origin, pds_dest, did, token_dest, token_origin }: SessionData,
   MIGRATOR_BACKEND: string
@@ -519,6 +525,7 @@ export async function resumeMigration(
     logger.log("Not resuming because this is a test");
     return { ok: true };
   }
+
   //Just returning true for now
   //Actual resume work needs to go in here
 
@@ -564,7 +571,7 @@ export async function validatePlcToken(
     if (!migrateRes.ok) {
       throw new MigrationError(
         (await migrateRes.json<{ message: string }>())?.message ??
-        migrateRes.statusText
+          migrateRes.statusText
       );
     }
 
@@ -582,7 +589,7 @@ export async function validatePlcToken(
     if (!activateRes.ok) {
       throw new MigrationError(
         (await activateRes.json<{ message: string }>())?.message ??
-        activateRes.statusText
+          activateRes.statusText
       );
     }
 
@@ -600,14 +607,12 @@ export async function validatePlcToken(
     if (!deactivateRes.ok) {
       throw new MigrationError(
         (await deactivateRes.json<{ message: string }>())?.message ??
-        deactivateRes.statusText
+          deactivateRes.statusText
       );
     }
 
     return { ok: true };
   }
-
-
 
   return { ok: false };
 }

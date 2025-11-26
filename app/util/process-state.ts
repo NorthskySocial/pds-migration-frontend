@@ -11,15 +11,13 @@ import {
   requestPlcToken,
   uploadBlobs,
   validatePlcToken,
-  resumeMigration
+  resumeMigration,
 } from "~/actions";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
-import { logger } from "./logger";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 import f from "./mock-fetch";
-import { HandleNotAvailableError, PasswordTooShortError, PasswordMatchError } from "../errors";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -104,11 +102,8 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
-        session.set("resumeMigration", false);
+    session.set("resumeMigration", false);
 
-    //make sure we're at the root URL
-    // TODO: do we have to do anything with `stage` here?
-    let stage = STAGES.INVITE_CODE;
     return state;
   } else {
     console.log("Processing stage: " + stage);
@@ -125,7 +120,6 @@ export const processState = async (
         state.inviteCode = invite;
         session.set("inviteCode", state.inviteCode);
         session.set("do_journey", state.do_journey);
-
 
         //initialize the origin PDS to bluesky
         session.set("pds_origin", "https://bsky.social");
@@ -173,30 +167,24 @@ export const processState = async (
 
         const is_creation_flow = state.do_journey === "create";
 
-        try {
-          const { handle_not_available, token_dest, handle_dest, passwordTooShort, passwordMismatch } =
+        const {
+          handle_not_available,
+          token_dest,
+          handle_dest,
+          passwordTooShort,
+          passwordMismatch,
+        } = await createDestAccount(
+          state,
+          data,
+          migratorBackend,
+          is_creation_flow
+        );
 
-            await createDestAccount(
-              state,
-              data,
-              migratorBackend,
-              is_creation_flow
-            );
-
-          session.set("handle_not_available", handle_not_available)
-          session.set("handle_dest", handle_dest);
-          session.set("token_dest", token_dest);
-          session.set("password_too_short", passwordTooShort);
-          session.set("password_mismatch", passwordMismatch);
-
-        }
-        catch (e) {
-          //set session variables from thrown errors
-
-          console.log("Error branch");
-
-          throw e;
-        }
+        session.set("handle_not_available", handle_not_available);
+        session.set("handle_dest", handle_dest);
+        session.set("token_dest", token_dest);
+        session.set("password_too_short", passwordTooShort);
+        session.set("password_mismatch", passwordMismatch);
 
         break;
       }
@@ -230,12 +218,18 @@ export const processState = async (
 
           // Only check job status if enough time has passed
           if (now - lastCheck >= CHECK_INTERVAL_MS) {
-            console.log("Checking export job status (last attempt, now): ", lastCheck, now);
+            console.log(
+              "Checking export job status (last attempt, now): ",
+              lastCheck,
+              now
+            );
 
-            const res = await f(`${migratorBackend}/jobs/${state.export_job_id}`);
+            const res = await f(
+              `${migratorBackend}/jobs/${state.export_job_id}`
+            );
 
             // I don't know where to put this def
-            const { progress, status } = await res.json() as {
+            const { progress, status } = (await res.json()) as {
               created_at: number;
               finished_at: number;
               id: string;
@@ -251,7 +245,12 @@ export const processState = async (
               status: string;
             };
 
-            console.log("Export blobs (progress, status, status code): ", progress, status, res.status);
+            console.log(
+              "Export blobs (progress, status, status code): ",
+              progress,
+              status,
+              res.status
+            );
 
             state.export_progress = progress;
             session.set("last_export_check", now);
