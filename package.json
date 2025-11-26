@@ -59,7 +59,7 @@
     "jest-puppeteer": "^11.0.0",
     "nodemailer": "^7.0.6",
     "ts-jest": "^29.4.1",
-    "typescript": "~5.9.2",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.43.0",
     "vite": "^7.1.5",
     "vite-tsconfig-paths": "^5.1.4",

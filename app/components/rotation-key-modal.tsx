@@ -196,10 +196,7 @@ export const OpenRotationKeyModal = ({
 }) => {
   const [key, setKey] = useState<Secp256k1Keypair | null>(null);
   useEffect(() => {
-    const mn = bip39.generateMnemonic(wordlist); // generate passphrase
-    const ent = bip39.mnemonicToEntropy(mn, wordlist);
-    console.log(mn);
-    Secp256k1Keypair.import(ent, { exportable: true }).then(setKey);
+    Secp256k1Keypair.create({ exportable: true }).then(setKey);
   }, []);
 
   const exit = useCallback(() => key && onClose(key), [key, onClose]);
