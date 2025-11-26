@@ -1,4 +1,5 @@
 import { createCookieSessionStorage } from "react-router";
+import type {AtpSessionData} from "@atproto/api/src/types";
 
 export type SessionData = {
   do_journey?: "create" | "migrate" | "resume" | "fail";
@@ -6,6 +7,8 @@ export type SessionData = {
   handle_dest?: string;
   password_origin?: string;
   pds_dest?: string;
+  atp_origin_session?: AtpSessionData;
+  atp_dest_session?: AtpSessionData;
   pds_origin?: string;
   token_origin?: string;
   token_dest?: string;
