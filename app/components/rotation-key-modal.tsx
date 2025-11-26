@@ -19,8 +19,10 @@ import {
   encodeOPSaveRequest,
   activateOPButton,
 } from "@1password/save-button";
-import { encryptKey, toBase64 } from "~/util/crypto";
+import * as bip39 from "@scure/bip39";
+import { wordlist } from "@scure/bip39/wordlists/english.js";
 import { Spoiler } from "@/components/ui/spoiler";
+
 export const SuccessText = ({
   exit,
   keypair,
@@ -33,18 +35,12 @@ export const SuccessText = ({
   handle: string;
 }) => {
   const [downloaded, setDownloaded] = useState(false);
-  const [result, setResult] = useState<{
-    encrypted: ArrayBuffer | null;
-    passphrase: string | null;
-    salt: string | null;
-  }>({
-    encrypted: null,
-    passphrase: null,
-    salt: null,
-  });
+  const [result, setResult] = useState<string>();
 
   useEffect(() => {
-    encryptKey(keypair).then(setResult);
+    keypair.export().then((ent) => {
+      setResult(bip39.entropyToMnemonic(ent, wordlist));
+    });
   }, [keypair]);
 
   useEffect(() => {
@@ -52,14 +48,14 @@ export const SuccessText = ({
   }, [result]);
 
   const downloadKey = useCallback(async () => {
-    if (result.encrypted) {
-      const blob = new Blob([result.encrypted], {
-        type: "application/octet-stream",
+    if (result) {
+      const blob = new Blob([result], {
+        type: "text/plain",
       });
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = `${keypair.did()}_${result.salt}.key`;
+      a.download = `${keypair.did()}_private.key`;
       document.body.appendChild(a);
       a.style.display = "none";
       a.click();
@@ -69,18 +65,18 @@ export const SuccessText = ({
         setDownloaded(true);
       }, 1000);
     }
-  }, [keypair, result.encrypted, result.salt]);
+  }, [keypair, result]);
 
-  return result.salt && result.encrypted && result.passphrase ? (
+  return result ? (
     <>
       <p>Here's a new recovery key. Its DID is:</p>
 
       <h4 style={{ padding: "1em" }}>{keypair.did()}</h4>
       <p>It is encrypted using the following passphrase (hover to reveal):</p>
-<br></br>
+      <br></br>
       <Spoiler>
         <pre style={{ textAlign: "center", padding: "1em" }}>
-          {result.passphrase
+          {result
             ?.split(" ")
             .map((v) => `${v}`)
             .join("\n")}
@@ -107,7 +103,12 @@ export const SuccessText = ({
         always generate a new one! But if you lose access to Northsky as well as
         this key, you may not be able to recover your account.
       </p>
-      <Button variant="solid" colorPalette={"purple"} style={{ margin: "1em 0" }} onClick={downloadKey}>
+      <Button
+        variant="solid"
+        colorPalette={"purple"}
+        style={{ margin: "1em 0" }}
+        onClick={downloadKey}
+      >
         Download {keypair.did()}.key
       </Button>
       <p>
@@ -138,17 +139,11 @@ export const SuccessText = ({
                   value: handle,
                 },
                 {
-                  autocomplete: "current-password" as AutofillType,
-                  value: toBase64(new Uint8Array(result.encrypted)),
-                },
-                {
                   autocomplete: "recovery-code" as AutofillType,
-                  value: result.passphrase,
+                  value: result,
                 },
               ],
-              notes: `Generated ${new Date().toISOString()} by Northsky Migrator.\n\nSalt: ${
-                result.salt
-              }`,
+              notes: `Generated ${new Date().toISOString()} by Northsky Migrator}`,
             })}
             lang="en"
           />
@@ -167,17 +162,24 @@ export const SuccessText = ({
       </p>
 
       {downloaded && (
-        <Button variant="solid" colorPalette={"purple"}  size="lg" onClick={exit}>
+        <Button
+          variant="solid"
+          colorPalette={"purple"}
+          size="lg"
+          onClick={exit}
+        >
           Continue
         </Button>
       )}
-<Float>
-              <CloseButton variant="solid" colorPalette={"purple"}  size="lg" onClick={exit}>
-
-        </CloseButton>
-        </Float>
+      <Float>
+        <CloseButton
+          variant="solid"
+          colorPalette={"purple"}
+          size="lg"
+          onClick={exit}
+        ></CloseButton>
+      </Float>
     </>
-
   ) : (
     <strong>An error has occurred.</strong>
   );
@@ -194,7 +196,10 @@ export const OpenRotationKeyModal = ({
 }) => {
   const [key, setKey] = useState<Secp256k1Keypair | null>(null);
   useEffect(() => {
-    Secp256k1Keypair.create({ exportable: true }).then(setKey);
+    const mn = bip39.generateMnemonic(wordlist); // generate passphrase
+    const ent = bip39.mnemonicToEntropy(mn, wordlist);
+    console.log(mn);
+    Secp256k1Keypair.import(ent, { exportable: true }).then(setKey);
   }, []);
 
   const exit = useCallback(() => key && onClose(key), [key, onClose]);
