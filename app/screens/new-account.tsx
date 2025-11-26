@@ -5,7 +5,6 @@ import {
   Input,
   Button,
   Spinner,
-  Image,
   VStack,
   HStack,
 } from "@chakra-ui/react";
@@ -25,7 +24,6 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   const [pass, setPass] = useState("");
   const [passVerify, setPassVerify] = useState("");
   const { id: strength } = passwordStrength(pass);
-
 
   return (
     <fetcher.Form method="post">
@@ -50,10 +48,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           </Text>
         )}
         {!state.email && (
-          <Field
-            required
-            label="Email address"
-          >
+          <Field required label="Email address">
             <Input name="email" required placeholder="user@example.com" />
           </Field>
         )}
@@ -61,12 +56,15 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         <Field
           label="New handle"
           invalid={!state.handle_not_available && state.handle_dest.length > 0}
-          errorText={!state.handle_not_available && state.handle_dest.length > 0 &&
+          errorText={
+            !state.handle_not_available &&
+            state.handle_dest.length > 0 &&
             `Uhoh! 🎉 ${state.handle_dest?.toLowerCase()}sdf is not available!`
           }
-          helperText=
-          {state.handle_not_available && state.handle_dest.length > 0 &&
-            (`Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`)
+          helperText={
+            state.handle_not_available &&
+            state.handle_dest.length > 0 &&
+            `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`
           }
         >
           <InputGroup
@@ -99,13 +97,10 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         </Field>
         <br />
 
-
         <Field
           required
           invalid={state.password_too_short}
-          errorText={state.password_too_short &&
-            (`Password is too short!`)
-          }
+          errorText={state.password_too_short && `Password is too short!`}
           label="Password"
         >
           <PasswordInput

@@ -4,7 +4,6 @@ import {
   Text,
   Input,
   Button,
-  Image,
   VStack,
   HStack,
   Grid,
@@ -38,11 +37,12 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
         ) : (
           <>
             <Text fontSize="md" textAlign={"justify"}>
-              Please provide us with the following information so we can resume migrating your data.
+              Please provide us with the following information so we can resume
+              migrating your data.
             </Text>
-    <Grid templateColumns="repeat(2, 1fr)" gap="6">
-      <VStack>
-                      <Switch
+            <Grid templateColumns="repeat(2, 1fr)" gap="6">
+              <VStack>
+                <Switch
                   name="has-pds"
                   checked={altPds}
                   onCheckedChange={() => setAltPds(!altPds)}
@@ -54,9 +54,9 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
                     <Input name="pds" defaultValue="https://bsky.social" />
                   </Field>
                 )}
-                </VStack>
-                <Box></Box>
-                <VStack>
+              </VStack>
+              <Box></Box>
+              <VStack>
                 <Field required label="Bluesky login">
                   <Input
                     autoComplete="username"
@@ -67,8 +67,8 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
                 <Field required label="Bluesky password">
                   <PasswordInput autoComplete="password" name="bsky-password" />
                 </Field>
-                </VStack>
-               <VStack>
+              </VStack>
+              <VStack>
                 <Field required label="Northsky login">
                   <Input
                     autoComplete="username"
@@ -77,15 +77,22 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
                   />
                 </Field>
                 <Field required label="Northsky password">
-                  <PasswordInput autoComplete="password" name="northsky-password" />
+                  <PasswordInput
+                    autoComplete="password"
+                    name="northsky-password"
+                  />
                 </Field>
-                </VStack>
-                </Grid>
-
+              </VStack>
+            </Grid>
           </>
         )}
         <HStack>
-          <Button type="submit" name="submit" margin={"0 auto"}>
+          <Button
+            type="submit"
+            name="submit"
+            margin={"0 auto"}
+            value="resume-migration-login"
+          >
             Continue
           </Button>
           <Button name="cancel" type="submit" value={"cancel"} formNoValidate>

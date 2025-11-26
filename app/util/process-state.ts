@@ -62,7 +62,6 @@ export const processState = async (
     importedBlobs: session.get("importedBlobs") ?? false,
     migratedPrefs: session.get("migratedPrefs") ?? false,
     requestedPlcToken: session.get("requestedPlcToken") ?? false,
-    resumeMigration: session.get("resumeMigration") ?? false,
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
     migratedPlc: session.get("migratedPlc") ?? false,
@@ -102,7 +101,6 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
-    session.set("resumeMigration", false);
 
     return state;
   } else {
@@ -118,13 +116,22 @@ export const processState = async (
           "resume";
         console.log("Do_journey " + state.do_journey);
         state.inviteCode = invite;
+
         session.set("inviteCode", state.inviteCode);
         session.set("do_journey", state.do_journey);
+        session.set("handle_dest", undefined);
+        session.set("email", undefined);
 
         //initialize the origin PDS to bluesky
         session.set("pds_origin", "https://bsky.social");
-        session.set("handle_dest", "");
-        session.set("email", "");
+
+        if (state.do_journey === "resume") {
+          //Reset tokens
+          session.set("token_origin", undefined);
+          session.set("token_dest", undefined);
+          session.set("password_origin", undefined);
+        }
+
         break;
       }
 
@@ -136,12 +143,24 @@ export const processState = async (
 
       case STAGES.ORIGIN_PDS_LOGIN: {
         try {
-          const { pds_origin, email, token_origin, did } = await loginOrigin(
-            session,
-            data
-          );
-
+          //Get origin, handle and password from form, immediately save to session
+          const pds_origin =
+            (data.get("pds") as string) ?? "https://bsky.social";
           session.set("pds_origin", pds_origin);
+
+          const handle_origin = data.get("bsky-handle") as string;
+          session.set("handle_origin", handle_origin);
+
+          const password_origin = (data.get("bsky-password") as string) ?? "";
+          session.set("password_origin", password_origin);
+
+          const { token_origin, email, did } = await loginOrigin({
+            pds_origin,
+            handle_origin,
+            password_origin,
+            authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+          });
+
           session.set("email", email);
           session.set("token_origin", token_origin);
           session.set("did", did);
@@ -306,10 +325,55 @@ export const processState = async (
       }
 
       case STAGES.RESUME_MIGRATION: {
-        const { ok } = await resumeMigration(state, migratorBackend);
-        if (ok) {
-          session.set("resumeMigration", ok);
+        try {
+          //Get origin, handle and password from form, immediately save to session
+          const pds_origin =
+            (data.get("pds") as string) ?? "https://bsky.social";
+          session.set("pds_origin", pds_origin);
+
+          const handle_origin = data.get("bsky-handle") as string;
+          session.set("handle_origin", handle_origin);
+
+          const password_origin = (data.get("bsky-password") as string) ?? "";
+          session.set("password_origin", password_origin);
+
+          const { token_origin, email, did } = await loginOrigin({
+            pds_origin,
+            handle_origin,
+            password_origin,
+            authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+          });
+
+          session.set("email", email);
+          session.set("token_origin", token_origin);
+          session.set("did", did);
+        } catch (e) {
+          if (e instanceof AuthFactorTokenRequiredError) {
+            session.set("require_2fa_code", true);
+            session.flash(
+              "error",
+              "Please check your email for your login code and enter it below"
+            );
+            break;
+          }
+          throw e;
         }
+
+        //Get dest handle and password from form
+        const handle_dest = data.get("northsky-handle") as string;
+        const password_dest = (data.get("northsky-password") as string) ?? "";
+
+        // Save dest handle to form in case it's changed somehow
+        session.set("handle_dest", handle_dest);
+
+        const { token_dest } = await resumeMigration({
+          pds_dest: state.pds_dest ?? "https://northsky.social",
+          handle_dest,
+          password_dest,
+        });
+
+        session.set("token_dest", token_dest);
+
         break;
       }
     }

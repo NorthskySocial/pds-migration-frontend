@@ -32,8 +32,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     session.set(
       "pds_dest",
       search.get("destination") ??
-      process?.env?.PDS_HOSTNAME ??
-      context.cloudflare.env.PDS_HOSTNAME
+        process?.env?.PDS_HOSTNAME ??
+        context.cloudflare.env.PDS_HOSTNAME
     );
   }
 
@@ -41,9 +41,9 @@ export async function action({ request, context }: Route.ActionArgs) {
     session.set(
       "plc_hostname",
       search.get("plc") ??
-      process?.env?.PLC_HOSTNAME ??
-      context.cloudflare.env.PLC_HOSTNAME ??
-      "https://plc.directory"
+        process?.env?.PLC_HOSTNAME ??
+        context.cloudflare.env.PLC_HOSTNAME ??
+        "https://plc.directory"
     );
   }
 
@@ -111,7 +111,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     password_mismatch: session.get("password_mismatch"),
     password_too_short: session.get("password_too_short"),
 
-
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
     exportedRepo: session.get("exportedRepo") ?? false,
@@ -119,7 +118,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     exportedBlobs: session.get("exportedBlobs") ?? false,
     importedBlobs: session.get("importedBlobs") ?? false,
     migratedPrefs: session.get("migratedPrefs") ?? false,
-    resumeMigration: session.get("resumeMigration") ?? false,
     requestedPlcToken: session.get("requestedPlcToken") ?? false,
     originDeactivated: session.get("originDeactivated") ?? false,
     destActivated: session.get("destActivated") ?? false,
