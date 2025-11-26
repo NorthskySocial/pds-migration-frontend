@@ -2,47 +2,40 @@
 
 import { AtpAgent } from "@atproto/api";
 
-import { type SessionData, type SessionFlashData } from "~/sessions.server";
+import { type SessionData } from "~/sessions.server";
 import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
-import type { Session } from "react-router";
 
-export async function loginOrigin(
-  session: Session<SessionData, SessionFlashData>,
-  data: FormData
-) {
-  const pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
-
+export async function loginOrigin({
+  pds_origin,
+  handle_origin,
+  password_origin,
+  authFactorToken,
+}: {
+  pds_origin: string;
+  handle_origin?: string;
+  password_origin?: string;
+  authFactorToken?: string;
+}) {
   const origin_agent = new AtpAgent({
     service: pds_origin,
     fetch: f as typeof fetch,
   });
 
-  const handle_origin = data.get("bsky-handle") as string;
-
   if (!handle_origin) {
     throw new LoginError("Invalid handle");
   }
 
-  const password = (data.get("bsky-password") as string) ?? "";
-
-  if (!password) {
+  if (!password_origin) {
     throw new LoginError("Invalid password");
   }
-
-  const password_origin = password;
-
-  //Save origin, user name and password for later
-  session.set("handle_origin", handle_origin);
-  session.set("password_origin", password_origin);
-  session.set("pds_origin", pds_origin);
 
   // Login to origin PDS
   const { data: agentSessionData } = await origin_agent.login({
     identifier: handle_origin,
-    password,
-    authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+    password: password_origin,
+    authFactorToken,
   });
 
   const { did, email, accessJwt: token_origin } = agentSessionData;
@@ -516,21 +509,45 @@ export async function requestPlcToken(
   return { ok: true };
 }
 
-// TODO aendra
-export async function resumeMigration(
-  { pds_origin, pds_dest, did, token_dest, token_origin }: SessionData,
-  MIGRATOR_BACKEND: string
-) {
-  if (import.meta.env.DEV) {
-    logger.log("Not resuming because this is a test");
-    return { ok: true };
+export async function resumeMigration({
+  pds_dest,
+  handle_dest,
+  password_dest,
+}: {
+  pds_dest: string;
+  handle_dest?: string;
+  password_dest?: string;
+}) {
+  const dest_agent = new AtpAgent({
+    service: pds_dest,
+    fetch: f as typeof fetch,
+  });
+
+  if (!handle_dest) {
+    throw new LoginError("Invalid Northsky handle");
   }
 
-  //Just returning true for now
-  //Actual resume work needs to go in here
+  if (!password_dest) {
+    throw new LoginError("Invalid Northsky password");
+  }
 
-  return { ok: true };
+  // Login to origin PDS
+  const { data: agentSessionData } = await dest_agent.login({
+    identifier: handle_dest,
+    password: password_dest,
+  });
+
+  const { accessJwt: token_dest } = agentSessionData;
+
+  if (!token_dest) {
+    throw new LoginError("Unable to login to Northsky");
+  }
+
+  return {
+    token_dest,
+  };
 }
+
 export async function validatePlcToken(
   {
     pds_dest,

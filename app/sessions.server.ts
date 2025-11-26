@@ -38,7 +38,6 @@ export type SessionData = {
   exportedBlobs: boolean;
   importedBlobs: boolean;
   migratedPrefs: boolean;
-  resumeMigration: boolean;
   requestedPlcToken: boolean;
   originDeactivated: boolean;
   destActivated: boolean;

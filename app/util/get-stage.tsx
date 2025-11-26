@@ -17,17 +17,37 @@ const all = (...items: (string | boolean | undefined | null)[]) =>
  * @returns STAGES
  */
 export function getStage(session: SessionData): STAGES {
-  if (!((session.inviteCode) || (session.do_journey?.includes("resume")))) {
+  if (!(session.inviteCode || session.do_journey?.includes("resume"))) {
     return STAGES.INVITE_CODE;
   }
 
   //Resume path
 
-  console.log("Do journey is "+session.do_journey);
+  console.log("Do journey is " + session.do_journey);
 
   if (session.do_journey === "resume") {
-    if (!session.resumeMigration) {
+    if (!session.token_dest || !session.token_origin) {
       return STAGES.RESUME_MIGRATION;
+    }
+
+    if (!session.exportedRepo) {
+      return STAGES.EXPORT_REPO_ORIGIN;
+    }
+
+    if (!session.importedRepo) {
+      return STAGES.IMPORT_REPO_DEST;
+    }
+
+    if (!session.exportedBlobs) {
+      return STAGES.EXPORT_BLOBS_ORIGIN;
+    }
+
+    if (!session.importedBlobs) {
+      return STAGES.IMPORT_BLOBS_DEST;
+    }
+
+    if (!session.migratedPrefs) {
+      return STAGES.MIGRATE_PREFERENCES;
     }
 
     if (!session.requestedPlcToken) {
@@ -116,6 +136,6 @@ export function getStage(session: SessionData): STAGES {
     return STAGES.DONE;
   }
 
-//safety return
+  //safety return
   return STAGES.DONE;
 }
