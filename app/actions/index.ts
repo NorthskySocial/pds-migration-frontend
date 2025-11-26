@@ -6,23 +6,37 @@ import { type SessionData } from "~/sessions.server";
 import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
+import type {AtpSessionData} from "@atproto/api/src/types";
 
 
 /**
- * Resume all agents in the session. Automatically refreshes the session if needed.
- * @param session
+ * Resume AtpAgent's session. Automatically refreshes the session if needed.
+ * @param pds_dest
+ * @param atp_dest_session
+ * @param pds_origin
+ * @param atp_origin_session
+ * These flags are here to save the need to resume if not needed since it does a web request. Saves a bit of time
  * @param destination Resume the destination agent if true. Defaults to true.
  * @param origin Resume the origin agent if true. Defaults to true.
  */
-async function refreshAgents(session: Session<SessionData, SessionFlashData>, destination = true, origin = true) {
+async function refreshAgents(
+    pds_dest?: string,
+    atp_dest_session?: AtpSessionData,
+    pds_origin?: string,
+    atp_origin_session?: AtpSessionData,
+    destination = true,
+    origin = true) {
+
+  if(!pds_dest || !pds_origin || !atp_dest_session || !atp_origin_session){
+    console.error("refreshAgents is missing required params");
+    throw new MigrationError("Unable to resume session . Please re login")
+  }
 
   let destResumeAgent: AtpAgent | null = null;
   let originResumeAgent: AtpAgent | null = null;
 
   if(destination) {
     //Resume destination agent session
-    const pds_dest = session.get("pds_dest");
-    const atp_dest_session = session.get("atp_dest_session");
 
     if (!pds_dest || !atp_dest_session) throw new MigrationError("Unable to resume session . Please re login")
 
@@ -32,15 +46,11 @@ async function refreshAgents(session: Session<SessionData, SessionFlashData>, de
     //this will automatically check the session and refresh if needed
     const {success} = await destResumeAgent.resumeSession(atp_dest_session)
     if (!success) throw new MigrationError("Unable to resume session. Please re login")
-    //We'll save the session again if it was changed
-    session.set("atp_dest_session", destResumeAgent.session);
+
   }
 
   if(origin) {
     //Resume origin agent session
-    const pds_origin = session.get("pds_origin");
-    const atp_origin_session = session.get("atp_origin_session");
-
     if (!pds_origin || !atp_origin_session) throw new MigrationError("Unable to resume session . Please re login")
 
     originResumeAgent = new AtpAgent({
@@ -49,8 +59,6 @@ async function refreshAgents(session: Session<SessionData, SessionFlashData>, de
     //this will automatically check the session and refresh if needed
     const {success} = await originResumeAgent.resumeSession(atp_origin_session)
     if (!success) throw new MigrationError("Unable to resume session. Please re login")
-    //We'll save the session again if it was changed
-    session.set("atp_origin_session", originResumeAgent.session);
   }
 
   return {destResumeAgent, originResumeAgent }
@@ -89,7 +97,6 @@ export async function loginOrigin({
   });
 
   const { did, email, accessJwt: token_origin } = agentSessionData;
-  session.set('atp_origin_session', origin_agent.session);
 
   if (!did) {
     throw new LoginError("Unable to resolve DID");
@@ -102,6 +109,7 @@ export async function loginOrigin({
     password_origin,
     token_origin,
     email,
+    atp_origin_session: origin_agent.session,
   };
 }
 
@@ -115,8 +123,6 @@ export async function createDestAccount(
     inviteCode,
     user_recover_key,
   }: Partial<SessionData>,
-  //TODO not sure what the best practice is here for react since it has a partial above for some of the session data
-  session: Session<SessionData, SessionFlashData>,
   data: FormData,
   MIGRATOR_BACKEND: string,
   is_creation_flow: boolean
@@ -242,8 +248,6 @@ export async function createDestAccount(
       identifier: handle_dest,
       password: pw_dest,
     });
-    //Not 100% sure if we do need to save the session since it's a new account. Not sure if theres more actions needed
-    session.set("atp_dest_session", agent_dest.session);
 
     return {
       token_dest: data.accessJwt,
@@ -251,6 +255,8 @@ export async function createDestAccount(
       handle_not_available: !handleIsAvailable,
       passwordTooShort: passwordTooShort,
       passwordMismatch: passwordMismatch,
+      //Not 100% sure if we do need to save the session since it's a new account. Not sure if theres more actions needed
+      atp_dest_session: agent_dest.session,
     };
   } else {
     /* This is a migrated account */
@@ -329,8 +335,6 @@ export async function createDestAccount(
       identifier: handle_dest,
       password: pw_dest,
     });
-    //We should now have successfully created the user's account with their did on the new PDS
-    session.set("atp_dest_session", agent_dest.session);
     nsToken = destLoginData.accessJwt;
 
     return {
@@ -339,13 +343,14 @@ export async function createDestAccount(
       handle_not_available: handleIsAvailable,
       passwordTooShort: passwordTooShort,
       passwordMismatch: passwordMismatch,
+      atp_dest_session: agent_dest.session,
     };
   }
 }
 
 export async function exportRepo(
-  { pds_origin, did }: SessionData,
-  session: Session<SessionData, SessionFlashData>,
+  { pds_origin, did, pds_dest, atp_dest_session, atp_origin_session,
+  }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
   //Disable checks if we're in dev mode
@@ -359,7 +364,12 @@ export async function exportRepo(
     );
   }
 
-  const { originResumeAgent} = await refreshAgents(session, false);
+  const { originResumeAgent} = await refreshAgents(
+      pds_dest,
+      atp_dest_session,
+      pds_origin,
+      atp_origin_session,
+      false);
 
   // export repo
   const res = await f(`${MIGRATOR_BACKEND}/export-repo`, {
@@ -381,8 +391,7 @@ export async function exportRepo(
 }
 
 export async function importRepo(
-  { pds_dest, did }: SessionData,
-  session: Session<SessionData, SessionFlashData>,
+  { pds_dest, did, atp_dest_session, atp_origin_session, pds_origin }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
   // This breaks during local tests so return early if Vite in dev mode
@@ -397,7 +406,13 @@ export async function importRepo(
     );
   }
 
-  const {destResumeAgent} = await refreshAgents(session, true, false);
+  const { destResumeAgent} = await refreshAgents(
+      pds_dest,
+      atp_dest_session,
+      pds_origin,
+      atp_origin_session,
+      true,
+      false);
 
   // import repo
   const res = await f(`${MIGRATOR_BACKEND}/import-repo`, {
@@ -420,8 +435,7 @@ export async function importRepo(
 }
 
 export async function exportBlobs(
-  { pds_origin, pds_dest, did, }: SessionData,
-  session: Session<SessionData, SessionFlashData>,
+  { pds_origin, pds_dest, did, atp_dest_session, atp_origin_session}: SessionData,
   MIGRATOR_BACKEND: string
 ) {
   //Disable checks if we're in dev mode
@@ -435,7 +449,11 @@ export async function exportBlobs(
     );
   }
 
-  const {destResumeAgent, originResumeAgent} = await refreshAgents(session);
+  const {destResumeAgent, originResumeAgent} = await refreshAgents(
+      pds_dest,
+      atp_dest_session,
+      pds_origin,
+      atp_origin_session);
 
   try {
     const res = await f(`${MIGRATOR_BACKEND}/jobs/export-blobs`, {
@@ -480,18 +498,26 @@ export async function exportBlobs(
 }
 
 export async function uploadBlobs(
-  { pds_dest, did, token_dest }: SessionData,
+  { pds_dest, did, atp_dest_session, atp_origin_session, pds_origin }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
   if (import.meta.env.DEV) {
     logger.log("Not uploading blobs because this is a test");
     return { ok: true };
   }
-  if (!pds_dest || !did || !token_dest) {
+  if (!pds_dest || !did) {
     throw new MigrationError(
       "Unable to resolve original account; please login again."
     );
   }
+
+  const {destResumeAgent} = await refreshAgents(
+      pds_dest,
+      atp_dest_session,
+      pds_origin,
+      atp_origin_session,
+      true,
+      false);
 
   // upload blobs
   const res = await f(`${MIGRATOR_BACKEND}/upload-blobs`, {
@@ -499,7 +525,7 @@ export async function uploadBlobs(
     body: JSON.stringify({
       pds_host: pds_dest,
       did,
-      token: token_dest,
+      token: destResumeAgent?.session?.accessJwt,
     }),
     headers: { "Content-Type": "application/json" },
   });
@@ -512,7 +538,7 @@ export async function uploadBlobs(
 }
 
 export async function migratePreferences(
-  { pds_origin, pds_dest, did, token_dest, token_origin }: SessionData,
+  { pds_origin, pds_dest, did, atp_dest_session, atp_origin_session}: SessionData,
   MIGRATOR_BACKEND: string
 ) {
   if (import.meta.env.DEV) {
@@ -520,18 +546,25 @@ export async function migratePreferences(
     return { ok: true };
   }
 
-  if (!pds_origin || !pds_dest || !did || !token_dest || !token_origin) {
+  if (!pds_origin || !pds_dest || !did) {
     throw new MigrationError("Not able to migrate preferences");
   }
+
+  const {destResumeAgent, originResumeAgent} = await refreshAgents(
+      pds_dest,
+      atp_dest_session,
+      pds_origin,
+      atp_origin_session);
+
   // migrate preferences
   const res = await f(`${MIGRATOR_BACKEND}/migrate-preferences`, {
     method: "post",
     body: JSON.stringify({
       did,
       destination: pds_dest,
-      destination_token: token_dest,
+      destination_token: destResumeAgent?.session?.accessJwt,
       origin: pds_origin,
-      origin_token: token_origin,
+      origin_token: originResumeAgent?.session?.accessJwt,
     }),
     headers: { "Content-Type": "application/json" },
   });
@@ -544,25 +577,33 @@ export async function migratePreferences(
 }
 
 export async function requestPlcToken(
-  { pds_origin, did, token_origin }: SessionData,
+  { pds_origin, did, pds_dest, atp_dest_session, atp_origin_session }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
   if (import.meta.env.DEV) {
     logger.log("Skipping PLC because we're testing");
     return { ok: true };
   }
-  if (!pds_origin || !did || !token_origin) {
+  if (!pds_origin || !did) {
     throw new MigrationError(
       "Not able to request PLC token due to invalid credentials"
     );
   }
+  const {originResumeAgent} = await refreshAgents(
+      pds_dest,
+      atp_dest_session,
+      pds_origin,
+      atp_origin_session,
+      false,
+      false);
+
   // req PLC token
   const res = await f(`${MIGRATOR_BACKEND}/request-token`, {
     method: "post",
     body: JSON.stringify({
       pds_host: pds_origin,
       did,
-      token: token_origin,
+      token: originResumeAgent?.session?.accessJwt,
     }),
     headers: { "Content-Type": "application/json" },
   });
@@ -610,6 +651,7 @@ export async function resumeMigration({
 
   return {
     token_dest,
+    atp_dest_session: dest_agent.session,
   };
 }
 
@@ -617,10 +659,10 @@ export async function validatePlcToken(
   {
     pds_dest,
     did,
-    token_dest,
     pds_origin,
-    token_origin,
     user_recover_key,
+    atp_dest_session,
+    atp_origin_session,
   }: SessionData,
   data: FormData,
   MIGRATOR_BACKEND: string
@@ -633,12 +675,19 @@ export async function validatePlcToken(
   const plcToken = data.get("token_plc") as string;
 
   if (submitted && plcToken) {
+
+    const {destResumeAgent, originResumeAgent} = await refreshAgents(
+        pds_dest,
+        atp_dest_session,
+        pds_origin,
+        atp_origin_session);
+
     const payload = {
       destination: pds_dest,
-      destination_token: token_dest,
+      destination_token: destResumeAgent?.session?.accessJwt,
       origin: pds_origin,
       did,
-      origin_token: token_origin,
+      origin_token: originResumeAgent?.session?.accessJwt,
       plc_signing_token: plcToken,
       user_recover_key: user_recover_key ?? undefined,
     };
@@ -663,7 +712,7 @@ export async function validatePlcToken(
       body: JSON.stringify({
         pds_host: pds_dest,
         did,
-        token: token_dest,
+        token: destResumeAgent?.session?.accessJwt,
       }),
       headers: { "Content-Type": "application/json" },
     });
@@ -681,7 +730,7 @@ export async function validatePlcToken(
       body: JSON.stringify({
         pds_host: pds_origin,
         did,
-        token: token_origin,
+        token: originResumeAgent?.session?.accessJwt,
       }),
       headers: { "Content-Type": "application/json" },
     });
