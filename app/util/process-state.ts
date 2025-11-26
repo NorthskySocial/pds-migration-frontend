@@ -82,7 +82,9 @@ export const processState = async (
     session.set("handle_origin", undefined);
     session.set("handle_dest", undefined);
     session.set("pds_dest", undefined);
+    session.set("atp_dest_session", undefined);
     session.set("pds_origin", undefined);
+    session.set("atp_origin_session", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
     session.set("plc_hostname", undefined);

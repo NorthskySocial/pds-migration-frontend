@@ -55,15 +55,17 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         <br />
         <Field
           label="New handle"
-          invalid={!state.handle_not_available && state.handle_dest.length > 0}
+          invalid={
+            !state.handle_not_available && (state.handle_dest?.length ?? 0) > 0
+          }
           errorText={
             !state.handle_not_available &&
-            state.handle_dest.length > 0 &&
-            `Uhoh! 🎉 ${state.handle_dest?.toLowerCase()}sdf is not available!`
+            (state.handle_dest?.length ?? 0) > 0 &&
+            `Uhoh! ${state.handle_dest?.toLowerCase()}sdf is not available!`
           }
           helperText={
             state.handle_not_available &&
-            state.handle_dest.length > 0 &&
+            (state.handle_dest?.length ?? 0) > 0 &&
             `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`
           }
         >
@@ -75,7 +77,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
             <Input
               name="handle"
               onKeyDown={(event) => {
-                if (!/[a-z0-9]/i.test(event.key)) {
+                if (!/[a-z0-9\-]/i.test(event.key)) {
                   return event.preventDefault();
                 }
               }}
