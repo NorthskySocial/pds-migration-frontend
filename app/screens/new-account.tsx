@@ -61,7 +61,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           errorText={
             !state.handle_not_available &&
             (state.handle_dest?.length ?? 0) > 0 &&
-            `Uhoh! ${state.handle_dest?.toLowerCase()}sdf is not available!`
+            `Uh oh! ${state.handle_dest?.toLowerCase()} is not available!`
           }
           helperText={
             state.handle_not_available &&
