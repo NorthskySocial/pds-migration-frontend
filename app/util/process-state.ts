@@ -37,7 +37,9 @@ export const processState = async (
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
     pds_dest: session.get("pds_dest"),
+    atp_origin_session: session.get("atp_origin_session"),
     pds_origin: session.get("pds_origin"),
+    atp_dest_session: session.get("atp_dest_session"),
     token_origin: session.get("token_origin"),
     token_dest: session.get("token_dest"),
     plc_hostname: session.get("plc_hostname"),
@@ -80,7 +82,9 @@ export const processState = async (
     session.set("handle_origin", undefined);
     session.set("handle_dest", undefined);
     session.set("pds_dest", undefined);
+    session.set("atp_dest_session", undefined);
     session.set("pds_origin", undefined);
+    session.set("atp_origin_session", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
     session.set("plc_hostname", undefined);
@@ -154,16 +158,17 @@ export const processState = async (
           const password_origin = (data.get("bsky-password") as string) ?? "";
           session.set("password_origin", password_origin);
 
-          const { token_origin, email, did } = await loginOrigin({
+          const { token_origin, email, did , atp_origin_session} = await loginOrigin({
             pds_origin,
             handle_origin,
             password_origin,
-            authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+            authFactorToken: (data.get("2fa_code") as string) ?? undefined
           });
 
           session.set("email", email);
           session.set("token_origin", token_origin);
           session.set("did", did);
+          session.set("atp_origin_session", atp_origin_session)
           break;
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
@@ -192,6 +197,7 @@ export const processState = async (
           handle_dest,
           passwordTooShort,
           passwordMismatch,
+          atp_dest_session
         } = await createDestAccount(
           state,
           data,
@@ -204,6 +210,7 @@ export const processState = async (
         session.set("token_dest", token_dest);
         session.set("password_too_short", passwordTooShort);
         session.set("password_mismatch", passwordMismatch);
+        session.set("atp_dest_session", atp_dest_session);
 
         break;
       }
@@ -337,7 +344,7 @@ export const processState = async (
           const password_origin = (data.get("bsky-password") as string) ?? "";
           session.set("password_origin", password_origin);
 
-          const { token_origin, email, did } = await loginOrigin({
+          const { token_origin, email, did, atp_origin_session } = await loginOrigin({
             pds_origin,
             handle_origin,
             password_origin,
@@ -347,6 +354,7 @@ export const processState = async (
           session.set("email", email);
           session.set("token_origin", token_origin);
           session.set("did", did);
+          session.set("atp_origin_session", atp_origin_session);
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
             session.set("require_2fa_code", true);
@@ -366,13 +374,14 @@ export const processState = async (
         // Save dest handle to form in case it's changed somehow
         session.set("handle_dest", handle_dest);
 
-        const { token_dest } = await resumeMigration({
+        const { token_dest, atp_dest_session } = await resumeMigration({
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,
           password_dest,
         });
 
         session.set("token_dest", token_dest);
+        session.set("atp_dest_session", atp_dest_session);
 
         break;
       }
