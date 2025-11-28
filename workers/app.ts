@@ -28,7 +28,8 @@ export default {
     // Expose log level globally for SSR code (logger reads this if present)
     const debugFlag = String((env as any).DEBUG ?? "").toLowerCase();
     const isDebug = debugFlag && debugFlag !== "false" && debugFlag !== "0";
-    const level = (env as any).VITE_LOG_LEVEL || (isDebug ? "debug" : undefined);
+    const level =
+      (env as any).VITE_LOG_LEVEL || (isDebug ? "debug" : undefined);
     if (level) {
       (globalThis as any).__LOG_LEVEL = String(level).toLowerCase();
     }
