@@ -5,7 +5,6 @@ import {
   Input,
   Button,
   Spinner,
-  Image,
   VStack,
   HStack,
 } from "@chakra-ui/react";
@@ -25,6 +24,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
   const [pass, setPass] = useState("");
   const [passVerify, setPassVerify] = useState("");
   const { id: strength } = passwordStrength(pass);
+
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
@@ -48,23 +48,25 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           </Text>
         )}
         {!state.email && (
-          <Field
-            required
-            invalid={fetcher.data?.error_password_length}
-            label="Email address"
-            errorText={fetcher.data?.error_password_length}
-          >
+          <Field required label="Email address">
             <Input name="email" required placeholder="user@example.com" />
           </Field>
         )}
         <br />
         <Field
           label="New handle"
-          invalid={fetcher.data && !fetcher.data?.handle_available}
-          errorText={!fetcher.data?.ok && fetcher.data?.handle_available}
+          invalid={
+            !state.handle_not_available && (state.handle_dest?.length ?? 0) > 0
+          }
+          errorText={
+            !state.handle_not_available &&
+            (state.handle_dest?.length ?? 0) > 0 &&
+            `Uhoh! ${state.handle_dest?.toLowerCase()}sdf is not available!`
+          }
           helperText={
-            fetcher.data?.handle_available &&
-            `Congrats! 🎉 ${fetcher.data?.handle.toLowerCase()}.northsky.social is available!`
+            state.handle_not_available &&
+            (state.handle_dest?.length ?? 0) > 0 &&
+            `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`
           }
         >
           <InputGroup
@@ -96,11 +98,12 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           </div>
         </Field>
         <br />
+
         <Field
           required
-          invalid={fetcher.data?.error_password_length}
+          invalid={state.password_too_short}
+          errorText={state.password_too_short && `Password is too short!`}
           label="Password"
-          errorText={fetcher.data?.error_password_length}
         >
           <PasswordInput
             name="password"
@@ -117,10 +120,10 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           required
           label="Repeat password"
           invalid={
-            fetcher.data?.error_password_match ||
+            state.password_mismatch ||
             (pass !== passVerify && passVerify.length > 0)
           }
-          errorText={fetcher.data?.error_password_match}
+          errorText={"Passwords do not match"}
         >
           <PasswordInput
             name="password-repeat"

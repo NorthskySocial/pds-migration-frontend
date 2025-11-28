@@ -15,6 +15,7 @@ import { Field } from "@/components/ui/field";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
+let enableResume = true;
 
 export default function IntroScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
@@ -44,6 +45,7 @@ export default function IntroScreen({ state }: ScreenProps) {
           By entering your invite code, you accept these terms, and consent to
           migrating your data to Northsky's servers.
         </Text>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/wKPBH8j5HDM?si=uf4ioqAn80p2L3UY" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
       </VStack>
       <VStack>
         <Heading size="xl">Enter your invite code to get started</Heading>
@@ -87,12 +89,30 @@ export default function IntroScreen({ state }: ScreenProps) {
           </VStack>
         </Box>
         <HStack>
-          <Button type="submit" name="create" value="create">
-            Create new account
-          </Button>
-          <Button type="submit" name="migrate" value="migrate">
-            Migrate existing account
-          </Button>
+          {enableResume ? (
+            <>
+              <Button width="33%" type="submit" name="create" value="create">
+                Create new account
+              </Button>
+              <Button width="33%" type="submit" name="migrate" value="migrate">
+                Migrate existing account
+              </Button>
+              <Button formNoValidate width="33%" type="submit" name="resume" value="resume">
+                Resume failed migration
+              </Button>
+
+            </>) : (
+            <>
+              <Button width="50%" type="submit" name="create" value="create">
+                Create new account
+              </Button>
+              <Button width="50%" type="submit" name="migrate" value="migrate">
+                Migrate existing account
+              </Button>
+
+            </>)
+          }
+
         </HStack>
       </VStack>
     </fetcher.Form>
