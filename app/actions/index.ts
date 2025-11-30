@@ -182,9 +182,9 @@ export async function createDestAccount(
     } else {
       //Return a valid handle if it includes the name Dave
       if (handle_dest.includes("dave")) {
-        handleIsAvailable = false;
-      } else {
         handleIsAvailable = true;
+      } else {
+        handleIsAvailable = false;
       }
     }
   }
@@ -340,7 +340,7 @@ export async function createDestAccount(
     return {
       token_dest: nsToken,
       handle_dest: handle_dest,
-      handle_not_available: handleIsAvailable,
+      handle_not_available: !handleIsAvailable,
       passwordTooShort: passwordTooShort,
       passwordMismatch: passwordMismatch,
       atp_dest_session: agent_dest.session,
