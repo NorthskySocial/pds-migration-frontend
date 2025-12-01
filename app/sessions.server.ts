@@ -1,5 +1,5 @@
 import { createCookieSessionStorage } from "react-router";
-import type {AtpSessionData} from "@atproto/api/src/types";
+import type { AtpSessionData } from "@atproto/api/src/types";
 
 export type SessionData = {
   do_journey?: "create" | "migrate" | "resume" | "fail";
@@ -20,10 +20,8 @@ export type SessionData = {
   email?: string;
   user_recover_key?: string | null;
   export_progress?: {
-    invalid_blob_ids: string[];
     invalid_blobs: number;
     successful_blobs: number;
-    successful_blobs_ids: string[];
     total: number;
   } | null;
   export_job_id?: string | null;

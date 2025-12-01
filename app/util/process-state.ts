@@ -158,17 +158,18 @@ export const processState = async (
           const password_origin = (data.get("bsky-password") as string) ?? "";
           session.set("password_origin", password_origin);
 
-          const { token_origin, email, did , atp_origin_session} = await loginOrigin({
-            pds_origin,
-            handle_origin,
-            password_origin,
-            authFactorToken: (data.get("2fa_code") as string) ?? undefined
-          });
+          const { token_origin, email, did, atp_origin_session } =
+            await loginOrigin({
+              pds_origin,
+              handle_origin,
+              password_origin,
+              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+            });
 
           session.set("email", email);
           session.set("token_origin", token_origin);
           session.set("did", did);
-          session.set("atp_origin_session", atp_origin_session)
+          session.set("atp_origin_session", atp_origin_session);
           break;
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
@@ -197,7 +198,7 @@ export const processState = async (
           handle_dest,
           passwordTooShort,
           passwordMismatch,
-          atp_dest_session
+          atp_dest_session,
         } = await createDestAccount(
           state,
           data,
@@ -278,7 +279,11 @@ export const processState = async (
               res.status
             );
 
-            state.export_progress = progress;
+            state.export_progress = {
+              invalid_blobs: progress.invalid_blobs,
+              successful_blobs: progress.successful_blobs,
+              total: progress.total,
+            };
             session.set("last_export_check", now);
 
             if (status.toLowerCase() === "success") {
@@ -344,12 +349,13 @@ export const processState = async (
           const password_origin = (data.get("bsky-password") as string) ?? "";
           session.set("password_origin", password_origin);
 
-          const { token_origin, email, did, atp_origin_session } = await loginOrigin({
-            pds_origin,
-            handle_origin,
-            password_origin,
-            authFactorToken: (data.get("2fa_code") as string) ?? undefined,
-          });
+          const { token_origin, email, did, atp_origin_session } =
+            await loginOrigin({
+              pds_origin,
+              handle_origin,
+              password_origin,
+              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+            });
 
           session.set("email", email);
           session.set("token_origin", token_origin);
