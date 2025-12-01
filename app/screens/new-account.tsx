@@ -18,13 +18,22 @@ import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { useState } from "react";
 import { passwordStrength } from "check-password-strength";
+import { useDebouncedCallback } from "use-debounce";
 
 export default function NewAccountScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   const [pass, setPass] = useState("");
   const [passVerify, setPassVerify] = useState("");
   const { id: strength } = passwordStrength(pass);
-
+  const onChangeCallback = useDebouncedCallback(
+    (event) => {
+      if (event.target.willValidate) {
+        fetcher.submit(event.target.form);
+      }
+    },
+    200,
+    { trailing: true }
+  );
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
@@ -81,11 +90,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
                   return event.preventDefault();
                 }
               }}
-              onChange={(event) => {
-                if (event.currentTarget.willValidate) {
-                  fetcher.submit(event.currentTarget.form);
-                }
-              }}
+              onChange={onChangeCallback}
               placeholder="username"
             />
           </InputGroup>

@@ -176,42 +176,24 @@ export async function createDestAccount(
     passwordTooShort = false;
   }
 
-  //do fake handle availability check if we're in dev
-  if (import.meta.env.DEV) {
-    if (!handle_dest.length) {
-      console.log("Empty Handle");
-      handleIsAvailable = null;
-    } else {
-      //Return a valid handle if it includes the name Dave
-      if (handle_dest.includes("dave")) {
-        handleIsAvailable = true;
-      } else {
-        handleIsAvailable = false;
-      }
-    }
-  }
-
-  //Actual production check
-  else {
-    // Check handle availability
-    if (!handle_dest.length) {
-      handleIsAvailable = null;
-    } else {
-      console.log("Checking handle " + handle_dest);
-      handleIsAvailable = await f(
-        `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+  // Check handle availability
+  if (!handle_dest.length) {
+    handleIsAvailable = null;
+  } else {
+    console.log("Checking handle " + handle_dest);
+    handleIsAvailable = await f(
+      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
+    )
+      .then<{ message: string; error: string } & { did: string }>((r) =>
+        r.json()
       )
-        .then<{ message: string; error: string } & { did: string }>((r) =>
-          r.json()
-        )
-        .then((d) => d.message === "Unable to resolve handle" || d.did === did)
-        .catch((e) => {
-          console.error(e);
-          return e.message === "Unable to resolve handle" || e.did === did;
-        });
+      .then((d) => d.message === "Unable to resolve handle" || d.did === did)
+      .catch((e) => {
+        console.error(e);
+        return e.message === "Unable to resolve handle" || e.did === did;
+      });
 
-      console.log(`Handle ${handle_dest} available? ` + handleIsAvailable);
-    }
+    console.log(`Handle ${handle_dest} available? ` + handleIsAvailable);
   }
 
   // Return early if the user hasn't clicked submit
@@ -364,10 +346,10 @@ export async function exportRepo(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  //Disable checks if we're in dev mode
-  if (import.meta.env.DEV) {
-    return { ok: true };
-  }
+  // //Disable checks if we're in dev mode
+  // if (import.meta.env.DEV) {
+  //   return { ok: true };
+  // }
 
   if (!pds_origin || !did) {
     throw new MigrationError(
@@ -412,11 +394,11 @@ export async function importRepo(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  // This breaks during local tests so return early if Vite in dev mode
-  if (import.meta.env.DEV) {
-    logger.log("Ignoring importRepo during tests");
-    return { ok: true };
-  }
+  // // This breaks during local tests so return early if Vite in dev mode
+  // if (import.meta.env.DEV) {
+  //   logger.log("Ignoring importRepo during tests");
+  //   return { ok: true };
+  // }
 
   if (!pds_dest || !did) {
     throw new MigrationError(
@@ -463,10 +445,10 @@ export async function exportBlobs(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  //Disable checks if we're in dev mode
-  if (import.meta.env.DEV) {
-    return { ok: true };
-  }
+  // //Disable checks if we're in dev mode
+  // if (import.meta.env.DEV) {
+  //   return { ok: true };
+  // }
 
   if (!pds_origin || !pds_dest || !did) {
     throw new MigrationError(
@@ -533,10 +515,10 @@ export async function uploadBlobs(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  if (import.meta.env.DEV) {
-    logger.log("Not uploading blobs because this is a test");
-    return { ok: true };
-  }
+  // if (import.meta.env.DEV) {
+  //   logger.log("Not uploading blobs because this is a test");
+  //   return { ok: true };
+  // }
   if (!pds_dest || !did) {
     throw new MigrationError(
       "Unable to resolve original account; please login again."
@@ -580,10 +562,10 @@ export async function migratePreferences(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  if (import.meta.env.DEV) {
-    logger.log("Not uploading blobs because this is a test");
-    return { ok: true };
-  }
+  // if (import.meta.env.DEV) {
+  //   logger.log("Not uploading blobs because this is a test");
+  //   return { ok: true };
+  // }
 
   if (!pds_origin || !pds_dest || !did) {
     throw new MigrationError("Not able to migrate preferences");
@@ -626,10 +608,10 @@ export async function requestPlcToken(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  if (import.meta.env.DEV) {
-    logger.log("Skipping PLC because we're testing");
-    return { ok: true };
-  }
+  // if (import.meta.env.DEV) {
+  //   logger.log("Skipping PLC because we're testing");
+  //   return { ok: true };
+  // }
   if (!pds_origin || !did) {
     throw new MigrationError(
       "Not able to request PLC token due to invalid credentials"

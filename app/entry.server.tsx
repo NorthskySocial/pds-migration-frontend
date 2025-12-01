@@ -76,7 +76,7 @@ async function handleRequestNode(
       () => abort(),
       streamTimeout + 1000
     );
-    console.log(routerContext);
+
     const { pipe, abort } = renderToPipeableStream(
       <ServerRouter context={routerContext} url={request.url} />,
       {
