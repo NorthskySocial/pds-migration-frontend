@@ -65,15 +65,16 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         <Field
           label="New handle"
           invalid={
-            !state.handle_not_available && (state.handle_dest?.length ?? 0) > 0
+            state.handle_not_available === true &&
+            (state.handle_dest?.length ?? 0) > 0
           }
           errorText={
-            !state.handle_not_available &&
+            state.handle_not_available === true &&
             (state.handle_dest?.length ?? 0) > 0 &&
             `Uh oh! ${state.handle_dest?.toLowerCase()} is not available!`
           }
           helperText={
-            state.handle_not_available &&
+            state.handle_not_available === false &&
             (state.handle_dest?.length ?? 0) > 0 &&
             `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`
           }
