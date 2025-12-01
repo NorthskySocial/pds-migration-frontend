@@ -56,12 +56,13 @@ export default function App() {
   );
 }
 
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  console.error(error);
+export function ErrorBoundary(props: Route.ErrorBoundaryProps) {
+  console.log("In ErrorBoundary");
+  console.error(props);
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
-
+  const { error } = props;
   if (isRouteErrorResponse(error)) {
     message = error.status === 404 ? "404" : "Error";
     details =
@@ -72,7 +73,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     details = error.message;
     stack = error.stack;
   }
-
+  console.error(message, details, stack);
   return (
     <main className="pt-16 p-4 container mx-auto">
       <h1>{message}</h1>
