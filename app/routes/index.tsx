@@ -62,7 +62,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
   } catch (e) {
-    logger.error("error in index action", e);
+    logger.error("error in index action");
+    console.error(e);
     if (e instanceof Error) {
       session.flash("error", e.message);
     }
