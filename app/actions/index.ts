@@ -630,13 +630,16 @@ export async function requestPlcToken(
   );
 
   // req PLC token
-  const res = await f(`${MIGRATOR_BACKEND}/request-token`, {
-    method: "post",
-    body: JSON.stringify({
+  const body = JSON.stringify({
       pds_host: pds_origin,
       did,
       token: originResumeAgent?.session?.accessJwt,
-    }),
+  });
+  // NOTE: temporary log to debug issue with PLC token request
+  console.log("Requesting PLC token with body:", body);
+  const res = await f(`${MIGRATOR_BACKEND}/request-token`, {
+    method: "post",
+    body: body,
     headers: { "Content-Type": "application/json" },
   });
 
