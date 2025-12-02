@@ -1,5 +1,8 @@
-import { createCookieSessionStorage } from "react-router";
+import { createSessionStorage } from "react-router";
 import type { AtpSessionData } from "@atproto/api/src/types";
+import { redisGet, redisSet, redisDel } from "./util/redis";
+
+const SESSION_TTL_SECONDS = 60 * 60 * 24; // 1 day
 
 export type SessionData = {
   do_journey?: "create" | "migrate" | "resume" | "fail";
@@ -51,48 +54,61 @@ export type SessionFlashData = {
 };
 
 export const initSession = (hostname?: string) =>
-  createCookieSessionStorage<SessionData, SessionFlashData>({
-    // a Cookie from `createCookie` or the CookieOptions to create one
+  createSessionStorage<SessionData, SessionFlashData>({
     cookie: {
       name: "__session",
-
-      // all of these are optional
       domain: hostname, // @TODO get from context
-      // Expires can also be set (although maxAge overrides it when used in combination).
-      // Note that this method is NOT recommended as `new Date` creates only one date on each server deployment, not a dynamic date in the future!
-      //
-      // expires: new Date(Date.now() + 60_000),
       httpOnly: true,
-      maxAge: 60 * 60 * 24,
+      maxAge: SESSION_TTL_SECONDS, // in seconds (1 day)
       path: "/",
       sameSite: "strict",
       secrets: ["toastytoast"],
       secure: true,
     },
+    async createData(data: SessionData, expires?: Date | number) {
+      const id = `sid:${crypto.randomUUID()}`;
+      const ttl = computeTtlSeconds(expires, SESSION_TTL_SECONDS);
+      await redisSet(sessionKey(id), ttl, JSON.stringify(data ?? {}));
+      return id;
+    },
+    async readData(id: string) {
+      if (!id) return null;
+
+      const raw = await redisGet(sessionKey(id));
+      if (!raw) return null;
+
+      try {
+        return JSON.parse(raw) as SessionData;
+      } catch {
+        // Corrupt payload, drop it
+        return null;
+      }
+    },
+    async updateData(id: string, data: SessionData, expires?: Date | number) {
+      const ttl = computeTtlSeconds(expires, SESSION_TTL_SECONDS);
+      await redisSet(sessionKey(id), ttl, JSON.stringify(data ?? {}));
+      return id;
+    },
+    async deleteData(id: string) {
+      if (!id) return;
+      await redisDel(sessionKey(id));
+    },
   });
 
-const { getSession, commitSession: _commitSession, destroySession } = initSession();
-
-/**
- * Wraps commitSession with cookie size logging.
- * We only want this for debugging purposes, not on the long term.
- */
-export async function commitSession(session: Parameters<typeof _commitSession>[0]) {
-  const header = await _commitSession(session);
-
-  try {
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(header).length;
-
-    const json = JSON.stringify(session.data ?? {});
-    const jsonBytes = encoder.encode(json).length;
-
-    console.log(`[session] Set-Cookie length: ${bytes} bytes; session JSON: ${jsonBytes} bytes`);
-  } catch (e) {
-    // Non-fatal; logging shouldn't break commit
-    console.warn("[session] Failed to log cookie size:", e);
-  }
-  return header;
+function sessionKey(id: string) {
+  return `sess:${id}`;
 }
 
-export { getSession, destroySession };
+function computeTtlSeconds(
+  expires: Date | number | undefined,
+  fallbackSeconds: number
+): number {
+  if (!expires) return fallbackSeconds;
+
+  if (typeof expires === "number") return Math.max(1, Math.floor(expires / 1000));
+
+  const ms = expires.getTime() - Date.now();
+  return Math.max(1, Math.floor(ms / 1000));
+}
+
+export const { getSession, commitSession, destroySession } = initSession();
