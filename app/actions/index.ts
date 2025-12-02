@@ -626,7 +626,7 @@ export async function requestPlcToken(
     pds_origin,
     atp_origin_session,
     false,
-    false
+    true
   );
 
   // req PLC token
