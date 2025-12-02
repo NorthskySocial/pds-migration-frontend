@@ -258,7 +258,6 @@ export async function createDestAccount(
     const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname}`;
 
     // Generate service token
-    console.log("Requesting service token");
     const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
       headers: {
         "Content-Type": "application/json",
@@ -277,13 +276,9 @@ export async function createDestAccount(
       throw new LoginError(
         `Invalid service token received; please contact support with error: ${res.statusText}`
       );
-    } else {
-      console.log("Service token received successfully!");
     }
 
     const token_service = await res.json<{ token: string }>();
-    console.log("Service token parsed successfully!");
-
     if (!token_service.token) {
       throw new LoginError(
         `Invalid service token received; please contact support with error: ${res.statusText}`
@@ -301,7 +296,6 @@ export async function createDestAccount(
       recovery_key: user_recover_key,
     };
 
-    console.log("Creating migrated account...");
     const createAccountRes = await f(`${MIGRATOR_BACKEND}/create-account`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -626,17 +620,18 @@ export async function requestPlcToken(
     pds_origin,
     atp_origin_session,
     false,
-    false
+    true
   );
 
   // req PLC token
-  const res = await f(`${MIGRATOR_BACKEND}/request-token`, {
-    method: "post",
-    body: JSON.stringify({
+  const body = JSON.stringify({
       pds_host: pds_origin,
       did,
       token: originResumeAgent?.session?.accessJwt,
-    }),
+  });
+  const res = await f(`${MIGRATOR_BACKEND}/request-token`, {
+    method: "post",
+    body: body,
     headers: { "Content-Type": "application/json" },
   });
 
