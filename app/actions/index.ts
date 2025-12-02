@@ -306,7 +306,10 @@ export async function createDestAccount(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(createAccountRequestBody),
-    }).then((res) => res.json());
+    }).then((res) => {
+      console.log("Create account response received: ", res);
+      res.json()
+    });
     console.log("Migrated account created successfully!");
 
     console.log(createAccountRes);
