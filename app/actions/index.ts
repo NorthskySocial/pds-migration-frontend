@@ -636,16 +636,7 @@ export async function requestPlcToken(
       token: originResumeAgent?.session?.accessJwt,
   });
   // NOTE: temporary log to debug issue with PLC token request
-  console.log("Requesting PLC token with body:", body);
-  console.log("originResumeAgent null?", originResumeAgent === null);
-  console.log(
-    "originResumeAgent session null?",
-    originResumeAgent?.session === null
-  );
-  console.log(
-    "originResumeAgent accessJwt:",
-    originResumeAgent?.session?.accessJwt
-  );
+  console.log("Requesting PLC token - token in body?: ", !!originResumeAgent?.session?.accessJwt);
   const res = await f(`${MIGRATOR_BACKEND}/request-token`, {
     method: "post",
     body: body,
