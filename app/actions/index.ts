@@ -306,26 +306,12 @@ export async function createDestAccount(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(createAccountRequestBody),
-    }).then((res) => {
-      console.log("Create account response received: ", res);
-      res.json()
     });
-    console.log("Migrated account created successfully!");
+    console.log("Migrated account creation status: ", createAccountRes.status);
 
-    console.log(createAccountRes);
-    // // @TODO IMPORTANT: this likely leaks sensitive info into logs and should likely be rewritten or removed ASAP
-    // logger.debug("create account debugging", createAccountRequestBody, {
-    //   headers: createAccountRes.headers,
-    //   body: createAccountRes.body,
-    //   ok: createAccountRes.ok,
-    //   status: createAccountRes.status,
-    //   statusText: createAccountRes.statusText,
-    //   url: createAccountRes.url,
-    // });
-
-    // if (!createAccountRes.ok) {
-    //   throw new CreateAccountError(createAccountRes.statusText);
-    // }
+    if (!createAccountRes.ok) {
+      throw new CreateAccountError(createAccountRes.statusText);
+    }
 
     // Get new user token
     const agent_dest = new AtpAgent({
@@ -333,10 +319,13 @@ export async function createDestAccount(
       fetch: f as typeof fetch,
     });
 
+    console.log("Logging into migrated account...");
     const { data: destLoginData } = await agent_dest.login({
       identifier: handle_dest,
       password: pw_dest,
     });
+    console.log("Logged into migrated account successfully!");
+
     nsToken = destLoginData.accessJwt;
 
     return {
