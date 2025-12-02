@@ -71,4 +71,28 @@ export const initSession = (hostname?: string) =>
     },
   });
 
-export const { getSession, commitSession, destroySession } = initSession();
+const { getSession, commitSession: _commitSession, destroySession } = initSession();
+
+/**
+ * Wraps commitSession with cookie size logging.
+ * We only want this for debugging purposes, not on the long term.
+ */
+export async function commitSession(session: Parameters<typeof _commitSession>[0]) {
+  const header = await _commitSession(session);
+
+  try {
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(header).length;
+
+    const json = JSON.stringify(session.data ?? {});
+    const jsonBytes = encoder.encode(json).length;
+
+    console.log(`[session] Set-Cookie length: ${bytes} bytes; session JSON: ${jsonBytes} bytes`);
+  } catch (e) {
+    // Non-fatal; logging shouldn't break commit
+    console.warn("[session] Failed to log cookie size:", e);
+  }
+  return header;
+}
+
+export { getSession, destroySession };
