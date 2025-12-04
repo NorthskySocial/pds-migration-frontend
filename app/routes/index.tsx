@@ -104,6 +104,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
     require_2fa_code: session.get("require_2fa_code") ?? false,
+    export_job_failures: session.get("export_job_failures"),
     export_job_id: session.get("export_job_id"),
     export_total: null,
     export_pct_done: null,

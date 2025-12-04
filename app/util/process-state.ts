@@ -49,6 +49,7 @@ export const processState = async (
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
     export_job_id: session.get("export_job_id"),
+    export_job_failures: session.get("export_job_failures"),
     export_total: null,
     export_pct_done: null,
     last_export_check: session.get("last_export_check"),
@@ -241,7 +242,7 @@ export const processState = async (
         } else if (state.export_job_id && !state.exportedBlobs) {
           const now = Date.now();
           const lastCheck = state.last_export_check ?? 0;
-          const CHECK_INTERVAL_MS = 2000;
+          const CHECK_INTERVAL_MS = 2500;
 
           // Only check job status if enough time has passed
           if (now - lastCheck >= CHECK_INTERVAL_MS) {
@@ -251,43 +252,73 @@ export const processState = async (
               now
             );
 
-            const res = await f(
-              `${migratorBackend}/jobs/${state.export_job_id}`
-            );
+            // NOTE: this try-catch is added to handle transient errors on the back-end,
+            // but a more robust solution should be added in the future (maybe centrally on `f`)
+            try {
+              const res = await f(
+                `${migratorBackend}/jobs/${state.export_job_id}`
+              );
+              console.log("Response status from job status check: ", res.status);
 
-            // I don't know where to put this def
-            const { progress, status } = (await res.json()) as {
-              created_at: number;
-              finished_at: number;
-              id: string;
-              kind: "ExportBlobs";
-              progress: {
-                invalid_blob_ids: string[];
-                invalid_blobs: number;
-                successful_blobs: number;
-                successful_blobs_ids: string[];
-                total: number;
+              // I don't know where to put this def
+              const { progress, status } = (await res.json()) as {
+                created_at: number;
+                finished_at: number;
+                id: string;
+                kind: "ExportBlobs";
+                progress: {
+                  invalid_blob_ids: string[];
+                  invalid_blobs: number;
+                  successful_blobs: number;
+                  successful_blobs_ids: string[];
+                  total: number;
+                };
+                started_at: number;
+                status: string;
               };
-              started_at: number;
-              status: string;
-            };
 
-            console.log(
-              "Export blobs (progress, status, status code): ",
-              progress,
-              status,
-              res.status
-            );
+              console.log(
+                "Export blobs (progress, status, status code): ",
+                progress,
+                status,
+                res.status
+              );
 
-            state.export_progress = {
-              invalid_blobs: progress.invalid_blobs,
-              successful_blobs: progress.successful_blobs,
-              total: progress.total,
-            };
-            session.set("last_export_check", now);
+              state.export_progress = {
+                invalid_blobs: progress.invalid_blobs,
+                successful_blobs: progress.successful_blobs,
+                total: progress.total,
+              };
+              session.set("last_export_check", now);
+              session.set("export_job_failures", 0);
 
-            if (status.toLowerCase() === "success") {
-              session.set("exportedBlobs", true);
+              if (status.toLowerCase() === "success") {
+                session.set("exportedBlobs", true);
+              }
+            } catch (error) {
+              const statusCode = error instanceof Response ? error.status : null;
+              const isSyntaxError = error instanceof SyntaxError;
+              console.log("Error checking export blobs job status: ", error);
+
+              if (statusCode === 404 || statusCode === 429 || isSyntaxError) {
+                const failureCount = (state.export_job_failures ?? 0) + 1;
+
+                session.set("export_job_failures", failureCount);
+
+                console.log(
+                  `Export blobs job check failed with status ${statusCode} and error ${error}. Failure count: ${failureCount}`
+                );
+
+                if (failureCount >= 3) {
+                  throw new Error(
+                    `Export blobs job check failed with status ${statusCode} (error: ${error}) after ${failureCount} consecutive attempts`
+                  );
+                }
+
+                break;
+              }
+
+              throw error;
             }
           }
         }

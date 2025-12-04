@@ -28,6 +28,7 @@ export type SessionData = {
     total: number;
   } | null;
   export_job_id?: string | null;
+  export_job_failures?: number;
   export_total?: number | null;
   export_pct_done?: string | null;
   last_export_check?: number;
