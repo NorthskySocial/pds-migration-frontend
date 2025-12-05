@@ -7,15 +7,12 @@ import {
   HStack,
   Button,
   Box,
-  Image,
   Link,
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
-
-let enableResume = true;
 
 export default function IntroScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
@@ -89,30 +86,15 @@ export default function IntroScreen({ state }: ScreenProps) {
           </VStack>
         </Box>
         <HStack>
-          {enableResume ? (
-            <>
-              <Button width="33%" type="submit" name="create" value="create">
-                Create new account
-              </Button>
-              <Button width="33%" type="submit" name="migrate" value="migrate">
-                Migrate existing account
-              </Button>
-              <Button formNoValidate width="33%" type="submit" name="resume" value="resume">
-                Resume failed migration
-              </Button>
-
-            </>) : (
-            <>
-              <Button width="50%" type="submit" name="create" value="create">
-                Create new account
-              </Button>
-              <Button width="50%" type="submit" name="migrate" value="migrate">
-                Migrate existing account
-              </Button>
-
-            </>)
-          }
-
+          <Button width="33%" type="submit" name="create" value="create">
+            Create new account
+          </Button>
+          <Button width="33%" type="submit" name="migrate" value="migrate">
+            Migrate existing account
+          </Button>
+          <Button formNoValidate width="33%" type="submit" name="resume" value="resume">
+            Resume failed migration
+          </Button>
         </HStack>
       </VStack>
     </fetcher.Form>
