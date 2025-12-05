@@ -4,7 +4,6 @@ import {
   Text,
   Input,
   Button,
-  Image,
   VStack,
   HStack,
 } from "@chakra-ui/react";
@@ -58,6 +57,9 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
                 autoComplete="username"
                 name="bsky-handle"
                 placeholder="username.bsky.social"
+                onChange={(e) => {
+                  e.target.value = e.target.value.trim();
+                }}
               />
             </Field>
             <Field required label="Bluesky password">
