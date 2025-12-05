@@ -242,7 +242,7 @@ export const processState = async (
         } else if (state.export_job_id && !state.exportedBlobs) {
           const now = Date.now();
           const lastCheck = state.last_export_check ?? 0;
-          const CHECK_INTERVAL_MS = 2500;
+          const CHECK_INTERVAL_MS = 2000;
 
           // Only check job status if enough time has passed
           if (now - lastCheck >= CHECK_INTERVAL_MS) {
