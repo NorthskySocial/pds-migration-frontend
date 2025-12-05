@@ -279,7 +279,7 @@ export const processState = async (
 
               console.log(
                 "Export blobs (progress, status, status code): ",
-                progress,
+                `${progress.successful_blobs}/${progress.total} (invalid: ${progress.invalid_blobs})`,
                 status,
                 res.status
               );
