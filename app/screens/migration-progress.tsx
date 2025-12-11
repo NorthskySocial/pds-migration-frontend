@@ -95,11 +95,12 @@ export default function MigrationProgressScreen({
             animated
           >
             <Progress.Label mb="2">
-              {stageTitle} {
-                stage == STAGES.EXPORT_BLOBS_ORIGIN
-                && export_progress?.successful_blobs && export_progress?.successful_blobs > 0
-                && export_progress?.total && export_progress?.total > 0 &&
-                ` (${export_progress?.successful_blobs}/${export_progress?.total} blobs exported)`}
+              {stageTitle}
+              {
+                stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
+                export_progress.successful_blobs && export_progress.total &&
+                ` (${export_progress.successful_blobs}/${export_progress.total} blobs exported)`
+              }
               <InfoTip>{stageDescription}</InfoTip>
             </Progress.Label>
             <Progress.Track>
