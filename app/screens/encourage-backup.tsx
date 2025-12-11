@@ -96,7 +96,6 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
             I have backed up my data or do not wish to before migrating.
           </Checkbox>
         </Box>
-
         <HStack align={"left"} gap={"10"}>
           <Button type="submit" name="submit">
             Continue
