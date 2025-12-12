@@ -233,7 +233,8 @@ export async function createDestAccount(
       throw new CreateAccountError("Error creating account on destination PDS");
     } else {
       console.log(`New dest account created successfully with invite code: ${inviteCode}`);
-      await sendDiscordMessage(`New account ${handle_dest} created successfully with invite code: ${inviteCode}`);
+      const newAccountDid = response.data.did;
+      await sendDiscordMessage(`New account **${handle_dest}** (${newAccountDid}) created successfully with invite code: ${inviteCode}`);
     }
 
     const { data } = await agent_dest.login({
@@ -309,7 +310,7 @@ export async function createDestAccount(
       throw new CreateAccountError(createAccountRes.statusText);
     }
     console.log(`Migrated dest account created successfully with invite code: ${inviteCode}`);
-    await sendDiscordMessage(`Migrated account ${handle_dest} created successfully with invite code: ${inviteCode}`);
+    await sendDiscordMessage(`Migrated account **${handle_dest}** (${did}) created successfully with invite code: ${inviteCode}`);
 
     // Get new user token
     const agent_dest = new AtpAgent({
