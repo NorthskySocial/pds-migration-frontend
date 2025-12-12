@@ -231,7 +231,7 @@ export async function createDestAccount(
     if (!response.success) {
       throw new CreateAccountError("Error creating account on destination PDS");
     } else {
-      console.log("New dest account created successfully");
+      console.log(`New dest account created successfully with invite code: ${inviteCode}`);
     }
 
     const { data } = await agent_dest.login({
@@ -306,6 +306,7 @@ export async function createDestAccount(
     if (!createAccountRes.ok) {
       throw new CreateAccountError(createAccountRes.statusText);
     }
+    console.log(`Migrated dest account created successfully with invite code: ${inviteCode}`);
 
     // Get new user token
     const agent_dest = new AtpAgent({
