@@ -3,14 +3,13 @@ import {
   Highlight,
   Text,
   Button,
-  Image,
   List,
   Link,
   VStack,
   HStack,
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Box, Span } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
