@@ -153,9 +153,15 @@ export async function createDestAccount(
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
-  const handle_dest = `${handle}.${
-    dest_hostname.match("localhost") ? "test" : dest_hostname
-  }`;
+
+  // Construct full handle. If the user did not enter a domain (no `.`),
+  // we'll complete it with `.northsky.social` (dest_hostname), otherwise assume it's a custom domain.
+  let handle_dest = handle;
+  if (!handle.includes(".")) {
+    console.log(`No domain detected in handle (${handle}), appending .northsky.social`);
+    handle_dest = handle_dest.concat(`.${dest_hostname}`);
+  }
+
   let handleIsAvailable = null;
   let passwordMismatch = null;
   let passwordTooShort = null;
