@@ -53,9 +53,8 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           </Text>
         ) : (
           <Text fontSize="md" textAlign={"justify"}>
-            You can get a <strong>.northsky.social</strong> handle to get you started.
-            You can also set up a custom domain here if you own one, and validate ownership
-            on the Bluesky app once your account is created, on your first login.
+            You get a <strong>.northsky.social</strong> handle to get you started.
+            If you want to use a custom domain handle, you can set that later.
           </Text>
         )}
         {!state.email && (
@@ -79,22 +78,28 @@ export default function NewAccountScreen({ state }: ScreenProps) {
             state.handle_not_available === false &&
             (state.handle_dest?.length ?? 0) > 0 &&
             `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!` ||
-            "Choose a handle that ends with .northsky.social (e.g., user.northsky.social) or use a custom domain that you own (e.g., example.com)"
+            (state.do_journey === "migrate" && "Choose a handle that ends with .northsky.social (e.g., user.northsky.social) or use a custom domain that you own (e.g., example.com)") ||
+            (state.do_journey === "create" && "Choose a handle that ends with .northsky.social (e.g., user.northsky.social)")
           }
         >
           <InputGroup
             width="100%"
             startElement="@"
+            endElement={state.do_journey === "create" ? ".northsky.social" : undefined}
           >
             <Input
               name="handle"
               onKeyDown={(event) => {
-                if (!/[a-z0-9.-]/i.test(event.key)) {
+                // NOTE: we only allow dots (.) on migration since custom domains are allowed there
+                const regexPattern = state.do_journey === "create"
+                  ? /^[a-z0-9-]$/i
+                  : /^[a-z0-9.-]$/i;
+                if (!regexPattern.test(event.key)) {
                   return event.preventDefault();
                 }
               }}
               onChange={onChangeCallback}
-              placeholder="username (user.northsky.social) or custom domain (example.com)"
+              placeholder={state.do_journey === "create" ? "username" : "username or custom domain"}
             />
           </InputGroup>
           <div>
