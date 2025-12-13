@@ -90,6 +90,11 @@ export default function NewAccountScreen({ state }: ScreenProps) {
             <Input
               name="handle"
               onKeyDown={(event) => {
+                // allow control keys (Backspace, Delete, arrows, Home/End, Tab) and shortcuts (Ctrl/Cmd)
+                if (event.ctrlKey || event.metaKey || event.key.length > 1) {
+                  return;
+                }
+
                 // NOTE: we only allow dots (.) on migration since custom domains are allowed there
                 const regexPattern = state.do_journey === "create"
                   ? /^[a-z0-9-]$/i
