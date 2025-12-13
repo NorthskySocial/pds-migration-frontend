@@ -48,8 +48,8 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           <Text fontSize="md" textAlign={"justify"}>
             If you are currently using a custom domain handle, you can continue
             to do so by entering it as your handle for your Northsky account. If you are currently
-            using a <strong>.bsky.social</strong> handle, you will need to switch to a
-            <strong>.northsky.social</strong> handle as part of the migration.
+            using a <strong>.bsky.social</strong> handle, you will need to switch to
+            a <strong>.northsky.social</strong> handle as part of the migration.
           </Text>
         ) : (
           <Text fontSize="md" textAlign={"justify"}>
