@@ -1,0 +1,17 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  frontend:
+    image: migration-fe:latest
+    build: .
+    environment:
+      - PDS_HOSTNAME=https://northsky.social
+      - MIGRATOR_BACKEND=https://migrator.northsky.social
+      - HOSTNAME=localhost
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - 3000:3000
+
