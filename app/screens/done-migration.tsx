@@ -1,11 +1,9 @@
-import { Heading, Text, Button, VStack, Image, List, Link, HStack, Center, Grid, GridItem } from "@chakra-ui/react";
-import misleading_notice from "../assets/misleading.png";
+import { Heading, Text, Button, VStack, Image, List, Link, Center, Grid, GridItem } from "@chakra-ui/react";
 import nsChooseProvider from "../assets/nsChooseProvider.png";
 import nsSignIn from "../assets/nsSignIn.png";
 import nsSignIn2 from "../assets/nsSignIn2.png";
 import nsNewAccount from "../assets/nsNewAccount.png";
 import nsOtherAccount from "../assets/nsOtherAccount.png";
-import type { ReactElement } from "react";
 import type { ScreenProps } from "~/util/stages";
 
 import { useFetcher } from "react-router";
