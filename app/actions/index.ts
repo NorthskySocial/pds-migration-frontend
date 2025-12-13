@@ -154,10 +154,11 @@ export async function createDestAccount(
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
 
-  // Construct full handle. If the user did not enter a domain (no `.`),
-  // we'll complete it with `.northsky.social` (dest_hostname), otherwise assume it's a custom domain.
+  // Construct full handle. If we're in creation, we always append the northsky domain.
+  // If the user did not enter a domain (no `.`), we'll complete it with `.northsky.social`
+  // (dest_hostname), otherwise assume it's a custom domain.
   let handle_dest = handle;
-  if (!handle.includes(".")) {
+  if (is_creation_flow || !handle.includes(".")) {
     console.log(`No domain detected in handle (${handle}), appending .northsky.social`);
     handle_dest = handle_dest.concat(`.${dest_hostname}`);
   }
