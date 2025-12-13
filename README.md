@@ -19,6 +19,7 @@ Key entry points and configs:
 - Wrangler config (env vars, environments): `wrangler.toml`
 - Dockerfile for the frontend: `Dockerfile`
 - Docker Compose for multi-service local stack: `docker-compose.yaml`
+- Docker Compose for front-end connected to Production services: `docker-compose.prod.yaml`
 
 ## Requirements
 - Node.js 20 (see `.nvmrc`: `v20.19.0`)
@@ -105,6 +106,14 @@ There are two Docker entry points:
   - Frontend: 5173
   - Proxy (Caddy): 80, 443 (and 443/udp)
 - TODO: Document expected contents of `./pds/**/pds.env` and any required Caddy config.
+
+3) Local Front-end with Production Backend (`docker-compose.prod.yaml`)
+  - Similar to above, but the `migrator` and `PDS` services are not run. Instead, the frontend connects to production services.
+  - Bring up:
+  - ```bash
+    docker compose -f docker-compose.prod.yaml up --build
+    ```
+  - Front-end is exposed via port 3000
 
 ## Tests
 - Test framework: Jest + Puppeteer (`jest-puppeteer` preset)

@@ -46,14 +46,15 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         </Heading>
         {state.do_journey === "migrate" ? (
           <Text fontSize="md" textAlign={"justify"}>
-            We'll need to give you a <strong>.northsky.social</strong> handle as
-            part of the migration. If you have a custom domain handle, you can
-            change it back right after the migration process is over.
+            If you are currently using a custom domain handle, you can continue
+            to do so by entering it as your handle for your Northsky account. If you are currently
+            using a <strong>.bsky.social</strong> handle, you will need to switch to
+            a <strong>.northsky.social</strong> handle as part of the migration.
           </Text>
         ) : (
           <Text fontSize="md" textAlign={"justify"}>
-            You get a .northsky.social handle to get you started. If you want to
-            use a custom domain handle, you can set that later.
+            You get a <strong>.northsky.social</strong> handle to get you started.
+            If you want to use a custom domain handle, you can set that later.
           </Text>
         )}
         {!state.email && (
@@ -76,23 +77,29 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           helperText={
             state.handle_not_available === false &&
             (state.handle_dest?.length ?? 0) > 0 &&
-            `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`
+            `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!` ||
+            (state.do_journey === "migrate" && "Choose a handle that ends with .northsky.social (e.g., user.northsky.social) or use a custom domain that you own (e.g., example.com)") ||
+            (state.do_journey === "create" && "Choose a handle that ends with .northsky.social (e.g., user.northsky.social)")
           }
         >
           <InputGroup
             width="100%"
             startElement="@"
-            endElement={".northsky.social"}
+            endElement={state.do_journey === "create" ? ".northsky.social" : undefined}
           >
             <Input
               name="handle"
               onKeyDown={(event) => {
-                if (!/[a-z0-9\-]/i.test(event.key)) {
+                // NOTE: we only allow dots (.) on migration since custom domains are allowed there
+                const regexPattern = state.do_journey === "create"
+                  ? /^[a-z0-9-]$/i
+                  : /^[a-z0-9.-]$/i;
+                if (!regexPattern.test(event.key)) {
                   return event.preventDefault();
                 }
               }}
               onChange={onChangeCallback}
-              placeholder="username"
+              placeholder={state.do_journey === "create" ? "username" : "username or custom domain"}
             />
           </InputGroup>
           <div>
@@ -107,7 +114,7 @@ export default function NewAccountScreen({ state }: ScreenProps) {
 
         <Field
           required
-          invalid={state.password_too_short}
+          invalid={!!state.password_too_short}
           errorText={state.password_too_short && `Password is too short!`}
           label="Password"
         >
