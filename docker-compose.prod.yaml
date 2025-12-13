@@ -9,9 +9,11 @@ services:
     build: .
     environment:
       - PDS_HOSTNAME=https://northsky.social
+      - PLC_HOSTNAME=https://plc.northsky.social
       - MIGRATOR_BACKEND=https://migrator.northsky.social
       - HOSTNAME=localhost
       - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
     ports:
       - 3000:3000
 
