@@ -2,6 +2,7 @@
 
 import { AtpAgent } from "@atproto/api";
 
+import { sendDiscordMessage } from "~/util/discord";
 import { type SessionData } from "~/sessions.server";
 import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { logger } from "~/util/logger";
@@ -152,9 +153,16 @@ export async function createDestAccount(
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
   const dest_hostname = new URL(pds_dest!).host;
-  const handle_dest = `${handle}.${
-    dest_hostname.match("localhost") ? "test" : dest_hostname
-  }`;
+
+  // Construct full handle. If we're in creation, we always append the northsky domain.
+  // If the user did not enter a domain (no `.`), we'll complete it with `.northsky.social`
+  // (dest_hostname), otherwise assume it's a custom domain.
+  let handle_dest = handle;
+  if (is_creation_flow || !handle.includes(".")) {
+    console.log(`No domain detected in handle (${handle}), appending .northsky.social`);
+    handle_dest = handle_dest.concat(`.${dest_hostname}`);
+  }
+
   let handleIsAvailable = null;
   let passwordMismatch = null;
   let passwordTooShort = null;
@@ -231,7 +239,11 @@ export async function createDestAccount(
     if (!response.success) {
       throw new CreateAccountError("Error creating account on destination PDS");
     } else {
-      console.log("New dest account created successfully");
+      console.log(`New dest account created successfully with invite code: ${inviteCode}`);
+      const newAccountDid = response.data.did;
+      await sendDiscordMessage(
+        `New account [**${handle_dest}**](<https://bsky.app/profile/${newAccountDid}>) (${newAccountDid}) created successfully with invite code: ${inviteCode}`
+      );
     }
 
     const { data } = await agent_dest.login({
@@ -306,6 +318,8 @@ export async function createDestAccount(
     if (!createAccountRes.ok) {
       throw new CreateAccountError(createAccountRes.statusText);
     }
+    console.log(`Migrated dest account created successfully with invite code: ${inviteCode}`);
+    await sendDiscordMessage(`Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode}`);
 
     // Get new user token
     const agent_dest = new AtpAgent({

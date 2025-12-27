@@ -1,4 +1,4 @@
-import { Heading, Text, VStack, Image } from "@chakra-ui/react";
+import { Heading, Text, VStack } from "@chakra-ui/react";
 import melted_clock from "../assets/melted.jpg";
 import type { ScreenProps } from "~/util/stages";
 
