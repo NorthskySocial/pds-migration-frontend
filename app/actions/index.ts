@@ -319,7 +319,7 @@ export async function createDestAccount(
       throw new CreateAccountError(createAccountRes.statusText);
     }
     console.log(`Migrated dest account created successfully with invite code: ${inviteCode}`);
-    await sendDiscordMessage(`Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode}`);
+    await sendDiscordMessage(`Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode} (migration in progress)`);
 
     // Get new user token
     const agent_dest = new AtpAgent({
@@ -783,7 +783,7 @@ export async function validatePlcToken(
       );
     }
 
-    await sendDiscordMessage(`Migrated account [${did}](<https://bsky.app/profile/${did}>) successfully migrated PLC and deactivated old account.`);
+    await sendDiscordMessage(`Migrated account [${did}](<https://bsky.app/profile/${did}>) successfully migrated PLC and deactivated old account (migration complete)`);
 
     return { ok: true };
   }
