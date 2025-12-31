@@ -783,6 +783,8 @@ export async function validatePlcToken(
       );
     }
 
+    await sendDiscordMessage(`Migrated account [${did}](<https://bsky.app/profile/${did}>) successfully migrated PLC and deactivated old account.`);
+
     return { ok: true };
   }
 
