@@ -21,7 +21,6 @@ import {
 } from "@1password/save-button";
 import * as bip39 from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-import { Spoiler } from "@/components/ui/spoiler";
 
 export const SuccessText = ({
   exit,
@@ -35,11 +34,17 @@ export const SuccessText = ({
   handle: string;
 }) => {
   const [downloaded, setDownloaded] = useState(false);
-  const [result, setResult] = useState<string>();
+  const [result, setResult] = useState<{
+    paper: string;
+    multipart: Uint8Array<ArrayBuffer>;
+  }>();
 
   useEffect(() => {
     keypair.export().then((ent) => {
-      setResult(bip39.entropyToMnemonic(ent, wordlist));
+      setResult({
+        paper: bip39.entropyToMnemonic(ent, wordlist),
+        multipart: ent as Uint8Array<ArrayBuffer>,
+      });
     });
   }, [keypair]);
 
@@ -49,9 +54,7 @@ export const SuccessText = ({
 
   const downloadKey = useCallback(async () => {
     if (result) {
-      const blob = new Blob([result], {
-        type: "text/plain",
-      });
+      const blob = new Blob([result.multipart]);
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
@@ -72,16 +75,6 @@ export const SuccessText = ({
       <p>Here's a new recovery key. Its DID is:</p>
 
       <h4 style={{ padding: "1em" }}>{keypair.did()}</h4>
-      <p>It is encrypted using the following passphrase (hover to reveal):</p>
-      <br></br>
-      <Spoiler>
-        <pre style={{ textAlign: "center", padding: "1em" }}>
-          {result
-            ?.split(" ")
-            .map((v) => `${v}`)
-            .join("\n")}
-        </pre>
-      </Spoiler>
 
       <h5 style={{ padding: "1em", textAlign: "center" }}>
         Save the word passphrase somewhere secure IMMEDIATELY. Ideally you
