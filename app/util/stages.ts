@@ -13,6 +13,7 @@ export enum STAGES {
   EXPORT_BLOBS_ORIGIN = "EXPORT_BLOBS_ORIGIN",
   IMPORT_BLOBS_DEST = "IMPORT_BLOBS_DEST",
   MIGRATE_PREFERENCES = "MIGRATE_PREFERENCES",
+  RESUME_MIGRATION = "RESUME_MIGRATION",
   GENERATE_RECOVERY_KEY = "GENERATE_RECOVERY_KEY",
   REQUEST_PLC = "REQUEST_PLC",
   ACTIVATE_DEST = "ACTIVATE_DEST",
@@ -93,5 +94,10 @@ export const stageInfo = {
     stageIdx: 7,
     stageTitle: "Requesting PLC token...",
     stageDescription: "Almost done! Check your email!",
+  },
+    [STAGES.RESUME_MIGRATION]: {
+    stageIdx: 8,
+    stageTitle: "Resuming migration",
+    stageDescription: "Let's resume your migration.",
   },
 };

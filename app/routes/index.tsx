@@ -62,7 +62,8 @@ export async function action({ request, context }: Route.ActionArgs) {
     const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
   } catch (e) {
-    logger.error("error in index action", e);
+    logger.error("error in index action");
+    console.log(e);
     if (e instanceof Error) {
       session.flash("error", e.message);
     }
@@ -103,10 +104,14 @@ export async function loader({ request }: Route.LoaderArgs) {
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
     require_2fa_code: session.get("require_2fa_code") ?? false,
+    export_job_failures: session.get("export_job_failures"),
     export_job_id: session.get("export_job_id"),
     export_total: null,
     export_pct_done: null,
     last_export_check: session.get("last_export_check"),
+    handle_not_available: session.get("handle_not_available"),
+    password_mismatch: session.get("password_mismatch"),
+    password_too_short: session.get("password_too_short"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,

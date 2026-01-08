@@ -78,7 +78,7 @@ export default function MigrationProgressScreen({
             >
               <Progress.Label mb="2">
                 Export blobs progress
-                <InfoTip>This might take awhile</InfoTip>
+                <InfoTip>This might take a while</InfoTip>
               </Progress.Label>
               <Progress.Track>
                 <Progress.Range />
@@ -96,6 +96,11 @@ export default function MigrationProgressScreen({
           >
             <Progress.Label mb="2">
               {stageTitle}
+              {
+                stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
+                export_progress.successful_blobs && export_progress.total &&
+                ` (${export_progress.successful_blobs}/${export_progress.total} blobs exported)`
+              }
               <InfoTip>{stageDescription}</InfoTip>
             </Progress.Label>
             <Progress.Track>

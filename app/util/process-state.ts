@@ -11,11 +11,11 @@ import {
   requestPlcToken,
   uploadBlobs,
   validatePlcToken,
+  resumeMigration,
 } from "~/actions";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
-import { logger } from "./logger";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 import f from "./mock-fetch";
 
@@ -37,7 +37,9 @@ export const processState = async (
     handle_origin: session.get("handle_origin"),
     handle_dest: session.get("handle_dest"),
     pds_dest: session.get("pds_dest"),
+    atp_origin_session: session.get("atp_origin_session"),
     pds_origin: session.get("pds_origin"),
+    atp_dest_session: session.get("atp_dest_session"),
     token_origin: session.get("token_origin"),
     token_dest: session.get("token_dest"),
     plc_hostname: session.get("plc_hostname"),
@@ -47,9 +49,13 @@ export const processState = async (
     email: session.get("email"),
     user_recover_key: session.get("user_recover_key"),
     export_job_id: session.get("export_job_id"),
+    export_job_failures: session.get("export_job_failures"),
     export_total: null,
     export_pct_done: null,
     last_export_check: session.get("last_export_check"),
+    handle_not_available: session.get("handle_not_available"),
+    password_mismatch: session.get("password_mismatch"),
+    password_too_short: session.get("password_too_short"),
 
     // state flags
     hasBackup: session.get("hasBackup") ?? false,
@@ -77,7 +83,9 @@ export const processState = async (
     session.set("handle_origin", undefined);
     session.set("handle_dest", undefined);
     session.set("pds_dest", undefined);
+    session.set("atp_dest_session", undefined);
     session.set("pds_origin", undefined);
+    session.set("atp_origin_session", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
     session.set("plc_hostname", undefined);
@@ -99,9 +107,6 @@ export const processState = async (
     session.set("destActivated", false);
     session.set("migratedPlc", false);
 
-    //make sure we're at the root URL
-    // TODO: do we have to do anything with `stage` here?
-    let stage = STAGES.INVITE_CODE;
     return state;
   } else {
     console.log("Processing stage: " + stage);
@@ -112,13 +117,26 @@ export const processState = async (
         state.do_journey =
           (data.get("create") as "create" | null) ||
           (data.get("migrate") as "migrate" | null) ||
-          "create";
+          (data.get("resume") as "resume" | null) ||
+          "resume";
+        console.log("Do_journey " + state.do_journey);
         state.inviteCode = invite;
+
         session.set("inviteCode", state.inviteCode);
         session.set("do_journey", state.do_journey);
+        session.set("handle_dest", undefined);
+        session.set("email", undefined);
 
         //initialize the origin PDS to bluesky
         session.set("pds_origin", "https://bsky.social");
+
+        if (state.do_journey === "resume") {
+          //Reset tokens
+          session.set("token_origin", undefined);
+          session.set("token_dest", undefined);
+          session.set("password_origin", undefined);
+        }
+
         break;
       }
 
@@ -130,15 +148,29 @@ export const processState = async (
 
       case STAGES.ORIGIN_PDS_LOGIN: {
         try {
-          const { pds_origin, email, token_origin, did } = await loginOrigin(
-            session,
-            data
-          );
-
+          //Get origin, handle and password from form, immediately save to session
+          const pds_origin =
+            (data.get("pds") as string) ?? "https://bsky.social";
           session.set("pds_origin", pds_origin);
+
+          const handle_origin = data.get("bsky-handle") as string;
+          session.set("handle_origin", handle_origin);
+
+          const password_origin = (data.get("bsky-password") as string) ?? "";
+          session.set("password_origin", password_origin);
+
+          const { token_origin, email, did, atp_origin_session } =
+            await loginOrigin({
+              pds_origin,
+              handle_origin,
+              password_origin,
+              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+            });
+
           session.set("email", email);
           session.set("token_origin", token_origin);
           session.set("did", did);
+          session.set("atp_origin_session", atp_origin_session);
           break;
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
@@ -160,24 +192,27 @@ export const processState = async (
         }
 
         const is_creation_flow = state.do_journey === "create";
-        const { handle_available, token_dest, handle_dest } =
-          await createDestAccount(
-            state,
-            data,
-            migratorBackend,
-            is_creation_flow
-          );
 
-        if (token_dest) {
-          session.set("token_dest", token_dest);
-        } else if (handle_available) {
-          session.set("handle_dest", handle_dest);
-        }
-        //skip check in dev
-        if (import.meta.env.DEV) {
-          logger.log("Forcing handle_dest in dev");
-          session.set("handle_dest", "Test Handle");
-        }
+        const {
+          handle_not_available,
+          token_dest,
+          handle_dest,
+          passwordTooShort,
+          passwordMismatch,
+          atp_dest_session,
+        } = await createDestAccount(
+          state,
+          data,
+          migratorBackend,
+          is_creation_flow
+        );
+
+        session.set("handle_not_available", handle_not_available);
+        session.set("handle_dest", handle_dest);
+        session.set("token_dest", token_dest);
+        session.set("password_too_short", passwordTooShort);
+        session.set("password_mismatch", passwordMismatch);
+        session.set("atp_dest_session", atp_dest_session);
 
         break;
       }
@@ -211,34 +246,79 @@ export const processState = async (
 
           // Only check job status if enough time has passed
           if (now - lastCheck >= CHECK_INTERVAL_MS) {
-            console.log("Checking export job status (last attempt, now): ", lastCheck, now);
+            console.log(
+              "Checking export job status (last attempt, now): ",
+              lastCheck,
+              now
+            );
 
-            const res = await f(`${migratorBackend}/jobs/${state.export_job_id}`);
+            // NOTE: this try-catch is added to handle transient errors on the back-end,
+            // but a more robust solution should be added in the future (maybe centrally on `f`)
+            try {
+              const res = await f(
+                `${migratorBackend}/jobs/${state.export_job_id}`
+              );
+              console.log("Response status from job status check: ", res.status);
 
-            // I don't know where to put this def
-            const { progress, status } = await res.json() as {
-              created_at: number;
-              finished_at: number;
-              id: string;
-              kind: "ExportBlobs";
-              progress: {
-                invalid_blob_ids: string[];
-                invalid_blobs: number;
-                successful_blobs: number;
-                successful_blobs_ids: string[];
-                total: number;
+              // I don't know where to put this def
+              const { progress, status } = (await res.json()) as {
+                created_at: number;
+                finished_at: number;
+                id: string;
+                kind: "ExportBlobs";
+                progress: {
+                  invalid_blob_ids: string[];
+                  invalid_blobs: number;
+                  successful_blobs: number;
+                  successful_blobs_ids: string[];
+                  total: number;
+                };
+                started_at: number;
+                status: string;
               };
-              started_at: number;
-              status: string;
-            };
 
-            console.log("Export blobs (progress, status, status code): ", progress, status, res.status);
+              console.log(
+                "Export blobs (progress, status, status code): ",
+                `${progress.successful_blobs}/${progress.total} (invalid: ${progress.invalid_blobs})`,
+                status,
+                res.status
+              );
 
-            state.export_progress = progress;
-            session.set("last_export_check", now);
+              state.export_progress = {
+                invalid_blobs: progress.invalid_blobs,
+                successful_blobs: progress.successful_blobs,
+                total: progress.total,
+              };
+              session.set("last_export_check", now);
+              session.set("export_job_failures", 0);
 
-            if (status.toLowerCase() === "success") {
-              session.set("exportedBlobs", true);
+              if (status.toLowerCase() === "success") {
+                session.set("exportedBlobs", true);
+              }
+            } catch (error) {
+              const statusCode = error instanceof Response ? error.status : null;
+              const isSyntaxError = error instanceof SyntaxError;
+              console.log("Error checking export blobs job status: ", error);
+
+              if (statusCode === 404 || statusCode === 429 || isSyntaxError) {
+                const failureCount = (state.export_job_failures ?? 0) + 1;
+
+                session.set("export_job_failures", failureCount);
+
+                console.log(
+                  `Export blobs job check failed with status ${statusCode} and error ${error}. Failure count: ${failureCount}`
+                );
+
+                if (failureCount >= 3) {
+                  throw new Error(
+                    `Export blobs job check failed with status ${statusCode} (error: ${error}) after ${failureCount} consecutive attempts`
+                  );
+                }
+
+                break;
+              }
+
+              throw error;
             }
           }
         }
@@ -284,6 +364,62 @@ export const processState = async (
           session.set("originDeactivated", ok);
           session.set("migratedPlc", ok);
         }
+        break;
+      }
+
+      case STAGES.RESUME_MIGRATION: {
+        try {
+          //Get origin, handle and password from form, immediately save to session
+          const pds_origin =
+            (data.get("pds") as string) ?? "https://bsky.social";
+          session.set("pds_origin", pds_origin);
+
+          const handle_origin = data.get("bsky-handle") as string;
+          session.set("handle_origin", handle_origin);
+
+          const password_origin = (data.get("bsky-password") as string) ?? "";
+          session.set("password_origin", password_origin);
+
+          const { token_origin, email, did, atp_origin_session } =
+            await loginOrigin({
+              pds_origin,
+              handle_origin,
+              password_origin,
+              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+            });
+
+          session.set("email", email);
+          session.set("token_origin", token_origin);
+          session.set("did", did);
+          session.set("atp_origin_session", atp_origin_session);
+        } catch (e) {
+          if (e instanceof AuthFactorTokenRequiredError) {
+            session.set("require_2fa_code", true);
+            session.flash(
+              "error",
+              "Please check your email for your login code and enter it below"
+            );
+            break;
+          }
+          throw e;
+        }
+
+        //Get dest handle and password from form
+        const handle_dest = data.get("northsky-handle") as string;
+        const password_dest = (data.get("northsky-password") as string) ?? "";
+
+        // Save dest handle to form in case it's changed somehow
+        session.set("handle_dest", handle_dest);
+
+        const { token_dest, atp_dest_session } = await resumeMigration({
+          pds_dest: state.pds_dest ?? "https://northsky.social",
+          handle_dest,
+          password_dest,
+        });
+
+        session.set("token_dest", token_dest);
+        session.set("atp_dest_session", atp_dest_session);
+
         break;
       }
     }

@@ -3,7 +3,6 @@ import {
   Highlight,
   Text,
   Button,
-  Image,
   VStack,
   HStack,
 } from "@chakra-ui/react";

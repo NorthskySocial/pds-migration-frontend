@@ -5,7 +5,6 @@ import {
   Input,
   Button,
   Spinner,
-  Image,
   VStack,
   HStack,
 } from "@chakra-ui/react";
@@ -19,12 +18,22 @@ import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { useState } from "react";
 import { passwordStrength } from "check-password-strength";
+import { useDebouncedCallback } from "use-debounce";
 
 export default function NewAccountScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   const [pass, setPass] = useState("");
   const [passVerify, setPassVerify] = useState("");
   const { id: strength } = passwordStrength(pass);
+  const onChangeCallback = useDebouncedCallback(
+    (event) => {
+      if (event.target.willValidate) {
+        fetcher.submit(event.target.form);
+      }
+    },
+    200,
+    { trailing: true }
+  );
   return (
     <fetcher.Form method="post">
       <VStack mb="5">
@@ -37,54 +46,65 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         </Heading>
         {state.do_journey === "migrate" ? (
           <Text fontSize="md" textAlign={"justify"}>
-            We'll need to give you a <strong>.northsky.social</strong> handle as
-            part of the migration. If you have a custom domain handle, you can
-            change it back right after the migration process is over.
+            If you are currently using a custom domain handle, you can continue
+            to do so by entering it as your handle for your Northsky account. If you are currently
+            using a <strong>.bsky.social</strong> handle, you will need to switch to
+            a <strong>.northsky.social</strong> handle as part of the migration.
           </Text>
         ) : (
           <Text fontSize="md" textAlign={"justify"}>
-            You get a .northsky.social handle to get you started. If you want to
-            use a custom domain handle, you can set that later.
+            You get a <strong>.northsky.social</strong> handle to get you started.
+            If you want to use a custom domain handle, you can set that later.
           </Text>
         )}
         {!state.email && (
-          <Field
-            required
-            invalid={fetcher.data?.error_password_length}
-            label="Email address"
-            errorText={fetcher.data?.error_password_length}
-          >
+          <Field required label="Email address">
             <Input name="email" required placeholder="user@example.com" />
           </Field>
         )}
         <br />
         <Field
           label="New handle"
-          invalid={fetcher.data && !fetcher.data?.handle_available}
-          errorText={!fetcher.data?.ok && fetcher.data?.handle_available}
+          invalid={
+            state.handle_not_available === true &&
+            (state.handle_dest?.length ?? 0) > 0
+          }
+          errorText={
+            state.handle_not_available === true &&
+            (state.handle_dest?.length ?? 0) > 0 &&
+            `Uh oh! ${state.handle_dest?.toLowerCase()} is not available!`
+          }
           helperText={
-            fetcher.data?.handle_available &&
-            `Congrats! 🎉 ${fetcher.data?.handle.toLowerCase()}.northsky.social is available!`
+            state.handle_not_available === false &&
+            (state.handle_dest?.length ?? 0) > 0 &&
+            `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!` ||
+            (state.do_journey === "migrate" && "Choose a handle that ends with .northsky.social (e.g., user.northsky.social) or use a custom domain that you own (e.g., example.com)") ||
+            (state.do_journey === "create" && "Choose a handle that ends with .northsky.social (e.g., user.northsky.social)")
           }
         >
           <InputGroup
             width="100%"
             startElement="@"
-            endElement={".northsky.social"}
+            endElement={state.do_journey === "create" ? ".northsky.social" : undefined}
           >
             <Input
               name="handle"
               onKeyDown={(event) => {
-                if (!/[a-z0-9\-]/i.test(event.key)) {
+                // allow control keys (Backspace, Delete, arrows, Home/End, Tab) and shortcuts (Ctrl/Cmd)
+                if (event.ctrlKey || event.metaKey || event.key.length > 1) {
+                  return;
+                }
+
+                // NOTE: we only allow dots (.) on migration since custom domains are allowed there
+                const regexPattern = state.do_journey === "create"
+                  ? /^[a-z0-9-]$/i
+                  : /^[a-z0-9.-]$/i;
+                if (!regexPattern.test(event.key)) {
                   return event.preventDefault();
                 }
               }}
-              onChange={(event) => {
-                if (event.currentTarget.willValidate) {
-                  fetcher.submit(event.currentTarget.form);
-                }
-              }}
-              placeholder="username"
+              onChange={onChangeCallback}
+              placeholder={state.do_journey === "create" ? "username" : "username or custom domain"}
             />
           </InputGroup>
           <div>
@@ -96,11 +116,12 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           </div>
         </Field>
         <br />
+
         <Field
           required
-          invalid={fetcher.data?.error_password_length}
+          invalid={!!state.password_too_short}
+          errorText={state.password_too_short && `Password is too short!`}
           label="Password"
-          errorText={fetcher.data?.error_password_length}
         >
           <PasswordInput
             name="password"
@@ -117,10 +138,10 @@ export default function NewAccountScreen({ state }: ScreenProps) {
           required
           label="Repeat password"
           invalid={
-            fetcher.data?.error_password_match ||
+            state.password_mismatch ||
             (pass !== passVerify && passVerify.length > 0)
           }
-          errorText={fetcher.data?.error_password_match}
+          errorText={"Passwords do not match"}
         >
           <PasswordInput
             name="password-repeat"
