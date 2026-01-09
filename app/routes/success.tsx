@@ -1,4 +1,4 @@
-import { redirect, data, useFetcher } from "react-router";
+import { data } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import { logger } from "~/util/logger";
 import type { Route } from "./+types";

@@ -3,14 +3,13 @@ import {
   Highlight,
   Text,
   Button,
-  Image,
   List,
   Link,
   VStack,
   HStack,
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Box, Span } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
@@ -34,7 +33,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
                 color={"emphasized"}
                 variant="underline"
                 target="_blank"
-                href="https://northskysocial.com/posts/privacy-policy"
+                href="https://github.com/NorthskySocial/pds-migration/"
               >
                 Northsky Migration Tool
               </Link>
@@ -50,7 +49,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
                 color={"emphasized"}
                 variant="underline"
                 target="_blank"
-                href="https://northskysocial.com/posts/privacy-policy"
+                href="https://atbackup.pages.dev/"
               >
                 ATBackup
               </Link>
@@ -65,7 +64,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
                 color={"emphasized"}
                 variant="underline"
                 target="_blank"
-                href="https://northskysocial.com/posts/privacy-policy"
+                href="https://bsky.storage/"
               >
                 Storacha
               </Link>
