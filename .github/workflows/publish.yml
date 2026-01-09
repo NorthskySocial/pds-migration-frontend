@@ -84,3 +84,20 @@ jobs:
           token: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
           repository: ${{ secrets.DEPLOYMENT_WEBHOOK_REPOSITORY }}
           event-type: restart-migration-fe
+
+  notify_deployment:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    needs: deploy_to_kubernetes
+    steps:
+      - name: Wait for successful deployment (2 minutes)
+        run: sleep 120s
+
+      - name: Notify Discord of successful deployment
+        uses: rjstone/discord-webhook-notify@v2
+        with:
+            webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+            severity: info
+            username: 'Github Actions deployment'
+            title: 'Migration Front-end deployment successful!'
+            description: 'Latest build has been deployed to production successfully!'
