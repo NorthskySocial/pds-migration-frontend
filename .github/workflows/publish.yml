@@ -96,8 +96,9 @@ jobs:
       - name: Notify Discord of successful deployment
         uses: rjstone/discord-webhook-notify@v2
         with:
-            webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
-            severity: info
-            username: 'Github Actions deployment'
-            title: 'Migration Front-end deployment successful!'
-            description: 'Latest build has been deployed to production successfully!'
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}
+          severity: info
+          username: 'Github Actions deployment'
+          title: 'Migration Front-end deployment successful!'
+          description: 'Latest build has been deployed to production successfully! [Access the migration front-end here](https://migrate.northsky.social)'
+          details: 'Commit: ${{ github.event.head_commit.message }}'
