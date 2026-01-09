@@ -28,7 +28,7 @@
     "@react-router/serve": "^7.10.1",
     "@scure/bip39": "^2.0.1",
     "@types/debug": "^4.1.12",
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.10.4",
     "@vitejs/plugin-rsc": "^0.5.3",
     "better-sqlite3": "^12.5.0",
     "check-password-strength": "^3.0.0",
