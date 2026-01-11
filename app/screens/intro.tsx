@@ -86,11 +86,11 @@ export default function IntroScreen({ state }: ScreenProps) {
           </VStack>
         </Box>
         <HStack>
-          <Button width="33%" type="submit" name="create" value="create">
-            Create new account
-          </Button>
           <Button width="33%" type="submit" name="migrate" value="migrate">
             Migrate existing account
+          </Button>
+          <Button width="33%" type="submit" name="create" value="create">
+            Create new account
           </Button>
           <Button formNoValidate width="33%" type="submit" name="resume" value="resume">
             Resume failed migration
