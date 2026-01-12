@@ -318,8 +318,8 @@ export async function createDestAccount(
     if (!createAccountRes.ok) {
       throw new CreateAccountError(createAccountRes.statusText);
     }
-    console.log(`Migrated dest account created successfully with invite code: ${inviteCode}`);
-    await sendDiscordMessage(`Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode} (migration in progress)`);
+    console.log(`Migrating dest account created successfully with invite code: ${inviteCode}`);
+    await sendDiscordMessage(`Migrating account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode} (migration in progress)`);
 
     // Get new user token
     const agent_dest = new AtpAgent({
