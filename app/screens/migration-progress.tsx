@@ -1,5 +1,5 @@
 import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
-import clock_art from "../assets/clock.jpg";
+import clock_art from "../assets/KTPClock.gif";
 import { InfoTip } from "@/components/ui/toggle-tip";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
