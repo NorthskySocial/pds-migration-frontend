@@ -316,7 +316,17 @@ export async function createDestAccount(
     console.log("Migrated account creation status: ", createAccountRes.status);
 
     if (!createAccountRes.ok) {
-      throw new CreateAccountError(createAccountRes.statusText);
+      let errorMessage: string;
+
+      try {
+        const errorData = await createAccountRes.json<{ message?: string }>();
+        errorMessage = errorData.message ?? createAccountRes.statusText;
+      } catch {
+        errorMessage = createAccountRes.statusText;
+      }
+
+      console.log(`Failed to create migrated account: ${errorMessage}`);
+      throw new CreateAccountError(errorMessage);
     }
     console.log(`Migrating dest account created successfully with invite code: ${inviteCode}`);
     await sendDiscordMessage(`Migrating account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode} (migration in progress)`);
