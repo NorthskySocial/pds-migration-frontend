@@ -73,6 +73,88 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
+  deploy_pr_to_staging:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: build-and-push-image
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up kubectl (staging)
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "latest"
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_STAGING }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Reset TTL job
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          kubectl delete job pr-$PR_NUMBER-ttl --ignore-not-found=true -n staging
+
+      - name: Create new TTL job
+        run: |
+          kubectl apply -f .github/k8s/ttl-job.yaml
+
+      - name: Get new UID
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          JOB_UID=$(kubectl get job pr-$PR_NUMBER-ttl -o jsonpath='{.metadata.uid}')
+          echo "JOB_UID=$JOB_UID" >> $GITHUB_ENV
+
+      - name: Apply manifests
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          JOB_UID: ${{ env.JOB_UID }}
+        run: |
+          envsubst < .github/k8s/staging-deployment.yaml | kubectl apply -f -
+
+      - name: Compute preview URL
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "PREVIEW_URL=https://pr-${PR_NUMBER}.pr.migrate.staging.northsky.social" >> $GITHUB_ENV
+
+      - name: Compute deployment time
+        run: |
+          DEPLOY_TIME="$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "DEPLOY_TIME=$DEPLOY_TIME" >> $GITHUB_ENV
+
+      - name: Wait for 1 minute to allow deployment to stabilize
+        run: sleep 60s
+
+      - name: Update PR comment with preview link
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_URL: ${{ env.PREVIEW_URL }}
+          DEPLOY_TIME: ${{ env.DEPLOY_TIME }}
+        run: |
+          BODY="<!-- preview-env-comment -->
+          🚀 **Staging environment is ready**
+          **URL:** ${PREVIEW_URL}
+          **Last deployed:** ${DEPLOY_TIME}
+          *This environment resets on every push and auto-expires in 3 days.*"
+
+          # Find existing comment
+          COMMENT_ID=$(gh pr comments $PR_NUMBER --json id,body \
+            --jq '.[] | select(.body | contains("preview-env-comment")) | .id')
+
+          if [ -z "$COMMENT_ID" ]; then
+            echo "Creating new comment"
+            gh pr comment $PR_NUMBER --body "$BODY"
+          else
+            echo "Updating existing comment $COMMENT_ID"
+            gh pr comment $PR_NUMBER --body "$BODY" --edit $COMMENT_ID
+          fi
+
   deploy_to_kubernetes:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
