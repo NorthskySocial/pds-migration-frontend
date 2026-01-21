@@ -145,8 +145,10 @@ jobs:
           **Last deployed:** ${DEPLOY_TIME}
           *This environment resets on every push and auto-expires in 3 days.*"
 
-          # Find existing comment
-          COMMENT_ID=$(gh pr comments $PR_NUMBER --json id,body \
+          # Find existing comment using GitHub API
+          COMMENT_ID=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
             --jq '.[] | select(.body | contains("preview-env-comment")) | .id')
 
           if [ -z "$COMMENT_ID" ]; then
@@ -154,7 +156,11 @@ jobs:
             gh pr comment $PR_NUMBER --body "$BODY"
           else
             echo "Updating existing comment $COMMENT_ID"
-            gh pr comment $PR_NUMBER --body "$BODY" --edit $COMMENT_ID
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" \
+              -f body="$BODY"
           fi
 
   deploy_to_kubernetes:
