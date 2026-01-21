@@ -130,7 +130,9 @@ jobs:
       - name: Compute deployment time
         run: |
           DEPLOY_TIME="$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          DEPLOY_TIME_PT="$(TZ='America/Los_Angeles' date +"%H:%M:%S %Z")"
           echo "DEPLOY_TIME=$DEPLOY_TIME" >> $GITHUB_ENV
+          echo "DEPLOY_TIME_PT=$DEPLOY_TIME_PT" >> $GITHUB_ENV
 
       - name: Wait for 1 minute to allow deployment to stabilize
         run: sleep 60s
@@ -141,11 +143,14 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PREVIEW_URL: ${{ env.PREVIEW_URL }}
           DEPLOY_TIME: ${{ env.DEPLOY_TIME }}
+          DEPLOY_TIME_PT: ${{ env.DEPLOY_TIME_PT }}
         run: |
           BODY="<!-- preview-env-comment -->
           🚀 **Staging environment is ready**
+
           **URL:** ${PREVIEW_URL}
-          **Last deployed:** ${DEPLOY_TIME}
+          **Last deployed:** ${DEPLOY_TIME} (${DEPLOY_TIME_PT})
+
           *This environment resets on every push and auto-expires in 3 days.*"
 
           # Find existing comment using GitHub API
