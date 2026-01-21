@@ -100,7 +100,7 @@ jobs:
 
       - name: Create new TTL job
         run: |
-          kubectl apply -f .github/k8s/ttl-job.yaml
+          envsubst < .github/k8s/ttl-job.yaml | kubectl apply -f -
 
       - name: Get new UID
         env:
