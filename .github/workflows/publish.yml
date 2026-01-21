@@ -99,6 +99,8 @@ jobs:
           kubectl delete job pr-$PR_NUMBER-ttl --ignore-not-found=true -n staging
 
       - name: Create new TTL job
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           envsubst < .github/k8s/ttl-job.yaml | kubectl apply -f -
 
