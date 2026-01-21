@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pr-${PR_NUMBER}-ttl
+  namespace: staging
+  labels:
+    preview: pr-${PR_NUMBER}
+spec:
+  ttlSecondsAfterFinished: 259200 # 3 days
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: ttl
+        image: busybox
+        command: ["sh", "-c", "echo TTL countdown started"]
