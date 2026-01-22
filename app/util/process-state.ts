@@ -2,6 +2,7 @@
 
 import { type Session } from "react-router";
 import {
+  checkIfDidExistsInDest,
   createDestAccount,
   exportBlobs,
   exportRepo,
@@ -38,6 +39,7 @@ export const processState = async (
     handle_dest: session.get("handle_dest"),
     pds_dest: session.get("pds_dest"),
     atp_origin_session: session.get("atp_origin_session"),
+    did_exists_in_dest: session.get("did_exists_in_dest"),
     pds_origin: session.get("pds_origin"),
     atp_dest_session: session.get("atp_dest_session"),
     token_origin: session.get("token_origin"),
@@ -86,6 +88,7 @@ export const processState = async (
     session.set("atp_dest_session", undefined);
     session.set("pds_origin", undefined);
     session.set("atp_origin_session", undefined);
+    session.set("did_exists_in_dest", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
     session.set("plc_hostname", undefined);
@@ -187,7 +190,13 @@ export const processState = async (
           session.set("did", did);
           session.set("atp_origin_session", atp_origin_session);
 
-          console.log("Origin login successful!");
+          const did_exists_in_dest = await checkIfDidExistsInDest(
+            did,
+            session.get("pds_dest") ?? "https://northsky.social",
+          );
+          session.set("did_exists_in_dest", did_exists_in_dest);
+
+          console.log(`Origin login successful! DID ${did}, exists in destination PDS: ${did_exists_in_dest}`);
           break;
         } catch (e) {
           console.log("Error during origin login: ", e);

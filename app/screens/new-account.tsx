@@ -19,6 +19,7 @@ import { useFetcher } from "react-router";
 import { useState } from "react";
 import { passwordStrength } from "check-password-strength";
 import { useDebouncedCallback } from "use-debounce";
+import { ErrorMessage } from "~/components/error-message";
 
 export default function NewAccountScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
@@ -44,6 +45,13 @@ export default function NewAccountScreen({ state }: ScreenProps) {
               : "Reserve New Account"}
           </Highlight>
         </Heading>
+        {state.do_journey === "migrate" && state.did_exists_in_dest === true && (
+          <ErrorMessage title="We already have an account for you!">
+            An account that matches your DID already exists in the Northsky PDS. If you previously started
+            a migration but did not complete it, please Cancel this form to return to the start and click on
+            the "Resume Migration" button. If you believe this is an error, please contact support.
+          </ErrorMessage>
+        )}
         {state.do_journey === "migrate" ? (
           <Text fontSize="md" textAlign={"justify"}>
             If you are currently using a custom domain handle, you can continue
