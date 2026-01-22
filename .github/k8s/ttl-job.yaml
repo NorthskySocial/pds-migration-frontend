@@ -11,6 +11,6 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-      - name: ttl
+      - name: ttl-${PR_NUMBER}
         image: busybox
         command: ["sh", "-c", "echo TTL countdown started"]

@@ -20,8 +20,8 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
   const [altPds, setAltPds] = useState(false);
   const fetcher = useFetcher();
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Bluesky">Login to both services</Highlight>
         </Heading>
@@ -40,7 +40,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
               Please provide us with the following information so we can resume
               migrating your data.
             </Text>
-            <Grid templateColumns="repeat(2, 1fr)" gap="6">
+            <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap="6" width="100%">
               <VStack>
                 <Switch
                   name="has-pds"
