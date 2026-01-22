@@ -5,7 +5,7 @@ import type { ScreenProps } from "~/util/stages";
 export default function FailedMigrationScreen({ state }: ScreenProps) {
   return (
     <>
-      <VStack mb="5">
+      <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight">
           Migration failed
         </Heading>
@@ -15,6 +15,7 @@ export default function FailedMigrationScreen({ state }: ScreenProps) {
         <img
           alt="Image of melting clocks by artist Katie Tightpussy"
           src={melted_clock}
+          style={{ maxWidth: "100%", height: "auto" }}
         />
         <Text fontSize="md" textAlign={"justify"}>
           Please reach out to our support team,{" "}

@@ -12,14 +12,14 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <>
-      <fetcher.Form method="post">
+      <fetcher.Form method="post" style={{ width: "100%" }}>
         <Center>
-          <Heading size="3xl" letterSpacing="tight">
+          <Heading size="3xl" letterSpacing="tight" textAlign="center">
             Welcome to Northsky!
           </Heading></Center>
 
         <br></br>
-        <Grid templateColumns="repeat(2, 1fr)" gap="6">
+        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap="6">
           <GridItem>
             <VStack mb="5">
               {state.do_journey === "migrate" ? (
@@ -103,12 +103,12 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           </GridItem>
           <GridItem>
             <VStack>
-              <Image src={nsNewAccount} alt="Adding a new account"></Image>
-              <Image src={nsSignIn2} alt="Bluesky sign in dialog"></Image>
-                                          <Image src={nsOtherAccount} alt="Choose other account"></Image>
+              <Image src={nsNewAccount} alt="Adding a new account" maxWidth="100%" height="auto" />
+              <Image src={nsSignIn2} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
+                                          <Image src={nsOtherAccount} alt="Choose other account" maxWidth="100%" height="auto" />
 
-              <Image src={nsSignIn} alt="Bluesky sign in dialog"></Image>
-              <Image src={nsChooseProvider} alt="Choose your Provder"></Image>
+              <Image src={nsSignIn} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
+              <Image src={nsChooseProvider} alt="Choose your Provder" maxWidth="100%" height="auto" />
             </VStack>
           </GridItem>
         </Grid>

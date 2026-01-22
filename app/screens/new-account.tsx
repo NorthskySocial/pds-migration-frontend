@@ -35,8 +35,8 @@ export default function NewAccountScreen({ state }: ScreenProps) {
     { trailing: true }
   );
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <Heading size="3xl" textAlign={"center"} letterSpacing="tight">
           <Highlight query="New Account">
             {state.do_journey === "create"
