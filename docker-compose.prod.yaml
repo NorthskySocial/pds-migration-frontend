@@ -1,3 +1,7 @@
+secrets:
+  npmrc:
+    file: ./.npmrc
+
 services:
   redis:
     image: redis:7-alpine
@@ -6,7 +10,10 @@ services:
 
   frontend:
     image: migration-fe:latest
-    build: .
+    build:
+      context: .
+      secrets:
+        - npmrc
     environment:
       - PDS_HOSTNAME=https://northsky.social
       - PLC_HOSTNAME=https://plc.northsky.social
