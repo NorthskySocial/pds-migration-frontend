@@ -42,7 +42,18 @@ export default function IntroScreen({ state }: ScreenProps) {
           By entering your invite code, you accept these terms, and consent to
           migrating your data to Northsky's servers.
         </Text>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/wKPBH8j5HDM?si=uf4ioqAn80p2L3UY" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+        <Box width="100%" maxWidth="560px" aspectRatio="16/9">
+          <iframe
+            width="100%"
+            height="100%"
+            src="https://www.youtube.com/embed/wKPBH8j5HDM?si=uf4ioqAn80p2L3UY"
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+        </Box>
       </VStack>
       <VStack>
         <Heading size="xl">Enter your invite code to get started</Heading>
