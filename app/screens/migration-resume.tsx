@@ -30,7 +30,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
             <Text fontSize="md" textAlign={"justify"}>
               Please check your email for a 2FA code and enter it below
             </Text>
-            <Field required label="Email 2fa code">
+            <Field required label="Email 2FA code">
               <Input name="2fa_code" required />
             </Field>
           </>
