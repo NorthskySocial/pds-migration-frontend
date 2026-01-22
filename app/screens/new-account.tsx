@@ -134,7 +134,9 @@ export default function NewAccountScreen({ state }: ScreenProps) {
             value={pass.length > 0 ? strength + 1 : 0}
           />
         </Field>
-        <Text>Do not use an app password. An app password usually looks like this: xxxx-xxxx-xxxx-xxxx.</Text>
+
+        {state.do_journey != "create" ? (
+          <Text>Do not use an app password. An app password usually looks like this: xxxx-xxxx-xxxx-xxxx.</Text>) : (<></>)}
         <Field
           required
           label="Repeat password"
