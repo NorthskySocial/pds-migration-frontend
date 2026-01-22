@@ -18,6 +18,7 @@ export default function App() {
         backgroundImage: `url(${bg})`,
         backgroundSize: "cover",
         backgroundAttachment: "fixed",
+        overflowX: "hidden",
       }}
       className="dark"
       lang="en"
@@ -40,7 +41,7 @@ export default function App() {
         {/* All `link` exports on all routes will render here */}
         <Links />
       </head>
-      <body>
+      <body style={{ overflowX: "hidden" }}>
         {/* Child routes render here */}
         <Outlet />
 

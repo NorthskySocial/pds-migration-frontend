@@ -14,7 +14,9 @@ export const Layout = ({ children }) => (
         display={"flex"}
         flexDirection={"column"}
         justifyContent={"center"}
+        alignItems={"center"}
         px={{ base: 4, md: 6 }}
+        overflowX={"hidden"}
       >
         <VStack padding="1em" width="100%" maxWidth={"3xl"} alignItems={"center"}>
           <VStack mb="5">

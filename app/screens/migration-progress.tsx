@@ -42,8 +42,8 @@ export default function MigrationProgressScreen({
   }, [fetcher, stage, error]);
 
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <VStack
           margin="0 auto"
           maxWidth={"350px"}

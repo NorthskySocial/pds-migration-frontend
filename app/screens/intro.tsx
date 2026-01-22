@@ -17,8 +17,8 @@ import { useFetcher } from "react-router";
 export default function IntroScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
         </Heading>
@@ -55,7 +55,7 @@ export default function IntroScreen({ state }: ScreenProps) {
           />
         </Box>
       </VStack>
-      <VStack>
+      <VStack width="100%">
         <Heading size="xl">Enter your invite code to get started</Heading>
         <Field
           invalid={fetcher?.data?.error}
@@ -96,17 +96,17 @@ export default function IntroScreen({ state }: ScreenProps) {
             </Checkbox>
           </VStack>
         </Box>
-        <HStack>
-          <Button width="33%" type="submit" name="migrate" value="migrate">
+        <VStack width="100%" gap={2}>
+          <Button width="100%" type="submit" name="migrate" value="migrate">
             Migrate existing account
           </Button>
-          <Button width="33%" type="submit" name="create" value="create">
+          <Button width="100%" type="submit" name="create" value="create">
             Create new account
           </Button>
-          <Button formNoValidate width="33%" type="submit" name="resume" value="resume">
+          <Button formNoValidate width="100%" type="submit" name="resume" value="resume">
             Resume failed migration
           </Button>
-        </HStack>
+        </VStack>
       </VStack>
     </fetcher.Form>
   );
