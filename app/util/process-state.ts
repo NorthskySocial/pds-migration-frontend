@@ -147,18 +147,33 @@ export const processState = async (
       }
 
       case STAGES.ORIGIN_PDS_LOGIN: {
-        try {
-          //Get origin, handle and password from form, immediately save to session
-          const pds_origin =
-            (data.get("pds") as string) ?? "https://bsky.social";
+        // If at this point we know the user requires a 2FA code, that means
+        // this stage as already submitted once so we already have PDS/handle/password.
+        // In that case, we don't read from form or save to session and just retrieve.
+        // Otherwise (first attempt or no 2FA), read from form and save to session.
+        const is2faAttempt = session.get("require_2fa_code") ?? false;
+        console.log("User attempting 2FA login? " + is2faAttempt);
+
+        let pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
+        let handle_origin = data.get("bsky-handle") as string;
+        let password_origin = (data.get("bsky-password") as string) ?? "";
+
+        if (is2faAttempt) {
+          pds_origin = session.get("pds_origin") ?? pds_origin;
+          handle_origin = session.get("handle_origin") ?? handle_origin;
+          password_origin =
+            session.get("password_origin") ?? password_origin;
+
+          console.log("User session retrieved from first sign-in attempt, handle: ", handle_origin);
+        } else {
           session.set("pds_origin", pds_origin);
-
-          const handle_origin = data.get("bsky-handle") as string;
           session.set("handle_origin", handle_origin);
-
-          const password_origin = (data.get("bsky-password") as string) ?? "";
           session.set("password_origin", password_origin);
 
+          console.log("User session saved from form, handle: ", handle_origin);
+        }
+
+        try {
           const { token_origin, email, did, atp_origin_session } =
             await loginOrigin({
               pds_origin,
@@ -171,8 +186,12 @@ export const processState = async (
           session.set("token_origin", token_origin);
           session.set("did", did);
           session.set("atp_origin_session", atp_origin_session);
+
+          console.log("Origin login successful!");
           break;
         } catch (e) {
+          console.log("Error during origin login: ", e);
+
           if (e instanceof AuthFactorTokenRequiredError) {
             session.set("require_2fa_code", true);
             session.flash(
@@ -181,6 +200,7 @@ export const processState = async (
             );
             break;
           }
+
           throw e;
         }
       }
