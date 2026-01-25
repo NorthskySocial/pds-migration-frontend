@@ -30,14 +30,14 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
         </Field>
 
         <HStack>
-        <Button type="submit" name="submit" margin={"0 auto"}>
-          Continue
-        </Button>
-                  <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-        Cancel
-      </Button>
+          <Button type="submit" name="submit" margin={"0 auto"}>
+            Continue
+          </Button>
+          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+            Cancel
+          </Button>
         </HStack>
-        </VStack>
+      </VStack>
     </fetcher.Form>
   );
 }
