@@ -32,54 +32,22 @@ export const processState = async (
   data: FormData,
   migratorBackend: string
 ) => {
-  // @TODO replace this with session.data
-  const state: SessionData = {
-    do_journey: session.get("do_journey"),
-    handle_origin: session.get("handle_origin"),
-    handle_dest: session.get("handle_dest"),
-    pds_dest: session.get("pds_dest"),
-    atp_origin_session: session.get("atp_origin_session"),
-    did_exists_in_dest: session.get("did_exists_in_dest"),
-    pds_origin: session.get("pds_origin"),
-    atp_dest_session: session.get("atp_dest_session"),
-    token_origin: session.get("token_origin"),
-    token_dest: session.get("token_dest"),
-    plc_hostname: session.get("plc_hostname"),
-    did: session.get("did"),
-    password_origin: session.get("password_origin"),
-    inviteCode: session.get("inviteCode"),
-    email: session.get("email"),
-    user_recover_key: session.get("user_recover_key"),
-    export_job_id: session.get("export_job_id"),
-    export_job_failures: session.get("export_job_failures"),
-    export_total: null,
-    export_pct_done: null,
-    last_export_check: session.get("last_export_check"),
-    handle_not_available: session.get("handle_not_available"),
-    password_mismatch: session.get("password_mismatch"),
-    password_too_short: session.get("password_too_short"),
-
-    // state flags
-    hasBackup: session.get("hasBackup") ?? false,
-    exportedRepo: session.get("exportedRepo") ?? false,
-    importedRepo: session.get("importedRepo") ?? false,
-    exportedBlobs: session.get("exportedBlobs") ?? false,
-    importedBlobs: session.get("importedBlobs") ?? false,
-    migratedPrefs: session.get("migratedPrefs") ?? false,
-    requestedPlcToken: session.get("requestedPlcToken") ?? false,
-    originDeactivated: session.get("originDeactivated") ?? false,
-    destActivated: session.get("destActivated") ?? false,
-    migratedPlc: session.get("migratedPlc") ?? false,
-    require_2fa_code: session.get("require_2fa_code") ?? false,
-  };
-
+  const state = session.data as SessionData;
   const stage = getStage(state);
 
   const isCancelling = data.get("cancel");
+  const isResendingPlcToken = data.get("resend_plc_token");
+  const isResetResume = data.get("reset-resume");
 
-  console.log("isCancelling: " + isCancelling);
+  console.log(`On processState with stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
 
-  if (isCancelling) {
+  if (isResendingPlcToken) {
+    session.set("requestedPlcToken", false);
+    return state;
+  }
+
+  const inviteCode = state.inviteCode;
+  if (isCancelling || isResetResume) {
     //Reset all session variables
     session.set("do_journey", undefined);
     session.set("handle_origin", undefined);
@@ -109,6 +77,12 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
+
+    if (isResetResume) {
+      // Shotcut to the resume screen
+      session.set("inviteCode", inviteCode as string);
+      session.set("do_journey", "resume");
+    }
 
     return state;
   } else {
