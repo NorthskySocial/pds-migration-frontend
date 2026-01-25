@@ -22,7 +22,8 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
         </Heading>
         <Text fontSize="md" textAlign={"left"}>
           Bluesky should have just sent you an e-mail to your inbox. Input that
-          code below to continue migration.
+          code below to continue migration. If you do not receive an e-mail within a
+          few minutes, please check your spam folder or click "Resend Code".
         </Text>
         <img src={plc_screenshot} style={{ maxWidth: "100%", height: "auto" }} />
         <Field required label="PLC Token">
@@ -32,6 +33,14 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
         <HStack>
           <Button type="submit" name="submit" margin={"0 auto"}>
             Continue
+          </Button>
+          <Button
+            name="resend_plc_token"
+            type="submit"
+            value="resend"
+            formNoValidate
+          >
+            Resend Code
           </Button>
           <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
             Cancel

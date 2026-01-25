@@ -74,8 +74,14 @@ export const processState = async (
   const stage = getStage(state);
 
   const isCancelling = data.get("cancel");
+  const isResendingPlcToken = data.get("resend_plc_token");
 
   console.log("isCancelling: " + isCancelling);
+
+  if (isResendingPlcToken) {
+    session.set("requestedPlcToken", false);
+    return state;
+  }
 
   if (isCancelling) {
     //Reset all session variables
