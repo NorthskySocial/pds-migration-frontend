@@ -74,10 +74,12 @@ export const processState = async (
   const stage = getStage(state);
 
   const isCancelling = data.get("cancel");
+  const isResetResume = data.get("reset-resume");
 
-  console.log("isCancelling: " + isCancelling);
+  console.log(`On processState with stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume}`);
 
-  if (isCancelling) {
+  const inviteCode = state.inviteCode;
+  if (isCancelling || isResetResume) {
     //Reset all session variables
     session.set("do_journey", undefined);
     session.set("handle_origin", undefined);
@@ -106,6 +108,12 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
+
+    if (isResetResume) {
+      // Shotcut to the resume screen
+      session.set("inviteCode", inviteCode as string);
+      session.set("do_journey", "resume");
+    }
 
     return state;
   } else {
