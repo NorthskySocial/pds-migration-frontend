@@ -21,7 +21,6 @@ import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
 import { logger } from "~/util/logger";
-import f from "~/util/mock-fetch";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));

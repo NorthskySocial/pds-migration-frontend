@@ -1,4 +1,4 @@
-import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
+import { Heading, Text, Progress, VStack, Button } from "@chakra-ui/react";
 import clock_art from "../assets/KTPClock.gif";
 import { InfoTip } from "@/components/ui/toggle-tip";
 import type { ScreenProps } from "~/util/stages";
@@ -107,6 +107,25 @@ export default function MigrationProgressScreen({
               <Progress.Range />
             </Progress.Track>
           </Progress.Root>
+
+          {error && (
+            <>
+              <Text fontSize="md" color="red.500" textAlign="center">
+                Please click the button below to resume the migration process.
+                You can log in with your Bluesky and Northsky credentials to kick off
+                the migration where it left off. If the problem persists, please
+                contact support.
+              </Text>
+              <Button
+                name="reset-resume"
+                type="submit"
+                value="reset-resume"
+                mt="4"
+              >
+                Resume Failed Migration
+              </Button>
+            </>
+          )}
         </VStack>
       </VStack>
     </fetcher.Form>
