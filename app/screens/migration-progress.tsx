@@ -122,7 +122,7 @@ export default function MigrationProgressScreen({
                 value="reset-resume"
                 mt="4"
               >
-                Reset Progress & Resume Migration
+                Resume Failed Migration
               </Button>
             </>
           )}
