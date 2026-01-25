@@ -67,6 +67,7 @@ export const processState = async (
     session.set("password_origin", undefined);
 
     // state flags
+    session.set("require_2fa_code", false);
     session.set("hasBackup", false);
     session.set("exportedRepo", false);
     session.set("importedRepo", false);
