@@ -4,6 +4,20 @@ import { redisGet, redisSet, redisDel } from "./util/redis";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24; // 1 day
 
+const SESSION_BOOLEAN_DEFAULTS = {
+  hasBackup: false,
+  exportedRepo: false,
+  importedRepo: false,
+  exportedBlobs: false,
+  importedBlobs: false,
+  migratedPrefs: false,
+  requestedPlcToken: false,
+  originDeactivated: false,
+  destActivated: false,
+  migratedPlc: false,
+  require_2fa_code: false,
+} as const;
+
 export type SessionData = {
   do_journey?: "create" | "migrate" | "resume" | "fail";
   handle_origin?: string;
@@ -29,14 +43,13 @@ export type SessionData = {
   } | null;
   export_job_id?: string | null;
   export_job_failures?: number;
-  export_total?: number | null;
-  export_pct_done?: string | null;
   last_export_check?: number;
   handle_not_available?: boolean | null;
   password_mismatch?: boolean | null;
   password_too_short?: boolean | null;
 
-  // state flags
+  // state flags, set a default on the object above when
+  // adding new ones
   hasBackup: boolean;
   exportedRepo: boolean;
   importedRepo: boolean;
@@ -66,7 +79,7 @@ export const initSession = (hostname?: string) =>
       secrets: ["toastytoast"],
       secure: true,
     },
-    async createData(data: SessionData, expires?: Date | number) {
+    async createData(data: Partial<SessionData>, expires?: Date | number) {
       const id = `sid:${crypto.randomUUID()}`;
       const ttl = computeTtlSeconds(expires, SESSION_TTL_SECONDS);
       await redisSet(sessionKey(id), ttl, JSON.stringify(data ?? {}));
@@ -79,16 +92,19 @@ export const initSession = (hostname?: string) =>
       if (!raw) return null;
 
       try {
-        return JSON.parse(raw) as SessionData;
+        const parsed = JSON.parse(raw) as Partial<SessionData>;
+        return {
+          ...SESSION_BOOLEAN_DEFAULTS,
+          ...parsed,
+        };
       } catch {
         // Corrupt payload, drop it
         return null;
       }
     },
-    async updateData(id: string, data: SessionData, expires?: Date | number) {
+    async updateData(id: string, data: Partial<SessionData>, expires?: Date | number) {
       const ttl = computeTtlSeconds(expires, SESSION_TTL_SECONDS);
       await redisSet(sessionKey(id), ttl, JSON.stringify(data ?? {}));
-      return id;
     },
     async deleteData(id: string) {
       if (!id) return;
