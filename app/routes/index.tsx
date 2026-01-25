@@ -87,43 +87,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
-
-  // TODO: why can't we replace with session.data???
-  const state: SessionData = {
-    do_journey: session.get("do_journey"),
-    handle_origin: session.get("handle_origin"),
-    handle_dest: session.get("handle_dest"),
-    pds_dest: session.get("pds_dest"),
-    pds_origin: session.get("pds_origin"),
-    token_origin: session.get("token_origin"),
-    token_dest: session.get("token_dest"),
-    plc_hostname: session.get("plc_hostname"),
-    did: session.get("did"),
-    inviteCode: session.get("inviteCode"),
-    email: session.get("email"),
-    user_recover_key: session.get("user_recover_key"),
-    require_2fa_code: session.get("require_2fa_code") ?? false,
-    export_job_failures: session.get("export_job_failures"),
-    export_job_id: session.get("export_job_id"),
-    export_total: null,
-    export_pct_done: null,
-    last_export_check: session.get("last_export_check"),
-    handle_not_available: session.get("handle_not_available"),
-    password_mismatch: session.get("password_mismatch"),
-    password_too_short: session.get("password_too_short"),
-
-    // state flags
-    hasBackup: session.get("hasBackup") ?? false,
-    exportedRepo: session.get("exportedRepo") ?? false,
-    importedRepo: session.get("importedRepo") ?? false,
-    exportedBlobs: session.get("exportedBlobs") ?? false,
-    importedBlobs: session.get("importedBlobs") ?? false,
-    migratedPrefs: session.get("migratedPrefs") ?? false,
-    requestedPlcToken: session.get("requestedPlcToken") ?? false,
-    originDeactivated: session.get("originDeactivated") ?? false,
-    destActivated: session.get("destActivated") ?? false,
-    migratedPlc: session.get("migratedPlc") ?? false,
-  };
+  const state = session.data as SessionData;
 
   try {
     const stage = getStage(state);
