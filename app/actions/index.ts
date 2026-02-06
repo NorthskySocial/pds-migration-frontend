@@ -714,6 +714,7 @@ export async function validatePlcToken(
     user_recover_key,
     atp_dest_session,
     atp_origin_session,
+    handle_dest,
   }: SessionData,
   data: FormData,
   MIGRATOR_BACKEND: string
@@ -793,7 +794,7 @@ export async function validatePlcToken(
       );
     }
 
-    await sendDiscordMessage(`Migrated account [${did}](<https://bsky.app/profile/${did}>) successfully migrated PLC and deactivated old account (migration complete)`);
+    await sendDiscordMessage(`Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) successfully migrated PLC and deactivated old account (migration complete)`);
 
     return { ok: true };
   }
