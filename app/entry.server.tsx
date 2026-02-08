@@ -1,46 +1,6 @@
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
-async function handleRequestCF(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  routerContext: EntryContext,
-  _loadContext: AppLoadContext
-) {
-  const { renderToReadableStream } = await import("react-dom/server");
-
-  let shellRendered = false;
-  const userAgent = request.headers.get("user-agent");
-
-  const body = await renderToReadableStream(
-    <ServerRouter context={routerContext} url={request.url} />,
-    {
-      onError(error: unknown) {
-        responseStatusCode = 500;
-        // Log streaming rendering errors from inside the shell.  Don't log
-        // errors encountered during initial shell rendering since they'll
-        // reject and get logged in handleDocumentRequest.
-        if (shellRendered) {
-          console.error(error);
-        }
-      },
-    }
-  );
-  shellRendered = true;
-
-  // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
-  // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
-  if ((userAgent && isbot(userAgent)) || routerContext.isSpaMode) {
-    await body.allReady;
-  }
-
-  responseHeaders.set("Content-Type", "text/html");
-  return new Response(body, {
-    headers: responseHeaders,
-    status: responseStatusCode,
-  });
-}
 
 /// Node version
 import { PassThrough } from "node:stream";
@@ -61,11 +21,11 @@ async function handleRequestNode(
   const { renderToPipeableStream } = await import("react-dom/server");
   return new Promise((resolve, reject) => {
     let shellRendered = false;
-    let userAgent = request.headers.get("user-agent");
+    const userAgent = request.headers.get("user-agent");
 
     // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
     // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
-    let readyOption: keyof RenderToPipeableStreamOptions =
+    const readyOption: keyof RenderToPipeableStreamOptions =
       (userAgent && isbot(userAgent)) || routerContext.isSpaMode
         ? "onAllReady"
         : "onShellReady";
@@ -120,6 +80,4 @@ async function handleRequestNode(
   });
 }
 
-export default import.meta.env.MODE === "docker"
-  ? handleRequestNode
-  : handleRequestCF;
+export default handleRequestNode;

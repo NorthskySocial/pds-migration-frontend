@@ -72,7 +72,7 @@ export const initSession = (hostname?: string) =>
   createSessionStorage<SessionData, SessionFlashData>({
     cookie: {
       name: "__session",
-      domain: hostname, // @TODO get from context
+      domain: hostname,
       httpOnly: true,
       maxAge: SESSION_TTL_SECONDS, // in seconds (1 day)
       path: "/",

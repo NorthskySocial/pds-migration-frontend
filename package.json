@@ -23,7 +23,6 @@
     "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/museomoderno": "^5.2.9",
     "@NorthskySocial/northwoods-ui": "^0.1.0",
-    "@react-router/cloudflare": "^7.13.0",
     "@react-router/node": "^7.13.0",
     "@react-router/serve": "^7.13.0",
     "@scure/bip39": "^2.0.1",
@@ -48,7 +47,6 @@
   },
   "devDependencies": {
     "@atproto/dev-env": "^0.3.205",
-    "@cloudflare/vite-plugin": "^1.17.1",
     "@eslint/js": "^9.39.1",
     "@react-router/dev": "^7.13.0",
     "@types/jest": "^30.0.0",
