@@ -15,7 +15,6 @@ A React Router + Vite application for guiding users through migrating a Bluesky/
 Key entry points and configs:
 - Vite config: `vite.config.ts`
 - React Router config: `react-router.config.ts` (SSR enabled)
-- Wrangler config (env vars, environments): `wrangler.toml`
 - Dockerfile for the frontend: `Dockerfile`
 - Docker Compose for multi-service local stack: `docker-compose.yaml`
 - Docker Compose for front-end connected to Production services: `docker-compose.prod.yaml`
@@ -80,7 +79,6 @@ There are two Docker entry points:
   docker build --secret id=npmrc,src=.npmrc -t migration-fe:latest .
   docker run --rm -p 5173:5173 --env-file ./.env migration-fe:latest
   ```
-  - The `.env` can define variables analogous to those in `wrangler.toml` if your app reads them in dev. If unsure, pass PDS/PLC via URL params as used in tests.
 
 2) Full stack via Docker Compose (`docker-compose.yaml`)
 - Services:
