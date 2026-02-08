@@ -77,7 +77,7 @@ export const initSession = (hostname?: string) =>
       maxAge: SESSION_TTL_SECONDS, // in seconds (1 day)
       path: "/",
       sameSite: "strict",
-      secrets: ["toastytoast"],
+      secrets: [process.env?.SESSION_SECRET ?? "toastytoast"],
       secure: true,
     },
     async createData(data: Partial<SessionData>, expires?: Date | number) {
