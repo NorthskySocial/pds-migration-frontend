@@ -176,7 +176,8 @@ Where to see logs:
 - Docker: use `docker logs` or `docker-compose logs` to view container logs. Ensure `VITE_LOG_LEVEL` is set appropriately.
 
 ## License
-- TODO: Add a `LICENSE` file and specify the project license here.
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ## Maintainers/Contributing
 - TODO: Add maintainers list, contribution guidelines, and code of conduct if applicable.
