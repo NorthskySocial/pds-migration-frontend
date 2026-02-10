@@ -165,6 +165,9 @@ export const processState = async (
           session.set("did", did);
           session.set("atp_origin_session", atp_origin_session);
 
+          // At this point, we no longer need the origin password
+          session.set("password_origin", undefined);
+
           const did_exists_in_dest = await checkIfDidExistsInDest(
             did,
             session.get("pds_dest") ?? "https://northsky.social",
@@ -396,6 +399,9 @@ export const processState = async (
           session.set("token_origin", token_origin);
           session.set("did", did);
           session.set("atp_origin_session", atp_origin_session);
+
+          // At this point, we no longer need the origin password
+          session.set("password_origin", undefined);
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
             session.set("require_2fa_code", true);

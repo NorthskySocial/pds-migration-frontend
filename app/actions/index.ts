@@ -107,9 +107,6 @@ export async function loginOrigin({
 
   return {
     did,
-    pds_origin,
-    handle_origin,
-    password_origin,
     token_origin,
     email,
     atp_origin_session: origin_agent.session,
