@@ -49,6 +49,7 @@ Key entry points and configs:
 - `MIGRATOR_BACKEND` – URL of the migrator API (default local: `http://localhost:9090`)
 - `DEBUG` – Debug namespace for logging (default: `migration-fe`)
 - `HOSTNAME` – Public hostname for this app (used in staging/prod)
+- `SESSION_SECRET` – Secret key for signing session cookies (required in production)
 
 Notes:
 - The end-to-end test passes `destination` and `plc` as URL parameters when opening the app during the flow. You can do the same to point to custom PDS/PLC endpoints for manual testing.
