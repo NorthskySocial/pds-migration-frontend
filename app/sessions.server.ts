@@ -2,7 +2,7 @@ import { createSessionStorage } from "react-router";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet, redisDel } from "./util/redis";
 
-const SESSION_TTL_SECONDS = 60 * 60 * 24; // 1 day
+const SESSION_TTL_SECONDS = 60 * 60 * 4; // 4 hours
 
 const SESSION_BOOLEAN_DEFAULTS = {
   hasBackup: false,
