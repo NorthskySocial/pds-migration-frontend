@@ -27,6 +27,8 @@ Key entry points and configs:
   - Rust toolchain if you want to run the ARM64 backend locally via Cargo (see scripts)
   - A modern Chromium/Chrome installation for Puppeteer tests (Jest + Puppeteer)
 
+Rename `.npmrc.example` to `.npmrc`.
+
 ## Getting Started (local dev)
 1. Install dependencies:
    ```bash
