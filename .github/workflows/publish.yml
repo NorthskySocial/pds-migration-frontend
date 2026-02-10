@@ -81,45 +81,13 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up kubectl (staging)
-        uses: azure/setup-kubectl@v4
+      - name: Trigger staging deployment via webhook
+        uses: peter-evans/repository-dispatch@v4
         with:
-          version: "latest"
-
-      - name: Configure kubectl
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_STAGING }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
-
-      - name: Reset TTL job
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          kubectl delete job pr-$PR_NUMBER-ttl --ignore-not-found=true -n staging
-
-      - name: Create new TTL job
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          envsubst < .github/k8s/ttl-job.yaml | kubectl apply -f -
-
-      - name: Get new UID
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          JOB_UID=$(kubectl get job pr-$PR_NUMBER-ttl -o jsonpath='{.metadata.uid}')
-          echo "JOB_UID=$JOB_UID" >> $GITHUB_ENV
-
-      - name: Apply manifests
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          JOB_UID: ${{ env.JOB_UID }}
-        run: |
-          envsubst < .github/k8s/staging-deployment.yaml | kubectl apply -f -
+          token: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
+          repository: ${{ secrets.DEPLOYMENT_WEBHOOK_REPOSITORY }}
+          event-type: deploy-migration-fe-preview
+          client-payload: '{"pr_number": "${{ github.event.pull_request.number }}"}'
 
       - name: Compute preview URL
         env:
@@ -134,8 +102,8 @@ jobs:
           echo "DEPLOY_TIME=$DEPLOY_TIME" >> $GITHUB_ENV
           echo "DEPLOY_TIME_PT=$DEPLOY_TIME_PT" >> $GITHUB_ENV
 
-      - name: Wait for 1 minute to allow deployment to stabilize
-        run: sleep 60s
+      - name: Wait for 2 minutes to allow deployment to complete
+        run: sleep 120s
 
       - name: Update PR comment with preview link
         env:
