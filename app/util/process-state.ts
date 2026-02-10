@@ -139,11 +139,12 @@ export const processState = async (
         if (is2faAttempt) {
           pds_origin = session.get("pds_origin") ?? pds_origin;
           handle_origin = session.get("handle_origin") ?? handle_origin;
-          password_origin =
-            session.get("password_origin") ?? password_origin;
+          password_origin = session.get("password_origin") ?? password_origin;
 
           console.log("User session retrieved from first sign-in attempt, handle: ", handle_origin);
         } else {
+          console.log("User session before update, handle: ", session.get("handle_origin") ?? "not set");
+
           session.set("pds_origin", pds_origin);
           session.set("handle_origin", handle_origin);
           session.set("password_origin", password_origin);
