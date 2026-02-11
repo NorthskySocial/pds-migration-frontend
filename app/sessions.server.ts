@@ -64,8 +64,11 @@ export type SessionData = {
   require_2fa_code: boolean;
 };
 
+export type ErrorType = "Expected" | "Unexpected";
+
 export type SessionFlashData = {
   error?: string;
+  errorType?: ErrorType;
 };
 
 export const initSession = (hostname?: string) =>
