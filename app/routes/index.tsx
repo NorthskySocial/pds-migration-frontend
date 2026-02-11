@@ -64,7 +64,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     stage = getStage(state);
   } catch (e) {
     logger.error("error in index action");
-    console.log(e);
+    console.log(e, e instanceof BaseAppError ? e.errorType : "Not BaseAppError");
     if (e instanceof BaseAppError) {
       session.flash("error", e.message);
       session.flash("errorType", e.errorType);
