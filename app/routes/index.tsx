@@ -11,6 +11,7 @@ import {
   getSession,
   commitSession,
   type SessionData,
+  type ErrorType,
 } from "../sessions.server";
 import { Layout } from "~/components/layout";
 import { Suspense } from "react";
@@ -21,6 +22,7 @@ import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
 import { logger } from "~/util/logger";
+import { BaseAppError } from "~/errors";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -63,8 +65,12 @@ export async function action({ request, context }: Route.ActionArgs) {
   } catch (e) {
     logger.error("error in index action");
     console.log(e);
-    if (e instanceof Error) {
+    if (e instanceof BaseAppError) {
       session.flash("error", e.message);
+      session.flash("errorType", e.errorType);
+    } else if (e instanceof Error) {
+      session.flash("error", e.message);
+      session.flash("errorType", "Unexpected");
     }
   }
 
@@ -83,14 +89,17 @@ export async function action({ request, context }: Route.ActionArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const state = session.data as SessionData;
+  const supportFormUrl = process.env?.SUPPORT_FORM_URL;
 
   try {
     const stage = getStage(state);
     return data(
       {
         error: session.get("error"),
+        errorType: session.get("errorType"),
         stage,
         state,
+        supportFormUrl,
       },
       {
         headers: {
@@ -103,8 +112,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     return data(
       {
         error: (e as Error).message,
+        errorType: "Unexpected" as ErrorType,
         stage: STAGES.FAILED,
         state,
+        supportFormUrl,
       },
       {
         headers: {
@@ -116,14 +127,14 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { error, state, stage = STAGES.INVITE_CODE } = loaderData;
+  const { error, errorType, state, stage = STAGES.INVITE_CODE, supportFormUrl } = loaderData;
   const fetcher = useFetcher();
 
   const Stage = SCREENS[stage];
 
   return (
     <Layout>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && <ErrorMessage errorType={errorType} supportFormUrl={supportFormUrl}>{error}</ErrorMessage>}
       <Suspense fallback={<Loading />}>
         {fetcher.state !== "idle" ? (
           <Loading />

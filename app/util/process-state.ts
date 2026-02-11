@@ -186,6 +186,7 @@ export const processState = async (
               "error",
               "Please check your email for your login code and enter it below"
             );
+            session.flash("errorType", "Expected");
             break;
           }
 
@@ -410,6 +411,7 @@ export const processState = async (
               "error",
               "Please check your email for your login code and enter it below"
             );
+            session.flash("errorType", "Expected");
             break;
           }
           throw e;
