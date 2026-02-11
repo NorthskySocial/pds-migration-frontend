@@ -81,6 +81,9 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
       - name: Trigger staging deployment via webhook
         uses: peter-evans/repository-dispatch@v4
         with:
