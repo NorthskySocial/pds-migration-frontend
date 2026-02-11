@@ -27,8 +27,6 @@ describe("account migration tool", () => {
         dbPostgresSchema: "account_migration",
         pds: {
           devMode: true,
-          // hostname: PDS_ORIGIN_HOSTNAME,
-          // port: PDS_ORIGIN_PORT,
         },
       });
 
@@ -39,24 +37,9 @@ describe("account migration tool", () => {
         devMode: true,
         didPlcUrl: originNetwork.plc.url,
         inviteRequired: true,
-        // hostname: PDS_DEST_HOSTNAME,
-        // port: PDS_DEST_PORT,
       });
 
       mockNetworkUtilities(destPds);
-
-      // const origin_config: ProxyOptions = {
-      //   from: `${originNetwork.pds.url}:${originNetwork.pds.port}`,
-      //   to: PDS_ORIGIN_HOSTNAME,
-      // };
-
-      // const dest_config: ProxyOptions = {
-      //   from: `${destPds.url}:${destPds.port}`,
-      //   to: PDS_DEST_HOSTNAME,
-      // };
-
-      // startProxy(origin_config);
-      // startProxy(dest_config);
 
       sc = originNetwork.getSeedClient();
 
@@ -68,7 +51,6 @@ describe("account migration tool", () => {
       });
 
       await originNetwork.processAll();
-      // sampleKey = (await Secp256k1Keypair.create()).did();
 
       // Catch emails for use in tests
       _origSendMail = mailer.transporter.sendMail;

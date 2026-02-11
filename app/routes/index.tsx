@@ -31,8 +31,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     session.set(
       "pds_dest",
       search.get("destination") ??
-        process?.env?.PDS_HOSTNAME ??
-        context.cloudflare.env.PDS_HOSTNAME
+        process?.env?.PDS_HOSTNAME
     );
   }
 
@@ -41,7 +40,6 @@ export async function action({ request, context }: Route.ActionArgs) {
       "plc_hostname",
       search.get("plc") ??
         process?.env?.PLC_HOSTNAME ??
-        context.cloudflare.env.PLC_HOSTNAME ??
         "https://plc.directory"
     );
   }
@@ -56,8 +54,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   let stage = STAGES.INVITE_CODE;
 
   try {
-    const migratorBackend =
-      process?.env?.MIGRATOR_BACKEND ?? context.cloudflare.env.MIGRATOR_BACKEND;
+    const migratorBackend = process?.env?.MIGRATOR_BACKEND;
+    if (!migratorBackend) {
+      throw new Error("MIGRATOR_BACKEND environment variable is not set");
+    }
     const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
   } catch (e) {
@@ -71,11 +71,6 @@ export async function action({ request, context }: Route.ActionArgs) {
   logger.debug("action: ", stage);
 
   return redirect(
-    // stage === STAGES.DONE
-    //   ? "/success"
-    //   : stage === STAGES.FAILED
-    //     ? "/failed"
-    //     : "/",
     "/",
     {
       headers: {
@@ -91,19 +86,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   try {
     const stage = getStage(state);
-    logger.debug(
-      stage,
-      {
-        ...session.data,
-        token_origin: "<HIDDEN>",
-        token_dest: "<HIDDEN>",
-      },
-      {
-        ...state,
-        token_dest: "<HIDDEN>",
-        token_origin: "<HIDDEN>",
-      }
-    );
     return data(
       {
         error: session.get("error"),

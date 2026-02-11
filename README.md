@@ -9,14 +9,12 @@ A React Router + Vite application for guiding users through migrating a Bluesky/
 - Runtime targets:
   - Local dev server (`react-router dev`)
   - Node SSR server for the built app (`react-router-serve`)
-  - Cloudflare Workers (via `@react-router/cloudflare` and `wrangler`) for deployment
+  - Docker container used for production deployment
 - Package manager: npm (lockfile present)
 
 Key entry points and configs:
-- Vite config: `vite.config.ts` (SSR build uses `./workers/app.ts` as input)
+- Vite config: `vite.config.ts`
 - React Router config: `react-router.config.ts` (SSR enabled)
-- Cloudflare Worker entry: `workers/app.ts`
-- Wrangler config (env vars, environments): `wrangler.toml`
 - Dockerfile for the frontend: `Dockerfile`
 - Docker Compose for multi-service local stack: `docker-compose.yaml`
 - Docker Compose for front-end connected to Production services: `docker-compose.prod.yaml`
@@ -28,7 +26,8 @@ Key entry points and configs:
   - Docker (for running the migrator image and optional services)
   - Rust toolchain if you want to run the ARM64 backend locally via Cargo (see scripts)
   - A modern Chromium/Chrome installation for Puppeteer tests (Jest + Puppeteer)
-  - Cloudflare Wrangler CLI if deploying to Workers: `npm i -g wrangler`
+
+Rename `.npmrc.example` to `.npmrc`.
 
 ## Getting Started (local dev)
 1. Install dependencies:
@@ -46,19 +45,13 @@ Key entry points and configs:
    - The app will be available on http://localhost:5173 (the Dockerfile also exposes this port).
 
 ### Environment variables (local)
-Environment variables are primarily defined in `wrangler.toml` for Worker environments. For local `npm run dev`, the app also accepts parameters via query string (see tests), but you can mirror the same variables in your environment when needed.
 
-Defined in `wrangler.toml`:
 - `PDS_HOSTNAME` – URL for the (origin/destination) PDS when appropriate (default local: `http://localhost:5577`)
 - `PLC_HOSTNAME` – URL for the PLC service (default local: `http://localhost:5555`)
 - `MIGRATOR_BACKEND` – URL of the migrator API (default local: `http://localhost:9090`)
 - `DEBUG` – Debug namespace for logging (default: `migration-fe`)
 - `HOSTNAME` – Public hostname for this app (used in staging/prod)
-
-Environments in `wrangler.toml`:
-- `[vars]` – local defaults
-- `[env.staging.vars]` – staging values
-- `[env.production.vars]` – production values
+- `SESSION_SECRET` – Secret key for signing session cookies (required in production)
 
 Notes:
 - The end-to-end test passes `destination` and `plc` as URL parameters when opening the app during the flow. You can do the same to point to custom PDS/PLC endpoints for manual testing.
@@ -70,7 +63,7 @@ Defined in `package.json`:
 - `npm run dev:test` – Start dev server in test mode
 - `npm run build` – Build app (SSR + client)
 - `npm start` – Serve the built app with `react-router-serve ./build/server/index.js`
-- `npm run typecheck` – Generate worker types (`wrangler types`), React Router types (`react-router typegen`), and run `tsc`
+- `npm run typecheck` – Generate React Router types (`react-router typegen`), and run `tsc`
 - `npm run test` – Full E2E test flow: concurrently runs test env bootstrap, dev server (test mode), and backend via Docker
 - `npm run test:arm64` – Same as above, but runs the backend via Cargo (ARM64-friendly)
 - `npm run test:env` – Bootstrap the test environment via `tsx bin/testenv.ts`
@@ -89,7 +82,6 @@ There are two Docker entry points:
   docker build --secret id=npmrc,src=.npmrc -t migration-fe:latest .
   docker run --rm -p 5173:5173 --env-file ./.env migration-fe:latest
   ```
-  - The `.env` can define variables analogous to those in `wrangler.toml` if your app reads them in dev. If unsure, pass PDS/PLC via URL params as used in tests.
 
 2) Full stack via Docker Compose (`docker-compose.yaml`)
 - Services:
@@ -139,7 +131,6 @@ Note:
 
 ## Project Structure
 - `app/` – React Router routes, screens, and app code (SSR by default)
-- `workers/` – Cloudflare Worker entry (`app.ts`) and related worker code
 - `public/` – Static assets served by the client
 - `test/` – End-to-end tests (Jest + Puppeteer)
 - `pds-migration/` – Migration backend (Docker/Cargo workspace)
@@ -147,17 +138,14 @@ Note:
 - Config files:
   - `vite.config.ts` – Vite build/dev configuration
   - `react-router.config.ts` – React Router SSR and feature flags
-  - `wrangler.toml` – Cloudflare Workers configuration and environment variables
   - `jest.config.js` / `jest-puppeteer.config.js` – Testing configuration
   - `tsconfig*.json` – TypeScript configurations
   - `eslint.config.js` – ESLint configuration
   - `docker-compose.yaml` / `Dockerfile` – Containerization for dev and integration
 
 ## Deployment
-- Cloudflare Workers: The project includes `wrangler.toml` and uses `@react-router/cloudflare`, suggesting deployment as a Worker with SSR.
-  - TODO: Add explicit `wrangler` commands (e.g., `wrangler deploy`) and any necessary `wrangler.toml` updates for KV, D1, queues, or bindings if used in the future.
-  - TODO: Document how environment variables map in staging vs production and DNS/hostnames setup.
-- Node SSR: You can also host the built app using `npm start` which serves `./build/server/index.js`.
+- Docker image: You can build a production image using the provided `Dockerfile` and deploy it to your hosting provider. The image runs the app in production mode. You can take a look at the `docker-compose.prod.yaml` for an example of running the frontend connected to production services, including expected environment variables. An image is also published to Docker Hub as `northskysocial/migration-fe:main`.
+- Node SSR: You can  host the built app using `npm start` which serves `./build/server/index.js`.
 
 ## Troubleshooting
 - Type generation: If types are missing after dependency changes, run `npm run typecheck`.
@@ -175,15 +163,15 @@ The app uses a simple environment-driven logger (`app/util/logger.ts`) that supp
     - Examples:
       - Local dev: create a `.env` with `VITE_LOG_LEVEL=debug`
       - Docker: `docker run --env-file ./.env -e VITE_LOG_LEVEL=debug ...`
-  - Cloudflare Workers: `wrangler.toml` may set `DEBUG`. Any truthy value (other than `false`/`0`) enables `debug` level. You can also set `VITE_LOG_LEVEL` if desired.
 
 Where to see logs:
 - Browser/client: open DevTools Console to see `logger.log/info/debug/error` output.
 - SSR (local dev): server logs print to your terminal running `npm run dev`.
-- Cloudflare Workers: run `wrangler dev` or `wrangler tail` to stream Worker logs. Ensure `DEBUG` or `VITE_LOG_LEVEL` enables the desired level.
+- Docker: use `docker logs` or `docker-compose logs` to view container logs. Ensure `VITE_LOG_LEVEL` is set appropriately.
 
 ## License
-- TODO: Add a `LICENSE` file and specify the project license here.
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
 ## Maintainers/Contributing
 - TODO: Add maintainers list, contribution guidelines, and code of conduct if applicable.

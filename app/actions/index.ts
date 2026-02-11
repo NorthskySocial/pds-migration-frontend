@@ -107,9 +107,6 @@ export async function loginOrigin({
 
   return {
     did,
-    pds_origin,
-    handle_origin,
-    password_origin,
     token_origin,
     email,
     atp_origin_session: origin_agent.session,
@@ -367,11 +364,6 @@ export async function exportRepo(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  // //Disable checks if we're in dev mode
-  // if (import.meta.env.DEV) {
-  //   return { ok: true };
-  // }
-
   if (!pds_origin || !did) {
     throw new MigrationError(
       "Unable to resolve original account; please login again."
@@ -415,12 +407,6 @@ export async function importRepo(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  // // This breaks during local tests so return early if Vite in dev mode
-  // if (import.meta.env.DEV) {
-  //   logger.log("Ignoring importRepo during tests");
-  //   return { ok: true };
-  // }
-
   if (!pds_dest || !did) {
     throw new MigrationError(
       "Unable to resolve new account; please contact support."
@@ -466,11 +452,6 @@ export async function exportBlobs(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  // //Disable checks if we're in dev mode
-  // if (import.meta.env.DEV) {
-  //   return { ok: true };
-  // }
-
   if (!pds_origin || !pds_dest || !did) {
     throw new MigrationError(
       "Unable to resolve original account; please login again."
@@ -536,10 +517,6 @@ export async function uploadBlobs(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  // if (import.meta.env.DEV) {
-  //   logger.log("Not uploading blobs because this is a test");
-  //   return { ok: true };
-  // }
   if (!pds_dest || !did) {
     throw new MigrationError(
       "Unable to resolve original account; please login again."
@@ -583,11 +560,6 @@ export async function migratePreferences(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  // if (import.meta.env.DEV) {
-  //   logger.log("Not uploading blobs because this is a test");
-  //   return { ok: true };
-  // }
-
   if (!pds_origin || !pds_dest || !did) {
     throw new MigrationError("Not able to migrate preferences");
   }
@@ -629,10 +601,6 @@ export async function requestPlcToken(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
-  // if (import.meta.env.DEV) {
-  //   logger.log("Skipping PLC because we're testing");
-  //   return { ok: true };
-  // }
   if (!pds_origin || !did) {
     throw new MigrationError(
       "Not able to request PLC token due to invalid credentials"

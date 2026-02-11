@@ -44,7 +44,6 @@ process.on("SIGINT", async function () {
 });
 
 await originNetwork.processAll();
-// sampleKey = (await Secp256k1Keypair.create()).did();
 
 // Catch emails for use in tests
 const _origSendMail = mailer.transporter.sendMail;
