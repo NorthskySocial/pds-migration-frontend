@@ -367,6 +367,10 @@ export const processState = async (
       case STAGES.ACTIVATE_DEST:
       case STAGES.DEACTIVATE_ORIGIN:
       case STAGES.MIGRATE_PLC: {
+        if (state.migratedPlc) {
+          break;
+        }
+
         const { ok } = await validatePlcToken(state, data, migratorBackend);
         if (ok) {
           session.set("destActivated", ok);
