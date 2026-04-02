@@ -65,6 +65,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
             <Field required label="Bluesky password">
               <PasswordInput autoComplete="password" name="bsky-password" />
             </Field>
+            <Text>⚠️ Do not use an app password. An app password usually looks like this: xxxx-xxxx-xxxx-xxxx.</Text>
           </>
         )}
         <HStack>
