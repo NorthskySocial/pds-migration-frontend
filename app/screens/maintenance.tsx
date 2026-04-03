@@ -33,6 +33,7 @@ export default function MaintenanceScreen({ supportFormUrl }: ScreenProps) {
           alt="A clock by artist Katie Tightpussy"
           src={clock_art}
           className="katie-clock"
+          style={{ maxWidth: "50%" }}
         />
 
         <Text fontSize="md" textAlign={"center"}>
