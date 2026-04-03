@@ -28,6 +28,7 @@ export type ScreenProps = {
   state: SessionData;
   stage?: STAGES;
   error?: string;
+  supportFormUrl?: string;
 };
 
 export const stageInfo = {

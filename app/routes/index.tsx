@@ -161,7 +161,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         {fetcher.state !== "idle" ? (
           <Loading />
         ) : (
-          <Stage stage={stage} state={state} error={error} />
+          <Stage stage={stage} state={state} error={error} supportFormUrl={supportFormUrl} />
         )}
       </Suspense>
     </Layout>

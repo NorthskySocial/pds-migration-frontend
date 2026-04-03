@@ -1,10 +1,17 @@
 import { Heading, VStack, Text, Button } from "@chakra-ui/react";
 import clock_art from "../assets/KTPClock.gif";
 import { useEffect } from "react";
+import type { ScreenProps } from "~/util/stages";
 
-export default function MaintenanceScreen() {
+export default function MaintenanceScreen({ supportFormUrl }: ScreenProps) {
   const handleRefresh = () => {
     window.location.reload();
+  };
+
+  const handleSupportClick = () => {
+    if (supportFormUrl) {
+      window.open(supportFormUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   // auto-refresh every minute
@@ -41,9 +48,19 @@ export default function MaintenanceScreen() {
           seconds.
         </Text>
 
+        <Text fontSize="md" textAlign={"center"}>
+          If it has been more than an hour and you're still seeing this message,
+          please use the button below to contact support.
+        </Text>
+
         <Button width="100%" onClick={handleRefresh}>
           Refresh
         </Button>
+        {supportFormUrl && (
+          <Button width="100%" onClick={handleSupportClick}>
+            Contact Support
+          </Button>
+        )}
       </VStack>
     </VStack>
   );
