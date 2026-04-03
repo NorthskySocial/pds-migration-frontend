@@ -26,7 +26,7 @@ export default function MaintenanceScreen() {
         alignItems={"center"}
       >
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
-          The Migration Tool is temporarily unavailable!
+          The Migration Tool is temporarily unavailable
         </Heading>
 
         <img
@@ -36,7 +36,7 @@ export default function MaintenanceScreen() {
         />
 
         <Text fontSize="md" textAlign={"center"}>
-          The migration tool is currently undergoing maintenance. Please wait a
+          The Northsky PDS is currently undergoing maintenance. Please wait a
           few minutes and try again. This page will automatically refresh in 60
           seconds.
         </Text>
