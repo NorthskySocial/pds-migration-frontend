@@ -8,6 +8,68 @@ import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
+import { redisGet, redisSet } from "~/util/redis";
+
+const HEALTH_CHECK_CACHE_KEY = "pds:health";
+const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
+const HEALTH_CHECK_TIMEOUT_MS = 2500;
+
+/**
+ * Check if the destination PDS is reachable and healthy.
+ * Results are cached in Redis for 10 seconds to avoid excessive requests.
+ * @returns true if PDS is healthy, false if unreachable or returning 500
+ */
+export async function checkPdsHealth(): Promise<boolean> {
+  const pdsHostname = process?.env?.PDS_HOSTNAME;
+
+  if (!pdsHostname) {
+    logger.error("PDS_HOSTNAME not configured, skipping health check");
+    return true;
+  }
+
+  // cache check
+  try {
+    const cached = await redisGet(HEALTH_CHECK_CACHE_KEY);
+    if (cached !== null) {
+      return cached === "true";
+    }
+  } catch (error) {
+    logger.debug("Failed to read health check from Redis cache", error);
+  }
+
+  // cache miss
+  try {
+    const healthUrl = new URL("/xrpc/_health", pdsHostname).toString();
+    const response = await fetch(healthUrl, {
+      method: "GET",
+      signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS),
+    });
+
+    const healthy = response.ok;
+
+    try {
+      await redisSet(HEALTH_CHECK_CACHE_KEY, HEALTH_CHECK_CACHE_TTL_SECONDS, String(healthy));
+    } catch (error) {
+      logger.debug("Failed to cache health check result in Redis", error);
+    }
+
+    if (!healthy) {
+      logger.error(`PDS health check failed with status ${response.status}`);
+    }
+
+    return healthy;
+  } catch (error) {
+    logger.error("PDS health check failed due to network error", error);
+
+    try {
+      await redisSet(HEALTH_CHECK_CACHE_KEY, HEALTH_CHECK_CACHE_TTL_SECONDS, "false");
+    } catch (cacheError) {
+      logger.debug("Failed to cache health check result in Redis", cacheError);
+    }
+
+    return false;
+  }
+}
 
 /**
  * Resume AtpAgent's session. Automatically refreshes the session if needed.

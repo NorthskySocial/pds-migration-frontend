@@ -23,6 +23,7 @@ import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
 import { logger } from "~/util/logger";
 import { BaseAppError } from "~/errors";
+import { checkPdsHealth } from "~/actions";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -90,6 +91,23 @@ export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const state = session.data as SessionData;
   const supportFormUrl = process.env?.SUPPORT_FORM_URL;
+
+  if (!await checkPdsHealth()) {
+    return data(
+      {
+        error: undefined,
+        errorType: undefined,
+        stage: STAGES.MAINTENANCE,
+        state,
+        supportFormUrl,
+      },
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
+  }
 
   try {
     const stage = getStage(state);
