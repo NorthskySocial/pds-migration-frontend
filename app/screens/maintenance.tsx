@@ -25,13 +25,6 @@ export default function MaintenanceScreen({ supportFormUrl }: ScreenProps) {
 
   return (
     <VStack mb="5" width="100%">
-      <VStack
-        margin="0 auto"
-        maxWidth={"350px"}
-        height={"70vh"}
-        justifyContent={"space-evenly"}
-        alignItems={"center"}
-      >
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           The Migration Tool is temporarily unavailable
         </Heading>
@@ -61,7 +54,6 @@ export default function MaintenanceScreen({ supportFormUrl }: ScreenProps) {
             Contact Support
           </Button>
         )}
-      </VStack>
     </VStack>
   );
 }
