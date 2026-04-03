@@ -92,7 +92,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   const state = session.data as SessionData;
   const supportFormUrl = process.env?.SUPPORT_FORM_URL;
 
-  if (!await checkPdsHealth()) {
+  const forceMaintenance = new URL(request.url)
+    .searchParams
+    .get("force_maintenance") === "true";
+
+  if (forceMaintenance || !(await checkPdsHealth())) {
     return data(
       {
         error: undefined,
