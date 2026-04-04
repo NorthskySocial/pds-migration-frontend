@@ -11,9 +11,11 @@ export const DoneMigration = lazy(() => import("./done-migration"));
 export const FailedMigration = lazy(() => import("./failed-migration"));
 export const AddRotationKey = lazy(() => import("./add-rotation-key.client"));
 export const ResumeMigration = lazy(() => import("./migration-resume"));
+export const Maintenance = lazy(() => import("./maintenance"));
 
 export const SCREENS = {
   [STAGES.INVITE_CODE]: Intro,
+  [STAGES.MAINTENANCE]: Maintenance,
   [STAGES.BACKUP_NOTICE]: EncourageBackup,
   [STAGES.ORIGIN_PDS_LOGIN]: OriginLogin,
   [STAGES.GENERATE_RECOVERY_KEY]: AddRotationKey,

@@ -21,16 +21,23 @@ export enum STAGES {
   MIGRATE_PLC = "MIGRATE_PLC",
   DONE = "DONE",
   FAILED = "FAILED",
+  MAINTENANCE = "MAINTENANCE",
 }
 
 export type ScreenProps = {
   state: SessionData;
   stage?: STAGES;
   error?: string;
+  supportFormUrl?: string;
 };
 
 export const stageInfo = {
   [STAGES.INVITE_CODE]: { stageIdx: -1, stageTitle: "", stageDescription: "" },
+  [STAGES.MAINTENANCE]: {
+    stageIdx: -1,
+    stageTitle: "Maintenance",
+    stageDescription: "The migration tool is temporarily unavailable",
+  },
   [STAGES.BACKUP_NOTICE]: {
     stageIdx: -1,
     stageTitle: "",

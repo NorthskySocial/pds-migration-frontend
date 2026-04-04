@@ -23,6 +23,7 @@ import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
 import { logger } from "~/util/logger";
 import { BaseAppError } from "~/errors";
+import { checkPdsHealth } from "~/actions";
 
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
@@ -91,6 +92,27 @@ export async function loader({ request }: Route.LoaderArgs) {
   const state = session.data as SessionData;
   const supportFormUrl = process.env?.SUPPORT_FORM_URL;
 
+  const forceMaintenance = new URL(request.url)
+    .searchParams
+    .get("force_maintenance") === "true";
+
+  if (forceMaintenance || !(await checkPdsHealth())) {
+    return data(
+      {
+        error: undefined,
+        errorType: undefined,
+        stage: STAGES.MAINTENANCE,
+        state,
+        supportFormUrl,
+      },
+      {
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
+      }
+    );
+  }
+
   try {
     const stage = getStage(state);
     return data(
@@ -139,7 +161,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         {fetcher.state !== "idle" ? (
           <Loading />
         ) : (
-          <Stage stage={stage} state={state} error={error} />
+          <Stage stage={stage} state={state} error={error} supportFormUrl={supportFormUrl} />
         )}
       </Suspense>
     </Layout>
