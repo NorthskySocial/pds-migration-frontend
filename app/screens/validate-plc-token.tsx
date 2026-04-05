@@ -31,18 +31,30 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
         </Field>
 
         <HStack>
-          <Button type="submit" name="submit" margin={"0 auto"}>
-            Continue
+          <Button
+            type="submit"
+            name="submit"
+            margin={"0 auto"}
+            disabled={fetcher.state !== "idle"}
+          >
+            {fetcher.state !== "idle" ? "Processing..." : "Continue"}
           </Button>
           <Button
             name="resend_plc_token"
             type="submit"
             value="resend"
             formNoValidate
+            disabled={fetcher.state !== "idle"}
           >
             Resend Code
           </Button>
-          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+          <Button
+            name="cancel"
+            type="submit"
+            value={"cancel"}
+            formNoValidate
+            disabled={fetcher.state !== "idle"}
+          >
             Cancel
           </Button>
         </HStack>
