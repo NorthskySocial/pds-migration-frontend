@@ -16,6 +16,69 @@ export default function MigrationProgressScreen({
 
   const { stageIdx, stageTitle, stageDescription } = stageInfo[stage];
 
+  const getSecondaryProgressBar = () => {
+    switch (stage) {
+      case STAGES.EXPORT_BLOBS_ORIGIN:
+        if (!export_progress) return null;
+
+        return (
+            <Progress.Root
+              width="100%"
+              max={export_progress?.total}
+              min={0}
+              value={
+                export_progress.invalid_blobs + export_progress.successful_blobs
+              }
+              striped
+              animated
+            >
+              <Progress.Label mb="2">
+                Export blobs progress
+                {
+                  stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
+                  export_progress.successful_blobs && export_progress.total &&
+                  ` (${export_progress.successful_blobs}/${export_progress.total} blobs exported)`
+                }
+                <InfoTip>We're collecting your blobs from your origin PDS, this might take a while</InfoTip>
+              </Progress.Label>
+              <Progress.Track>
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
+          );
+      case STAGES.IMPORT_BLOBS_DEST:
+        if (!upload_progress) return null;
+
+        return (
+            <Progress.Root
+              width="100%"
+              max={upload_progress?.total}
+              min={0}
+              value={
+                upload_progress.invalid_blobs + upload_progress.successful_blobs
+              }
+              striped
+              animated
+            >
+              <Progress.Label mb="2">
+                Import blobs progress
+                {
+                  stage === STAGES.IMPORT_BLOBS_DEST && upload_progress &&
+                  upload_progress.successful_blobs && upload_progress.total &&
+                  ` (${upload_progress.successful_blobs}/${upload_progress.total} blobs imported)`
+                }
+                <InfoTip>We're importing your blobs to the Northsky PDS, this might take a while</InfoTip>
+              </Progress.Label>
+              <Progress.Track>
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
+          );
+    }
+
+    return null;
+  };
+
   // Immediately submit to go to next step
   useEffect(() => {
     (async () => {
@@ -63,48 +126,6 @@ export default function MigrationProgressScreen({
             className="katie-clock"
           />
 
-          {stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress && (
-            <Progress.Root
-              width="100%"
-              max={export_progress?.total}
-              min={0}
-              value={
-                export_progress.invalid_blobs + export_progress.successful_blobs
-              }
-              striped
-              animated
-            >
-              <Progress.Label mb="2">
-                Export blobs progress
-                <InfoTip>This might take a while</InfoTip>
-              </Progress.Label>
-              <Progress.Track>
-                <Progress.Range />
-              </Progress.Track>
-            </Progress.Root>
-          )}
-
-          {stage === STAGES.IMPORT_BLOBS_DEST && upload_progress && (
-            <Progress.Root
-              width="100%"
-              max={upload_progress?.total}
-              min={0}
-              value={
-                upload_progress.invalid_blobs + upload_progress.successful_blobs
-              }
-              striped
-              animated
-            >
-              <Progress.Label mb="2">
-                Upload blobs progress
-                <InfoTip>This might take a while</InfoTip>
-              </Progress.Label>
-              <Progress.Track>
-                <Progress.Range />
-              </Progress.Track>
-            </Progress.Root>
-          )}
-
           <Progress.Root
             width="100%"
             max={6}
@@ -114,23 +135,15 @@ export default function MigrationProgressScreen({
             animated
           >
             <Progress.Label mb="2">
-              {stageTitle}
-              {
-                stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
-                export_progress.successful_blobs && export_progress.total &&
-                ` (${export_progress.successful_blobs}/${export_progress.total} blobs exported)`
-              }
-              {
-                stage === STAGES.IMPORT_BLOBS_DEST && upload_progress &&
-                upload_progress.successful_blobs && upload_progress.total &&
-                ` (${upload_progress.successful_blobs}/${upload_progress.total} blobs uploaded)`
-              }
+              Migration stage {stageIdx + 1} of 6: {stageTitle}
               <InfoTip>{stageDescription}</InfoTip>
             </Progress.Label>
             <Progress.Track>
               <Progress.Range />
             </Progress.Track>
           </Progress.Root>
+
+          {getSecondaryProgressBar()}
 
           {error && (
             <>
