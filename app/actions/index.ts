@@ -581,7 +581,7 @@ export async function uploadBlobs(
 ) {
   if (!pds_dest || !did) {
     throw new MigrationError(
-      "Unable to resolve original account; please login again."
+      "Unable to resolve destination account; please login again."
     );
   }
 
@@ -595,21 +595,44 @@ export async function uploadBlobs(
   );
 
   // upload blobs
-  const res = await f(`${MIGRATOR_BACKEND}/upload-blobs`, {
-    method: "post",
-    body: JSON.stringify({
-      pds_host: pds_dest,
-      did,
-      token: destResumeAgent?.session?.accessJwt,
-    }),
-    headers: { "Content-Type": "application/json" },
-  });
+  try {
+    const res = await f(`${MIGRATOR_BACKEND}/jobs/upload-blobs`, {
+      method: "post",
+      body: JSON.stringify({
+        pds_host: pds_dest,
+        did,
+        token: destResumeAgent?.session?.accessJwt,
+      }),
+      headers: { "Content-Type": "application/json" },
+    });
 
-  if (!res.ok) {
-    throw new MigrationError((await res.json<{ message: string }>()).message);
+    if (!res.ok) {
+      let errorMessage: string;
+      try {
+        const errorData = await res.json<{ message: string }>();
+        errorMessage = errorData.message;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (jsonError) {
+        // If JSON parsing fails, try to get text content
+        try {
+          const textContent = await res.text();
+          errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (textError) {
+          // If both fail, use the status information
+          errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+        }
+      }
+      logger.error(`Upload blobs failed: ${errorMessage}`);
+      throw new MigrationError(errorMessage);
+    }
+
+    const { job_id } = await res.json<{ job_id: string }>();
+
+    return { job_id };
+  } catch (e) {
+    console.error(e);
   }
-
-  return { ok: true };
 }
 
 export async function migratePreferences(

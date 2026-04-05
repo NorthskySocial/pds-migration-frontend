@@ -42,9 +42,17 @@ export type SessionData = {
     successful_blobs: number;
     total: number;
   } | null;
+  upload_progress?: {
+    invalid_blobs: number;
+    successful_blobs: number;
+    total: number;
+  } | null;
   export_job_id?: string | null;
+  import_job_id?: string | null;
   export_job_failures?: number;
+  import_job_failures?: number;
   last_export_check?: number;
+  last_import_check?: number;
   handle_not_available?: boolean | null;
   password_mismatch?: boolean | null;
   password_too_short?: boolean | null;
