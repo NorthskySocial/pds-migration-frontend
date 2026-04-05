@@ -18,7 +18,7 @@ const SESSION_BOOLEAN_DEFAULTS = {
   require_2fa_code: false,
 } as const;
 
-export type BlobJobProgress = {
+export type BackgroundJobProgress = {
   invalid_blobs: number;
   successful_blobs: number;
   total: number;
@@ -43,8 +43,8 @@ export type SessionData = {
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-  export_progress?: BlobJobProgress | null;
-  upload_progress?: BlobJobProgress | null;
+  export_progress?: BackgroundJobProgress | null;
+  upload_progress?: BackgroundJobProgress | null;
   export_job_id?: string | null;
   import_job_id?: string | null;
   export_job_failures?: number;

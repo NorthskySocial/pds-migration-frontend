@@ -18,10 +18,8 @@ import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
-import f from "./mock-fetch";
 import { sendDiscordMessage } from "./discord";
-
-const JOB_CHECK_INTERVAL_MS = 2000;
+import { processBlobJobStage } from "./jobs";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -245,188 +243,27 @@ export const processState = async (
         break;
       }
       case STAGES.EXPORT_BLOBS_ORIGIN: {
-        if (!state.export_job_id) {
-          const { job_id } = (await exportBlobs(state, migratorBackend)) ?? {};
-          if (job_id) {
-            session.set("export_job_id", job_id);
-            state.export_job_id = job_id;
-          }
-        } else if (state.export_job_id && !state.exportedBlobs) {
-          const now = Date.now();
-          const lastCheck = state.last_export_check ?? 0;
-
-          // Only check job status if enough time has passed
-          if (now - lastCheck >= JOB_CHECK_INTERVAL_MS) {
-            console.log(
-              "Checking export job status (last attempt, now): ",
-              lastCheck,
-              now
-            );
-
-            // NOTE: this try-catch is added to handle transient errors on the back-end,
-            // but a more robust solution should be added in the future (maybe centrally on `f`)
-            try {
-              const res = await f(
-                `${migratorBackend}/jobs/${state.export_job_id}`
-              );
-              console.log("Response status from job status check: ", res.status);
-
-              // I don't know where to put this def
-              const { progress, status } = (await res.json()) as {
-                created_at: number;
-                finished_at: number;
-                id: string;
-                kind: "ExportBlobs";
-                progress: {
-                  invalid_blob_ids: string[];
-                  invalid_blobs: number;
-                  successful_blobs: number;
-                  successful_blobs_ids: string[];
-                  total: number;
-                };
-                started_at: number;
-                status: string;
-              };
-
-              console.log(
-                "Export blobs (progress, status, status code): ",
-                `${progress.successful_blobs}/${progress.total} (invalid: ${progress.invalid_blobs})`,
-                status,
-                res.status
-              );
-
-              state.export_progress = {
-                invalid_blobs: progress.invalid_blobs,
-                successful_blobs: progress.successful_blobs,
-                total: progress.total,
-              };
-              session.set("export_progress", state.export_progress);
-              session.set("last_export_check", now);
-              session.set("export_job_failures", 0);
-
-              if (status.toLowerCase() === "success") {
-                session.set("exportedBlobs", true);
-              }
-            } catch (error) {
-              const statusCode = error instanceof Response ? error.status : null;
-              const isSyntaxError = error instanceof SyntaxError;
-              console.log("Error checking export blobs job status: ", error);
-
-              if (statusCode === 404 || statusCode === 429 || isSyntaxError) {
-                const failureCount = (state.export_job_failures ?? 0) + 1;
-
-                session.set("export_job_failures", failureCount);
-
-                console.log(
-                  `Export blobs job check failed with status ${statusCode} and error ${error}. Failure count: ${failureCount}`
-                );
-
-                if (failureCount >= 3) {
-                  throw new Error(
-                    `Export blobs job check failed with status ${statusCode} (error: ${error}) after ${failureCount} consecutive attempts`
-                  );
-                }
-
-                break;
-              }
-
-              throw error;
-            }
-          }
-        }
-
+        await processBlobJobStage(state, session, {
+          jobIdKey: "export_job_id",
+          progressKey: "export_progress",
+          lastCheckKey: "last_export_check",
+          failuresKey: "export_job_failures",
+          completedKey: "exportedBlobs",
+          jobKind: "ExportBlobs",
+          startJob: exportBlobs,
+        }, migratorBackend);
         break;
       }
       case STAGES.IMPORT_BLOBS_DEST: {
-        if (!state.import_job_id) {
-          const { job_id } = (await uploadBlobs(state, migratorBackend)) ?? {};
-          if (job_id) {
-            session.set("import_job_id", job_id);
-            state.import_job_id = job_id;
-          }
-        } else if (state.import_job_id && !state.importedBlobs) {
-          const now = Date.now();
-          const lastCheck = state.last_import_check ?? 0;
-
-          // Only check job status if enough time has passed
-          if (now - lastCheck >= JOB_CHECK_INTERVAL_MS) {
-            console.log(
-              "Checking import blobs job status (last attempt, now): ",
-              lastCheck,
-              now
-            );
-
-            // NOTE: this try-catch is added to handle transient errors on the back-end,
-            // but a more robust solution should be added in the future (maybe centrally on `f`)
-            try {
-              const res = await f(
-                `${migratorBackend}/jobs/${state.import_job_id}`
-              );
-              console.log("Response status from job status check: ", res.status);
-
-              // I don't know where to put this def
-              const { progress, status } = (await res.json()) as {
-                created_at: number;
-                finished_at: number;
-                id: string;
-                kind: "UploadBlobs";
-                progress: {
-                  invalid_blob_ids: string[];
-                  invalid_blobs: number;
-                  successful_blobs: number;
-                  successful_blobs_ids: string[];
-                  total: number;
-                };
-                started_at: number;
-                status: string;
-              };
-
-              console.log(
-                "Upload blobs (progress, status, status code): ",
-                `${progress.successful_blobs}/${progress.total} (invalid: ${progress.invalid_blobs})`,
-                status,
-                res.status
-              );
-
-              state.upload_progress = {
-                invalid_blobs: progress.invalid_blobs,
-                successful_blobs: progress.successful_blobs,
-                total: progress.total,
-              };
-              session.set("upload_progress", state.upload_progress);
-              session.set("last_import_check", now);
-              session.set("import_job_failures", 0);
-
-              if (status.toLowerCase() === "success") {
-                session.set("importedBlobs", true);
-              }
-            } catch (error) {
-              const statusCode = error instanceof Response ? error.status : null;
-              const isSyntaxError = error instanceof SyntaxError;
-              console.log("Error checking import blobs job status: ", error);
-
-              if (statusCode === 404 || statusCode === 429 || isSyntaxError) {
-                const failureCount = (state.import_job_failures ?? 0) + 1;
-
-                session.set("import_job_failures", failureCount);
-
-                console.log(
-                  `Import blobs job check failed with status ${statusCode} and error ${error}. Failure count: ${failureCount}`
-                );
-
-                if (failureCount >= 3) {
-                  throw new Error(
-                    `Import blobs job check failed with status ${statusCode} (error: ${error}) after ${failureCount} consecutive attempts`
-                  );
-                }
-
-                break;
-              }
-
-              throw error;
-            }
-          }
-        }
+        await processBlobJobStage(state, session, {
+          jobIdKey: "import_job_id",
+          progressKey: "upload_progress",
+          lastCheckKey: "last_import_check",
+          failuresKey: "import_job_failures",
+          completedKey: "importedBlobs",
+          jobKind: "UploadBlobs",
+          startJob: uploadBlobs,
+        }, migratorBackend);
         break;
       }
       case STAGES.MIGRATE_PREFERENCES: {
