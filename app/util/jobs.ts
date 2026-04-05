@@ -110,6 +110,10 @@ const checkBackgroundJobStatus = async (
 
     if (status.toLowerCase() === "success") {
       session.set(config.completedKey, true);
+
+      if (config.jobKind === "UploadBlobs" && progress.invalid_blobs > 0) {
+        session.set("had_invalid_blobs", true);
+      }
     }
   } catch (error) {
     const statusCode = error instanceof Response ? error.status : null;

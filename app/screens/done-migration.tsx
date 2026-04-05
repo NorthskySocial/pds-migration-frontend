@@ -1,4 +1,4 @@
-import { Heading, Text, Button, VStack, Image, List, Link, Center, Grid, GridItem } from "@chakra-ui/react";
+import { Heading, Text, Button, VStack, Image, List, Link, Center, Grid, GridItem, Alert } from "@chakra-ui/react";
 import nsChooseProvider from "../assets/nsChooseProvider.png";
 import nsSignIn from "../assets/nsSignIn.png";
 import nsSignIn2 from "../assets/nsSignIn2.png";
@@ -27,6 +27,19 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
                   <Text fontSize="md" textAlign={"justify"}>
                     Your account has been migrated to Northsky successfully.
                   </Text>
+                  {state.had_invalid_blobs && (
+                    <Alert.Root status="info" mt="3" mb="3">
+                      <Alert.Indicator />
+                      <Alert.Content>
+                        <Alert.Title>Some media blobs could not be transferred</Alert.Title>
+                        <Alert.Description>
+                          Your migration still completed successfully and you can follow the steps below to access your account.
+                          You can also go back to the home screen to recover missing media by selecting "Import missing blobs",
+                          and we will attempt to import the missing blobs again.
+                        </Alert.Description>
+                      </Alert.Content>
+                    </Alert.Root>
+                  )}
                   <Text fontSize="md" textAlign={"justify"}>
                     When you next log in, Bluesky will prompt you to re-activate your
                     old account.
