@@ -18,6 +18,12 @@ const SESSION_BOOLEAN_DEFAULTS = {
   require_2fa_code: false,
 } as const;
 
+export type BlobJobProgress = {
+  invalid_blobs: number;
+  successful_blobs: number;
+  total: number;
+};
+
 export type SessionData = {
   do_journey?: "create" | "migrate" | "resume" | "fail";
   handle_origin?: string;
@@ -37,16 +43,8 @@ export type SessionData = {
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-  export_progress?: {
-    invalid_blobs: number;
-    successful_blobs: number;
-    total: number;
-  } | null;
-  upload_progress?: {
-    invalid_blobs: number;
-    successful_blobs: number;
-    total: number;
-  } | null;
+  export_progress?: BlobJobProgress | null;
+  upload_progress?: BlobJobProgress | null;
   export_job_id?: string | null;
   import_job_id?: string | null;
   export_job_failures?: number;
