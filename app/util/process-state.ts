@@ -19,7 +19,7 @@ import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 import { sendDiscordMessage } from "./discord";
-import { processBlobJobStage } from "./jobs";
+import { processBackgroundJobStage } from "./jobs";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -245,7 +245,7 @@ export const processState = async (
       }
       case STAGES.MISSING_BLOBS_EXPORT:
       case STAGES.EXPORT_BLOBS_ORIGIN: {
-        await processBlobJobStage(state, session, {
+        await processBackgroundJobStage(state, session, {
           jobIdKey: "export_job_id",
           progressKey: "export_progress",
           lastCheckKey: "last_export_check",
@@ -258,7 +258,7 @@ export const processState = async (
       }
       case STAGES.MISSING_BLOBS_IMPORT:
       case STAGES.IMPORT_BLOBS_DEST: {
-        await processBlobJobStage(state, session, {
+        await processBackgroundJobStage(state, session, {
           jobIdKey: "import_job_id",
           progressKey: "upload_progress",
           lastCheckKey: "last_import_check",
