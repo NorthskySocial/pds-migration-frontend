@@ -33,11 +33,11 @@ export default function MigrationProgressScreen({
               animated
             >
               <Progress.Label mb="2">
-                Export blobs progress
+                Export progress:
                 {
                   stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
-                  export_progress.successful_blobs && export_progress.total &&
-                  ` (${export_progress.successful_blobs}/${export_progress.total} blobs exported)`
+                  export_progress.successful_blobs > 0 && export_progress.total > 0 &&
+                  ` ${export_progress.successful_blobs}/${export_progress.total} blobs`
                 }
                 <InfoTip>We're collecting your blobs from your origin PDS, this might take a while</InfoTip>
               </Progress.Label>
@@ -61,11 +61,11 @@ export default function MigrationProgressScreen({
               animated
             >
               <Progress.Label mb="2">
-                Import blobs progress
+                Import progress:
                 {
                   stage === STAGES.IMPORT_BLOBS_DEST && upload_progress &&
-                  upload_progress.successful_blobs && upload_progress.total &&
-                  ` (${upload_progress.successful_blobs}/${upload_progress.total} blobs imported)`
+                  upload_progress.successful_blobs > 0 && upload_progress.total > 0 &&
+                  ` ${upload_progress.successful_blobs}/${upload_progress.total} blobs`
                 }
                 <InfoTip>We're importing your blobs to the Northsky PDS, this might take a while</InfoTip>
               </Progress.Label>
@@ -79,7 +79,8 @@ export default function MigrationProgressScreen({
     return null;
   };
 
-  // Immediately submit to go to next step
+  // These stage are managed by the migrator app, so we trigger
+  // them automatically (every 1 second) to move to the next stage
   useEffect(() => {
     (async () => {
       if (
@@ -98,7 +99,7 @@ export default function MigrationProgressScreen({
           async () => {
             await fetcher.submit({}, { method: "post" });
           },
-          import.meta.env.DEV ? 500 : 0
+          1000
         );
       }
     })();
