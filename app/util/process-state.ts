@@ -19,6 +19,7 @@ import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 import f from "./mock-fetch";
+import { sendDiscordMessage } from "./discord";
 
 /**
  * Takes the form data, runs any side-effect actions,
@@ -432,6 +433,9 @@ export const processState = async (
 
         session.set("token_dest", token_dest);
         session.set("atp_dest_session", atp_dest_session);
+
+        const did = session.get("did") ?? "unknown DID";
+        await sendDiscordMessage(`Migration resumed for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) (migration in progress)`);
 
         break;
       }
