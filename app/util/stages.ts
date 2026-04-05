@@ -22,6 +22,10 @@ export enum STAGES {
   DONE = "DONE",
   FAILED = "FAILED",
   MAINTENANCE = "MAINTENANCE",
+  MISSING_BLOBS_LOGIN = "MISSING_BLOBS_LOGIN",
+  MISSING_BLOBS_EXPORT = "MISSING_BLOBS_EXPORT",
+  MISSING_BLOBS_IMPORT = "MISSING_BLOBS_IMPORT",
+  MISSING_BLOBS_DONE = "MISSING_BLOBS_DONE",
 }
 
 export type ScreenProps = {
@@ -102,9 +106,29 @@ export const stageInfo = {
     stageTitle: "Requesting PLC token...",
     stageDescription: "Almost done! Check your email!",
   },
-    [STAGES.RESUME_MIGRATION]: {
+  [STAGES.RESUME_MIGRATION]: {
     stageIdx: 8,
     stageTitle: "Resuming migration",
     stageDescription: "Let's resume your migration.",
+  },
+  [STAGES.MISSING_BLOBS_LOGIN]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
+  },
+  [STAGES.MISSING_BLOBS_EXPORT]: {
+    stageIdx: 0,
+    stageTitle: "Exporting missing blobs...",
+    stageDescription: "Finding and exporting blobs that need to be imported",
+  },
+  [STAGES.MISSING_BLOBS_IMPORT]: {
+    stageIdx: 1,
+    stageTitle: "Importing blobs...",
+    stageDescription: "Importing blobs to Northsky",
+  },
+  [STAGES.MISSING_BLOBS_DONE]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
   },
 };

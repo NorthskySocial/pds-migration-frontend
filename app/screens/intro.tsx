@@ -105,6 +105,9 @@ export default function IntroScreen({ state }: ScreenProps) {
           <Button formNoValidate width="100%" type="submit" name="resume" value="resume">
             Resume failed migration
           </Button>
+          <Button formNoValidate width="100%" type="submit" name="missing-blobs" value="missing-blobs">
+            Import missing blobs
+          </Button>
         </VStack>
       </VStack>
     </fetcher.Form>

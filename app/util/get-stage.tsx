@@ -140,6 +140,23 @@ export function getStage(session: SessionData): STAGES {
     return STAGES.DONE;
   }
 
+  // missing-blobs path
+  if (session.do_journey === "missing-blobs") {
+    if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
+      return STAGES.MISSING_BLOBS_LOGIN;
+    }
+
+    if (!session.exportedBlobs) {
+      return STAGES.MISSING_BLOBS_EXPORT;
+    }
+
+    if (!session.importedBlobs) {
+      return STAGES.MISSING_BLOBS_IMPORT;
+    }
+
+    return STAGES.MISSING_BLOBS_DONE;
+  }
+
   //safety return
   return STAGES.DONE;
 }

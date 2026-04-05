@@ -97,6 +97,7 @@ export const processState = async (
           (data.get("create") as "create" | null) ||
           (data.get("migrate") as "migrate" | null) ||
           (data.get("resume") as "resume" | null) ||
+          (data.get("missing-blobs") as "missing-blobs" | null) ||
           "resume";
         console.log("Do_journey " + state.do_journey);
         state.inviteCode = invite;
@@ -242,6 +243,7 @@ export const processState = async (
         }
         break;
       }
+      case STAGES.MISSING_BLOBS_EXPORT:
       case STAGES.EXPORT_BLOBS_ORIGIN: {
         await processBlobJobStage(state, session, {
           jobIdKey: "export_job_id",
@@ -254,6 +256,7 @@ export const processState = async (
         }, migratorBackend);
         break;
       }
+      case STAGES.MISSING_BLOBS_IMPORT:
       case STAGES.IMPORT_BLOBS_DEST: {
         await processBlobJobStage(state, session, {
           jobIdKey: "import_job_id",

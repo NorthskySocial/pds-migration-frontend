@@ -25,7 +25,7 @@ export type BackgroundJobProgress = {
 };
 
 export type SessionData = {
-  do_journey?: "create" | "migrate" | "resume" | "fail";
+  do_journey?: "create" | "migrate" | "resume" | "fail" | "missing-blobs";
   handle_origin?: string;
   handle_dest?: string;
   password_origin?: string;
