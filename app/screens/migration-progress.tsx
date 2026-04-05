@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 export default function MigrationProgressScreen({
   stage,
-  state: { export_progress },
+  state: { export_progress, upload_progress },
   error,
 }: ScreenProps) {
   const fetcher = useFetcher();
@@ -69,15 +69,34 @@ export default function MigrationProgressScreen({
               max={export_progress?.total}
               min={0}
               value={
-                (export_progress.invalid_blobs +
-                  export_progress.successful_blobs) /
-                export_progress.total
+                export_progress.invalid_blobs + export_progress.successful_blobs
               }
               striped
               animated
             >
               <Progress.Label mb="2">
                 Export blobs progress
+                <InfoTip>This might take a while</InfoTip>
+              </Progress.Label>
+              <Progress.Track>
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
+          )}
+
+          {stage === STAGES.IMPORT_BLOBS_DEST && upload_progress && (
+            <Progress.Root
+              width="100%"
+              max={upload_progress?.total}
+              min={0}
+              value={
+                upload_progress.invalid_blobs + upload_progress.successful_blobs
+              }
+              striped
+              animated
+            >
+              <Progress.Label mb="2">
+                Upload blobs progress
                 <InfoTip>This might take a while</InfoTip>
               </Progress.Label>
               <Progress.Track>
@@ -100,6 +119,11 @@ export default function MigrationProgressScreen({
                 stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
                 export_progress.successful_blobs && export_progress.total &&
                 ` (${export_progress.successful_blobs}/${export_progress.total} blobs exported)`
+              }
+              {
+                stage === STAGES.IMPORT_BLOBS_DEST && upload_progress &&
+                upload_progress.successful_blobs && upload_progress.total &&
+                ` (${upload_progress.successful_blobs}/${upload_progress.total} blobs uploaded)`
               }
               <InfoTip>{stageDescription}</InfoTip>
             </Progress.Label>
