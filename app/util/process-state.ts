@@ -79,6 +79,7 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
+    session.set("had_invalid_blobs", false);
 
     if (isResetResume) {
       // Shotcut to the resume screen
