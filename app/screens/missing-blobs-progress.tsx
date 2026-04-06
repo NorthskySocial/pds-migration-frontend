@@ -146,8 +146,8 @@ export default function MissingBlobsProgressScreen({
                 An error occurred while recovering your blobs. Please try again
                 or contact support if the problem persists.
               </Text>
-              <Button name="retry" type="submit" value="retry" mt="4">
-                Retry
+              <Button name="cancel" type="submit" value="cancel" mt="4">
+              Cancel
               </Button>
             </>
           )}
