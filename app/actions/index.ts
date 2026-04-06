@@ -722,7 +722,7 @@ export async function requestPlcToken(
   return { ok: true };
 }
 
-export async function resumeMigration({
+export async function loginDest({
   pds_dest,
   handle_dest,
   password_dest,

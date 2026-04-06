@@ -12,7 +12,7 @@ import {
   requestPlcToken,
   uploadBlobs,
   validatePlcToken,
-  resumeMigration,
+  loginDest,
 } from "~/actions";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
@@ -352,7 +352,7 @@ export const processState = async (
         // Save dest handle to form in case it's changed somehow
         session.set("handle_dest", handle_dest);
 
-        const { token_dest, atp_dest_session } = await resumeMigration({
+        const { token_dest, atp_dest_session } = await loginDest({
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,
           password_dest,
@@ -380,7 +380,7 @@ export const processState = async (
 
         session.set("handle_dest", handle_dest);
 
-        const { token_dest, atp_dest_session } = await resumeMigration({
+        const { token_dest, atp_dest_session } = await loginDest({
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,
           password_dest,
