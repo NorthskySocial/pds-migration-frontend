@@ -16,10 +16,17 @@ const SESSION_BOOLEAN_DEFAULTS = {
   destActivated: false,
   migratedPlc: false,
   require_2fa_code: false,
+  had_invalid_blobs: false,
 } as const;
 
+export type BackgroundJobProgress = {
+  invalid_blobs: number;
+  successful_blobs: number;
+  total: number;
+};
+
 export type SessionData = {
-  do_journey?: "create" | "migrate" | "resume" | "fail";
+  do_journey?: "create" | "migrate" | "resume" | "fail" | "missing-blobs";
   handle_origin?: string;
   handle_dest?: string;
   password_origin?: string;
@@ -37,16 +44,8 @@ export type SessionData = {
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-  export_progress?: {
-    invalid_blobs: number;
-    successful_blobs: number;
-    total: number;
-  } | null;
-  upload_progress?: {
-    invalid_blobs: number;
-    successful_blobs: number;
-    total: number;
-  } | null;
+  export_progress?: BackgroundJobProgress | null;
+  upload_progress?: BackgroundJobProgress | null;
   export_job_id?: string | null;
   import_job_id?: string | null;
   export_job_failures?: number;
@@ -70,6 +69,7 @@ export type SessionData = {
   destActivated: boolean;
   migratedPlc: boolean;
   require_2fa_code: boolean;
+  had_invalid_blobs: boolean;
 };
 
 export type ErrorType = "Expected" | "Unexpected";

@@ -17,7 +17,7 @@ const all = (...items: (string | boolean | undefined | null)[]) =>
  * @returns STAGES
  */
 export function getStage(session: SessionData): STAGES {
-  if (!(session.inviteCode || session.do_journey?.includes("resume"))) {
+  if (!(session.inviteCode || session.do_journey === "resume" || session.do_journey === "missing-blobs")) {
     return STAGES.INVITE_CODE;
   }
 
@@ -138,6 +138,23 @@ export function getStage(session: SessionData): STAGES {
       return STAGES.MIGRATE_PLC;
     }
     return STAGES.DONE;
+  }
+
+  // missing-blobs path
+  if (session.do_journey === "missing-blobs") {
+    if (!session.token_dest || !session.token_origin) {
+      return STAGES.MISSING_BLOBS_LOGIN;
+    }
+
+    if (!session.exportedBlobs) {
+      return STAGES.MISSING_BLOBS_EXPORT;
+    }
+
+    if (!session.importedBlobs) {
+      return STAGES.MISSING_BLOBS_IMPORT;
+    }
+
+    return STAGES.MISSING_BLOBS_DONE;
   }
 
   //safety return

@@ -1,4 +1,4 @@
-import { Heading, Text, Progress, VStack, Button } from "@chakra-ui/react";
+import { Heading, Text, Progress, VStack, Button, Alert } from "@chakra-ui/react";
 import clock_art from "../assets/KTPClock.gif";
 import { InfoTip } from "@/components/ui/toggle-tip";
 import type { ScreenProps } from "~/util/stages";
@@ -50,6 +50,7 @@ export default function MigrationProgressScreen({
         if (!upload_progress) return null;
 
         return (
+          <>
             <Progress.Root
               width="100%"
               max={upload_progress?.total}
@@ -73,6 +74,18 @@ export default function MigrationProgressScreen({
                 <Progress.Range />
               </Progress.Track>
             </Progress.Root>
+            {upload_progress.invalid_blobs > 0 && (
+              <Alert.Root status="warning" mt="3">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>Some media blobs could not be imported</Alert.Title>
+                  <Alert.Description>
+                    {upload_progress.invalid_blobs} blob(s) could not be transferred during the migration process. Don't worry, you can recover these later from the home screen!
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert.Root>
+            )}
+          </>
           );
     }
 
