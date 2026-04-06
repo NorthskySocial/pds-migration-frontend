@@ -304,6 +304,7 @@ export const processState = async (
         break;
       }
 
+      case STAGES.MISSING_BLOBS_LOGIN:
       case STAGES.RESUME_MIGRATION: {
         try {
           //Get origin, handle and password from form, immediately save to session
@@ -362,69 +363,14 @@ export const processState = async (
         session.set("atp_dest_session", atp_dest_session);
 
         const did = session.get("did") ?? "unknown DID";
-        await sendDiscordMessage(`Migration resumed for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) (migration in progress)`);
 
-        break;
-      }
+        const isMissingBlobsJourney = state.do_journey === "missing-blobs";
 
-      case STAGES.MISSING_BLOBS_LOGIN: {
-        try {
-          // Get origin credentials from form
-          const pds_origin =
-            (data.get("pds") as string) ?? "https://bsky.social";
-          session.set("pds_origin", pds_origin);
-
-          const handle_origin = data.get("bsky-handle") as string;
-          session.set("handle_origin", handle_origin);
-
-          const password_origin = (data.get("bsky-password") as string) ?? "";
-          session.set("password_origin", password_origin);
-
-          const { token_origin, email, did, atp_origin_session } =
-            await loginOrigin({
-              pds_origin,
-              handle_origin,
-              password_origin,
-              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
-            });
-
-          session.set("email", email);
-          session.set("token_origin", token_origin);
-          session.set("did", did);
-          session.set("atp_origin_session", atp_origin_session);
-
-          // At this point, we no longer need the origin password
-          session.set("password_origin", undefined);
-        } catch (e) {
-          if (e instanceof AuthFactorTokenRequiredError) {
-            session.set("require_2fa_code", true);
-            session.flash(
-              "error",
-              "Please check your email for your login code and enter it below"
-            );
-            session.flash("errorType", "Expected");
-            break;
-          }
-          throw e;
+        if (isMissingBlobsJourney) {
+          await sendDiscordMessage(`Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`);
+        } else {
+          await sendDiscordMessage(`Migration resumed for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) (migration in progress)`);
         }
-
-        // Get Northsky credentials from form
-        const handle_dest = data.get("northsky-handle") as string;
-        const password_dest = (data.get("northsky-password") as string) ?? "";
-
-        session.set("handle_dest", handle_dest);
-
-        const { token_dest, atp_dest_session } = await loginDest({
-          pds_dest: state.pds_dest ?? "https://northsky.social",
-          handle_dest,
-          password_dest,
-        });
-
-        session.set("token_dest", token_dest);
-        session.set("atp_dest_session", atp_dest_session);
-
-        const did = session.get("did") ?? "unknown DID";
-        await sendDiscordMessage(`Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`);
 
         break;
       }
