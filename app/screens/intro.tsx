@@ -95,7 +95,7 @@ export default function IntroScreen({ state }: ScreenProps) {
             </Checkbox>
           </VStack>
         </Box>
-        <VStack width="100%" gap={4}>
+        <VStack width="100%" gap={4} marginBottom={4}>
           <VStack width="100%" gap={2}>
             <Text fontSize="sm" color="fg.muted">If it's your first time here:</Text>
             <Button width="100%" type="submit" name="migrate" value="migrate">
@@ -107,14 +107,14 @@ export default function IntroScreen({ state }: ScreenProps) {
           </VStack>
 
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you started a migration and it failed:</Text>
+            <Text fontSize="sm" color="fg.muted">If you previously started a migration and it failed:</Text>
             <Button formNoValidate width="100%" type="submit" name="resume" value="resume">
               Resume failed migration
             </Button>
           </VStack>
 
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you migrated successfully but are missing blobs:</Text>
+            <Text fontSize="sm" color="fg.muted">If you migrated to Northsky successfully but are missing blobs:</Text>
             <Button formNoValidate width="100%" type="submit" name="missing-blobs" value="missing-blobs">
               Import missing blobs
             </Button>

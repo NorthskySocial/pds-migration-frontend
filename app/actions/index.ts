@@ -536,6 +536,7 @@ export async function exportBlobs(
         destination_token: destResumeAgent?.session?.accessJwt,
         origin: pds_origin,
         origin_token: originResumeAgent?.session?.accessJwt,
+        is_missing_blob_request: false,
       }),
       headers: { "Content-Type": "application/json" },
     });
