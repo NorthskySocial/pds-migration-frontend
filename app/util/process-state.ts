@@ -366,6 +366,37 @@ export const processState = async (
 
         break;
       }
+
+      case STAGES.MISSING_BLOBS_LOGIN: {
+        // Handle cancel button
+        if (data.get("cancel") === "cancel") {
+          session.set("do_journey", undefined);
+          break;
+        }
+
+        // Get Northsky credentials from form
+        const handle_dest = data.get("northsky-handle") as string;
+        const password_dest = (data.get("northsky-password") as string) ?? "";
+
+        session.set("handle_dest", handle_dest);
+
+        const { token_dest, atp_dest_session } = await resumeMigration({
+          pds_dest: state.pds_dest ?? "https://northsky.social",
+          handle_dest,
+          password_dest,
+        });
+
+        session.set("token_dest", token_dest);
+        session.set("atp_dest_session", atp_dest_session);
+
+        // Get the DID from the session
+        const did = atp_dest_session?.did;
+        if (did) {
+          session.set("did", did);
+        }
+
+        break;
+      }
     }
   }
 
