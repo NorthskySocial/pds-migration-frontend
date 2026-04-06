@@ -142,7 +142,7 @@ export function getStage(session: SessionData): STAGES {
 
   // missing-blobs path
   if (session.do_journey === "missing-blobs") {
-    if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
+    if (!session.token_dest || !session.token_origin) {
       return STAGES.MISSING_BLOBS_LOGIN;
     }
 

@@ -368,10 +368,44 @@ export const processState = async (
       }
 
       case STAGES.MISSING_BLOBS_LOGIN: {
-        // Handle cancel button
-        if (data.get("cancel") === "cancel") {
-          session.set("do_journey", undefined);
-          break;
+        try {
+          // Get origin credentials from form
+          const pds_origin =
+            (data.get("pds") as string) ?? "https://bsky.social";
+          session.set("pds_origin", pds_origin);
+
+          const handle_origin = data.get("bsky-handle") as string;
+          session.set("handle_origin", handle_origin);
+
+          const password_origin = (data.get("bsky-password") as string) ?? "";
+          session.set("password_origin", password_origin);
+
+          const { token_origin, email, did, atp_origin_session } =
+            await loginOrigin({
+              pds_origin,
+              handle_origin,
+              password_origin,
+              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+            });
+
+          session.set("email", email);
+          session.set("token_origin", token_origin);
+          session.set("did", did);
+          session.set("atp_origin_session", atp_origin_session);
+
+          // At this point, we no longer need the origin password
+          session.set("password_origin", undefined);
+        } catch (e) {
+          if (e instanceof AuthFactorTokenRequiredError) {
+            session.set("require_2fa_code", true);
+            session.flash(
+              "error",
+              "Please check your email for your login code and enter it below"
+            );
+            session.flash("errorType", "Expected");
+            break;
+          }
+          throw e;
         }
 
         // Get Northsky credentials from form
@@ -389,11 +423,8 @@ export const processState = async (
         session.set("token_dest", token_dest);
         session.set("atp_dest_session", atp_dest_session);
 
-        // Get the DID from the session
-        const did = atp_dest_session?.did;
-        if (did) {
-          session.set("did", did);
-        }
+        const did = session.get("did") ?? "unknown DID";
+        await sendDiscordMessage(`Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`);
 
         break;
       }
