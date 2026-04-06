@@ -521,19 +521,14 @@ export async function exportBlobs(
     );
   }
 
+  const { destResumeAgent, originResumeAgent } = await refreshAgents(
+    pds_dest,
+    atp_dest_session,
+    pds_origin,
+    atp_origin_session
+  );
+
   const isMissingBlobsJourney = do_journey === "missing-blobs";
-
-  let originResumeAgent: AtpAgent | null = null;
-  let destResumeAgent: AtpAgent | null = null;
-  if (isMissingBlobsJourney) {
-    ({ destResumeAgent, originResumeAgent } = await refreshAgents(
-      pds_dest,
-      atp_dest_session,
-      pds_origin,
-      atp_origin_session
-    ));
-  }
-
   try {
     const res = await f(`${MIGRATOR_BACKEND}/jobs/export-blobs`, {
       method: "post",
@@ -541,8 +536,8 @@ export async function exportBlobs(
         did,
         destination: pds_dest,
         destination_token: destResumeAgent?.session?.accessJwt,
-        origin: isMissingBlobsJourney ? pds_dest : pds_origin,
-        origin_token: isMissingBlobsJourney ? destResumeAgent?.session?.accessJwt : originResumeAgent?.session?.accessJwt,
+        origin: pds_origin,
+        origin_token: originResumeAgent?.session?.accessJwt,
         is_missing_blob_request: isMissingBlobsJourney,
       }),
       headers: { "Content-Type": "application/json" },
