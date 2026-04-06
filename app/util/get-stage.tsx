@@ -17,7 +17,7 @@ const all = (...items: (string | boolean | undefined | null)[]) =>
  * @returns STAGES
  */
 export function getStage(session: SessionData): STAGES {
-  if (!(session.inviteCode || session.do_journey?.includes("resume"))) {
+  if (!(session.inviteCode || session.do_journey === "resume" || session.do_journey === "missing-blobs")) {
     return STAGES.INVITE_CODE;
   }
 
