@@ -506,6 +506,7 @@ export async function importRepo(
 
 export async function exportBlobs(
   {
+    do_journey,
     pds_origin,
     pds_dest,
     did,
@@ -527,6 +528,7 @@ export async function exportBlobs(
     atp_origin_session
   );
 
+  const isMissingBlobsJourney = do_journey === "missing-blobs";
   try {
     const res = await f(`${MIGRATOR_BACKEND}/jobs/export-blobs`, {
       method: "post",
@@ -536,7 +538,7 @@ export async function exportBlobs(
         destination_token: destResumeAgent?.session?.accessJwt,
         origin: pds_origin,
         origin_token: originResumeAgent?.session?.accessJwt,
-        is_missing_blob_request: false,
+        is_missing_blob_request: isMissingBlobsJourney,
       }),
       headers: { "Content-Type": "application/json" },
     });
