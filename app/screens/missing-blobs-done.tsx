@@ -20,8 +20,8 @@ export default function MissingBlobsDoneScreen({ state }: ScreenProps) {
           You can now continue using Northsky as normal. All your images and
           media should be fully restored.
         </Text>
-        <Button type="submit" name="done" mt="6">
-          Done
+        <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+          Start Over
         </Button>
       </VStack>
     </fetcher.Form>
