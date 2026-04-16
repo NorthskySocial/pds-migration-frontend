@@ -96,7 +96,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     .searchParams
     .get("force_maintenance") === "true";
 
-  if (forceMaintenance || !(await checkPdsHealth())) {
+  const upstreamOutage = process.env?.UPSTREAM_OUTAGE === "true";
+
+  if (forceMaintenance || upstreamOutage || !(await checkPdsHealth())) {
     return data(
       {
         error: undefined,
@@ -104,6 +106,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         stage: STAGES.MAINTENANCE,
         state,
         supportFormUrl,
+        isUpstreamOutage: upstreamOutage,
       },
       {
         headers: {
@@ -122,6 +125,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         stage,
         state,
         supportFormUrl,
+        isUpstreamOutage: false,
       },
       {
         headers: {
@@ -138,6 +142,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         stage: STAGES.FAILED,
         state,
         supportFormUrl,
+        isUpstreamOutage: false,
       },
       {
         headers: {
@@ -149,7 +154,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { error, errorType, state, stage = STAGES.INVITE_CODE, supportFormUrl } = loaderData;
+  const { error, errorType, state, stage = STAGES.INVITE_CODE, supportFormUrl, isUpstreamOutage } = loaderData;
   const fetcher = useFetcher();
 
   const Stage = SCREENS[stage];
@@ -161,7 +166,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
         {fetcher.state !== "idle" ? (
           <Loading />
         ) : (
-          <Stage stage={stage} state={state} error={error} supportFormUrl={supportFormUrl} />
+          <Stage stage={stage} state={state} error={error} supportFormUrl={supportFormUrl} isUpstreamOutage={isUpstreamOutage} />
         )}
       </Suspense>
     </Layout>

@@ -33,6 +33,7 @@ export type ScreenProps = {
   stage?: STAGES;
   error?: string;
   supportFormUrl?: string;
+  isUpstreamOutage?: boolean;
 };
 
 export const stageInfo = {
