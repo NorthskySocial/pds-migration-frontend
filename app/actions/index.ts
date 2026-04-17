@@ -211,15 +211,15 @@ export async function createDestAccount(
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
-  const dest_hostname = '.northsky.social';
+  const handle_hostname = '.northsky.social';
 
   // Construct full handle. If we're in creation, we always append the northsky domain.
   // If the user did not enter a domain (no `.`), we'll complete it with `.northsky.social`
-  // (dest_hostname), otherwise assume it's a custom domain.
+  // (handle_hostname), otherwise assume it's a custom domain.
   let handle_dest = handle;
   if (is_creation_flow || !handle.includes(".")) {
     console.log(`No domain detected in handle (${handle}), appending .northsky.social`);
-    handle_dest = handle_dest.concat(dest_hostname);
+    handle_dest = handle_dest.concat(handle_hostname);
   }
 
   let handleIsAvailable = null;
