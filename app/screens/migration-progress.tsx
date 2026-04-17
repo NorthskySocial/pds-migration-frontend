@@ -149,7 +149,7 @@ export default function MigrationProgressScreen({
             animated
           >
             <Progress.Label mb="2">
-              Migration stage {stageIdx + 1} of 6: {stageTitle}
+              Migration stage {stageIdx + 1} of 8: {stageTitle}
               <InfoTip>{stageDescription}</InfoTip>
             </Progress.Label>
             <Progress.Track>
