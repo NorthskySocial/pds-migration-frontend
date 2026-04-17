@@ -211,15 +211,15 @@ export async function createDestAccount(
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
   const submitted = data.has("submit");
-  const dest_hostname = new URL(pds_dest!).host;
+  const handle_hostname = '.northsky.social';
 
   // Construct full handle. If we're in creation, we always append the northsky domain.
   // If the user did not enter a domain (no `.`), we'll complete it with `.northsky.social`
-  // (dest_hostname), otherwise assume it's a custom domain.
+  // (handle_hostname), otherwise assume it's a custom domain.
   let handle_dest = handle;
   if (is_creation_flow || !handle.includes(".")) {
     console.log(`No domain detected in handle (${handle}), appending .northsky.social`);
-    handle_dest = handle_dest.concat(`.${dest_hostname}`);
+    handle_dest = handle_dest.concat(handle_hostname);
   }
 
   let handleIsAvailable = null;
@@ -325,7 +325,7 @@ export async function createDestAccount(
 
     const serviceEndpoint: string = pds_origin;
 
-    const pds_dest_hostname: string = new URL(pds_dest!).host;
+    const pds_dest_hostname: string = 'northsky.social';
     const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname}`;
 
     // Generate service token

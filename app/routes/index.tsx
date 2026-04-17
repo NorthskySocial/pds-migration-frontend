@@ -25,7 +25,7 @@ import { logger } from "~/util/logger";
 import { BaseAppError } from "~/errors";
 import { checkPdsHealth } from "~/actions";
 
-export async function action({ request, context }: Route.ActionArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
@@ -90,6 +90,9 @@ export async function action({ request, context }: Route.ActionArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const state = session.data as SessionData;
+  const publicState = Object.fromEntries(
+    Object.entries(state).filter(([key]) => key !== "pds_dest")
+  ) as Omit<SessionData, "pds_dest">;
   const supportFormUrl = process.env?.SUPPORT_FORM_URL;
 
   const forceMaintenance = new URL(request.url)
@@ -104,7 +107,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         error: undefined,
         errorType: undefined,
         stage: STAGES.MAINTENANCE,
-        state,
+        state: publicState,
         supportFormUrl,
         isUpstreamOutage: upstreamOutage,
       },
@@ -123,7 +126,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         error: session.get("error"),
         errorType: session.get("errorType"),
         stage,
-        state,
+        state: publicState,
         supportFormUrl,
         isUpstreamOutage: false,
       },
@@ -140,7 +143,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         error: (e as Error).message,
         errorType: "Unexpected" as ErrorType,
         stage: STAGES.FAILED,
-        state,
+        state: publicState,
         supportFormUrl,
         isUpstreamOutage: false,
       },
