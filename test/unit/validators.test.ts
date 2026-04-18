@@ -2,6 +2,7 @@ import {
   isPasswordTooShort,
   doPasswordsMismatch,
   normalizeHandle,
+  all,
   MIN_PASSWORD_LENGTH,
   DEFAULT_HANDLE_DOMAIN,
 } from "~/util/validators";
@@ -100,6 +101,25 @@ describe("validators", () => {
 
     it("should handle empty handle", () => {
       expect(normalizeHandle("", true)).toBe(".northsky.social");
+    });
+  });
+
+  describe("all", () => {
+    it("should return true when all arguments are truthy", () => {
+      expect(all(true, true, true)).toBe(true);
+      expect(all("string", true, "another")).toBe(true);
+      expect(all("value")).toBe(true);
+    });
+
+    it("should return false when any argument is falsy", () => {
+      expect(all(true, false, true)).toBe(false);
+      expect(all(true, null, true)).toBe(false);
+      expect(all(true, undefined, true)).toBe(false);
+      expect(all(true, "", true)).toBe(false);
+    });
+
+    it("should return true for empty arguments", () => {
+      expect(all()).toBe(true);
     });
   });
 });

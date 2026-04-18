@@ -2,15 +2,7 @@
 
 import { type SessionData } from "~/sessions.server";
 import { STAGES } from "./stages";
-import { logger } from "./logger";
-
-/**
- * Returns true is all arguments are truthy.
- * @param items
- * @returns
- */
-const all = (...items: (string | boolean | undefined | null)[]) =>
-  items.every((i) => i);
+import { all } from "./validators";
 
 /**
  * Returns the correct stage based on session value availability.
@@ -23,9 +15,6 @@ export function getStage(session: SessionData): STAGES {
   }
 
   //Resume path
-
-  logger.withDid(session.did).debug("Do journey is " + session.do_journey);
-
   if (session.do_journey === "resume") {
     if (!session.token_dest || !session.token_origin) {
       return STAGES.RESUME_MIGRATION;

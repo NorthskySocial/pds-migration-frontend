@@ -56,6 +56,8 @@ export async function action({ request }: Route.ActionArgs) {
   const data = await request.formData();
   let stage = STAGES.INVITE_CODE;
 
+  const log = logger.withDid(session.get("did"));
+
   try {
     const migratorBackend = process?.env?.MIGRATOR_BACKEND;
     if (!migratorBackend) {
@@ -63,8 +65,10 @@ export async function action({ request }: Route.ActionArgs) {
     }
     const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
+    log.info(`New stage for journey (${session.get("do_journey")}): ${stage}`);
+
   } catch (e) {
-    logger.withDid(session.get("did")).error("error in index action", e, e instanceof BaseAppError ? e.errorType : "Not BaseAppError");
+    log.error("error in index action", e, e instanceof BaseAppError ? e.errorType : "Not BaseAppError");
     if (e instanceof BaseAppError) {
       session.flash("error", e.message);
       session.flash("errorType", e.errorType);
@@ -74,7 +78,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
   }
 
-  logger.debug("action: ", stage);
+  log.debug("action: ", stage);
 
   return redirect(
     "/",
@@ -118,8 +122,10 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   }
 
+  const log = logger.withDid(state.did);
   try {
     const stage = getStage(state);
+    log.info(`Loading data for journey (${session.get("do_journey")}): ${stage}`);
     return data(
       {
         error: session.get("error"),
@@ -136,7 +142,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       }
     );
   } catch (e) {
-    logger.withDid(state.did).error("Error in loader:", e, state);
+    log.error("Error in loader:", e, state);
     return data(
       {
         error: (e as Error).message,

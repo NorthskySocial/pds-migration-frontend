@@ -68,3 +68,14 @@ export function normalizeHandle(
 
   return normalizedHandle;
 }
+
+/**
+ * Returns true if all arguments are truthy.
+ * @param items - Values to check for truthiness
+ * @returns true if all items are truthy, false otherwise
+ */
+export function all(
+  ...items: (string | boolean | undefined | null)[]
+): boolean {
+  return items.every((i) => i);
+}
