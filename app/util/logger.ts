@@ -35,6 +35,9 @@ export const logger = {
   info: (...args: any[]) => {
     if (enabled("info")) console.info(...args);
   },
+  warn: (...args: any[]) => {
+    if (enabled("info")) console.warn(...args);
+  },
   error: (...args: any[]) => {
     if (enabled("error")) console.error(...args);
   },

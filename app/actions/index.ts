@@ -12,7 +12,7 @@ import { redisGet, redisSet } from "~/util/redis";
 
 const HEALTH_CHECK_CACHE_KEY = "pds:health";
 const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
-const HEALTH_CHECK_TIMEOUT_MS = 2500;
+const HEALTH_CHECK_TIMEOUT_MS = 5000;
 const HEALTH_CHECK_FAILURE_COUNT_KEY = "pds:health:failures";
 const HEALTH_CHECK_FAILURE_THRESHOLD = 4;
 const HEALTH_CHECK_FAILURE_TTL_SECONDS = 90;
@@ -66,7 +66,7 @@ export async function checkPdsHealth(): Promise<boolean> {
     logger.error(`PDS health check failed with status ${response.status}`);
     return await handleHealthCheckFailure();
   } catch (error) {
-    logger.error("PDS health check failed due to network error", error);
+    logger.warn("PDS health check failed due to network error", error);
     return await handleHealthCheckFailure();
   }
 }
