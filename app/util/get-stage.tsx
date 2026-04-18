@@ -2,6 +2,7 @@
 
 import { type SessionData } from "~/sessions.server";
 import { STAGES } from "./stages";
+import { logger } from "./logger";
 
 /**
  * Returns true is all arguments are truthy.
@@ -23,7 +24,7 @@ export function getStage(session: SessionData): STAGES {
 
   //Resume path
 
-  console.log("Do journey is " + session.do_journey);
+  logger.withDid(session.did).debug("Do journey is " + session.do_journey);
 
   if (session.do_journey === "resume") {
     if (!session.token_dest || !session.token_origin) {

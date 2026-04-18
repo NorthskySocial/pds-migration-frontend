@@ -20,6 +20,7 @@ import { STAGES } from "./stages";
 import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
 import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
+import { logger } from "./logger";
 
 /**
  * Handles origin PDS login with 2FA support.
@@ -39,7 +40,8 @@ const handleOriginLoginWith2FA = async (
   atp_origin_session: unknown;
 } | null> => {
   const is2faAttempt = session.get("require_2fa_code") ?? false;
-  console.log(`User attempting 2FA login for ${context}? ${is2faAttempt}`);
+  const log = logger.withDid(session.get("did"));
+  log.info(`User attempting 2FA login for ${context}? ${is2faAttempt}`);
 
   let pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
   let handle_origin = data.get("bsky-handle") as string;
@@ -50,19 +52,19 @@ const handleOriginLoginWith2FA = async (
     handle_origin = session.get("handle_origin") ?? handle_origin;
     password_origin = session.get("password_origin") ?? password_origin;
 
-    console.log("User session retrieved from first sign-in attempt, handle: ", handle_origin);
+    log.info("User session retrieved from first sign-in attempt, handle: ", handle_origin);
   } else {
-    console.log("User session before update, handle: ", session.get("handle_origin") ?? "not set");
+    log.info("User session before update, handle: ", session.get("handle_origin") ?? "not set");
 
     session.set("pds_origin", pds_origin);
     session.set("handle_origin", handle_origin);
     session.set("password_origin", password_origin);
 
-    console.log("User session saved from form, handle: ", handle_origin);
+    log.info("User session saved from form, handle: ", handle_origin);
   }
 
   try {
-    console.log(`Attempting to log in user to origin for ${context}. Handle: `, handle_origin);
+    log.info(`Attempting to log in user to origin for ${context}. Handle: `, handle_origin);
     const result = await loginOrigin({
       pds_origin,
       handle_origin,
@@ -80,10 +82,10 @@ const handleOriginLoginWith2FA = async (
 
     return result;
   } catch (e) {
-    console.log(`Error during origin login for ${context}: `, e);
+    log.error(`Error during origin login for ${context}: `, e);
 
     if (e instanceof AuthFactorTokenRequiredError) {
-      console.log("2FA code required for origin login, prompting user to enter 2FA code");
+      log.info("2FA code required for origin login, prompting user to enter 2FA code");
       session.set("require_2fa_code", true);
       session.flash(
         "error",
@@ -111,12 +113,13 @@ export const processState = async (
 ) => {
   const state = session.data as SessionData;
   const stage = getStage(state);
+  const log = logger.withDid(state.did);
 
   const isCancelling = data.get("cancel");
   const isResendingPlcToken = data.get("resend_plc_token");
   const isResetResume = data.get("reset-resume");
 
-  console.log(`On processState with stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
+  log.info(`On processState with stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
 
   if (isResendingPlcToken) {
     session.set("requestedPlcToken", false);
@@ -165,7 +168,7 @@ export const processState = async (
 
     return state;
   } else {
-    console.log("Processing stage: " + stage);
+    log.info("Processing stage: " + stage);
 
     switch (stage) {
       case STAGES.INVITE_CODE: {
@@ -176,7 +179,7 @@ export const processState = async (
           (data.get("resume") as "resume" | null) ||
           (data.get("missing-blobs") as "missing-blobs" | null) ||
           "resume";
-        console.log("Do_journey " + state.do_journey);
+        log.info("Do_journey " + state.do_journey);
         state.inviteCode = invite;
 
         session.set("inviteCode", state.inviteCode);
@@ -218,7 +221,7 @@ export const processState = async (
         );
         session.set("did_exists_in_dest", did_exists_in_dest);
 
-        console.log(`Origin login successful! DID ${did}, exists in destination PDS: ${did_exists_in_dest}`);
+        log.info(`Origin login successful! DID ${did}, exists in destination PDS: ${did_exists_in_dest}`);
         break;
       }
 
@@ -348,7 +351,7 @@ export const processState = async (
         // Save dest handle to form in case it's changed somehow
         session.set("handle_dest", handle_dest);
 
-        console.log(`Attempting to log in user to destination for ${journeyContext}. Handle: ${handle_dest}`);
+        log.info(`Attempting to log in user to destination for ${journeyContext}. Handle: ${handle_dest}`);
         const { token_dest, atp_dest_session } = await loginDest({
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,

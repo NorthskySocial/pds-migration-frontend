@@ -1,6 +1,7 @@
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
+import { logger } from "./util/logger";
 
 /// Node version
 import { PassThrough } from "node:stream";
@@ -72,7 +73,7 @@ async function handleRequestNode(
           // errors encountered during initial shell rendering since they'll
           // reject and get logged in handleDocumentRequest.
           if (shellRendered) {
-            console.error(error);
+            logger.error(error);
           }
         },
       }
