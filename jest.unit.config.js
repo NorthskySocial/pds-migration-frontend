@@ -15,6 +15,7 @@ export default {
           esModuleInterop: true,
           skipLibCheck: true,
           noEmit: true,
+          jsx: "react-jsx",
           types: ["node", "jest"],
           baseUrl: ".",
           paths: {
