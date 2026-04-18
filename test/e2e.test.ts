@@ -1,5 +1,4 @@
-import { type AtpAgent } from "@atproto/api";
-import { once, EventEmitter } from "node:events";
+import { EventEmitter } from "node:events";
 import {
   SeedClient,
   TestNetworkNoAppView,
@@ -8,7 +7,6 @@ import {
 } from "@atproto/dev-env";
 import "jest-puppeteer";
 import "expect-puppeteer";
-import Mail from "nodemailer/lib/mailer";
 import { STAGES } from "../app/util/stages";
 
 describe("account migration tool", () => {
@@ -68,7 +66,7 @@ describe("account migration tool", () => {
 
       alice = sc.dids.alice;
 
-      const res = await destPds.getClient().com.atproto.server.createInviteCode(
+      const res = await destPds.getAgent().com.atproto.server.createInviteCode(
         { useCount: 5 },
         {
           encoding: "application/json",
