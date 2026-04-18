@@ -319,6 +319,7 @@ export const processState = async (
           const password_origin = (data.get("bsky-password") as string) ?? "";
           session.set("password_origin", password_origin);
 
+          console.log("Attempting to log in user to origin for resume/missing blobs journey. Handle: ", handle_origin);
           const { token_origin, email, did, atp_origin_session } =
             await loginOrigin({
               pds_origin,
@@ -336,6 +337,7 @@ export const processState = async (
           session.set("password_origin", undefined);
         } catch (e) {
           if (e instanceof AuthFactorTokenRequiredError) {
+            console.log("2FA required for resume/missing blobs login attempt, prompting user for 2FA code");
             session.set("require_2fa_code", true);
             session.flash(
               "error",
@@ -354,6 +356,7 @@ export const processState = async (
         // Save dest handle to form in case it's changed somehow
         session.set("handle_dest", handle_dest);
 
+        console.log("Attempting to log in user to destination for resume/missing blobs journey. Handle: ", handle_dest);
         const { token_dest, atp_dest_session } = await loginDest({
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,
