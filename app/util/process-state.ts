@@ -119,7 +119,7 @@ export const processState = async (
   const isResendingPlcToken = data.get("resend_plc_token");
   const isResetResume = data.get("reset-resume");
 
-  log.info(`On processState with stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
+  log.info(`On processState with journey: ${state.do_journey} | stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
 
   if (isResendingPlcToken) {
     session.set("requestedPlcToken", false);

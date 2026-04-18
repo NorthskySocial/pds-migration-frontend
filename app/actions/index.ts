@@ -5,6 +5,7 @@ import { AtpAgent } from "@atproto/api";
 import { sendDiscordMessage } from "~/util/discord";
 import { type SessionData } from "~/sessions.server";
 import { CreateAccountError, LoginError, MigrationError } from "~/errors";
+import { normalizeHandle, doPasswordsMismatch, isPasswordTooShort } from "~/util/validators";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
@@ -238,44 +239,28 @@ export async function createDestAccount(
   log.info("In creation");
   const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
-  const handle = ((data.get("handle") as string) ?? "").toLowerCase();
+  const handle = ((data.get("handle") as string) ?? "");
   const submitted = data.has("submit");
-  const handle_hostname = '.northsky.social';
 
-  // Construct full handle. If we're in creation, we always append the northsky domain.
-  // If the user did not enter a domain (no `.`), we'll complete it with `.northsky.social`
-  // (handle_hostname), otherwise assume it's a custom domain.
-  let handle_dest = handle;
-  if (is_creation_flow || !handle.includes(".")) {
-    log.info(`No domain detected in handle (${handle}), appending .northsky.social`);
-    handle_dest = handle_dest.concat(handle_hostname);
+  // Normalize handle with domain
+  const handle_dest = normalizeHandle(handle, is_creation_flow);
+  if (handle !== handle_dest) {
+    log.info(`Handle normalized from (${handle}) to (${handle_dest})`);
   }
 
-  let handleIsAvailable = null;
-  let passwordMismatch = null;
-  let passwordTooShort = null;
-  let nsToken = "";
-
-  // Check passwords matching
-  if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
-    passwordMismatch = true;
+  const passwordMismatch = doPasswordsMismatch(pw_dest, pwConfirm);
+  if (passwordMismatch) {
     log.debug("Password mismatch");
-  } else {
-    passwordMismatch = false;
   }
 
-  // Check password length
-  if (pw_dest?.length < 8 && pw_dest.length > 0) {
-    passwordTooShort = true;
+  const passwordTooShort = isPasswordTooShort(pw_dest);
+  if (passwordTooShort) {
     log.debug("Password too short");
-  } else if (pw_dest.length > 0) {
-    passwordTooShort = false;
   }
 
   // Check handle availability
-  if (!handle_dest.length) {
-    handleIsAvailable = null;
-  } else {
+  let handleIsAvailable = null;
+  if (handle_dest.length) {
     log.info("Checking handle " + handle_dest);
     handleIsAvailable = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
@@ -432,7 +417,7 @@ export async function createDestAccount(
     });
     log.info("Logged into migrated account successfully!");
 
-    nsToken = destLoginData.accessJwt;
+    const nsToken = destLoginData.accessJwt;
 
     return {
       token_dest: nsToken,
