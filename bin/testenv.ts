@@ -1,7 +1,5 @@
-import { type AtpAgent } from "@atproto/api";
-import { once, EventEmitter } from "node:events";
+import { EventEmitter } from "node:events";
 import {
-  SeedClient,
   TestNetworkNoAppView,
   TestPds,
   mockNetworkUtilities,
@@ -80,7 +78,7 @@ async function main() {
 
   switch (menu) {
     case "invite_code": {
-      const res = await destPds.getClient().com.atproto.server.createInviteCode(
+      const res = await destPds.getAgent().com.atproto.server.createInviteCode(
         { useCount: 1 },
         {
           encoding: "application/json",
