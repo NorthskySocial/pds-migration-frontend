@@ -10,6 +10,7 @@ import type { Route } from "./+types/root";
 import "@fontsource-variable/museomoderno/index.css";
 import "@fontsource-variable/geist/index.css";
 import bg from "./assets/Northsky-Background.jpg";
+import { logger } from "./util/logger";
 
 export default function App() {
   return (
@@ -58,7 +59,7 @@ export default function App() {
 }
 
 export function ErrorBoundary(props: Route.ErrorBoundaryProps) {
-  console.log("In ErrorBoundary, props: ", props);
+  logger.debug("In ErrorBoundary, props: ", props);
   let message = "Oops!";
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
@@ -73,7 +74,7 @@ export function ErrorBoundary(props: Route.ErrorBoundaryProps) {
     details = error.message;
     stack = error.stack;
   }
-  console.error(message, details, stack);
+  logger.error(message, details, stack);
   return (
     <main className="pt-16 p-4 container mx-auto">
       <h1>{message}</h1>

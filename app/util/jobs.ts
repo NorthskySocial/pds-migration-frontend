@@ -3,6 +3,7 @@
 import { type Session } from "react-router";
 import { type SessionData, type SessionFlashData, type BackgroundJobProgress } from "~/sessions.server";
 import f from "./mock-fetch";
+import { logger } from "./logger";
 
 const JOB_CHECK_INTERVAL_MS = 2000;
 
@@ -69,6 +70,7 @@ const checkBackgroundJobStatus = async (
 ): Promise<void> => {
   const jobId = state[config.jobIdKey];
   const isCompleted = state[config.completedKey];
+  const log = logger.withDid(state.did);
 
   if (!jobId || isCompleted) return;
 
@@ -78,7 +80,7 @@ const checkBackgroundJobStatus = async (
   // Only check job status if enough time has passed
   if (now - lastCheck < JOB_CHECK_INTERVAL_MS) return;
 
-  console.log(
+  log.info(
     `Checking ${config.jobKind} job status (last attempt, now): `,
     lastCheck,
     now
@@ -86,11 +88,11 @@ const checkBackgroundJobStatus = async (
 
   try {
     const res = await f(`${migratorBackend}/jobs/${jobId}`);
-    console.log("Response status from job status check: ", res.status);
+    log.info("Response status from job status check: ", res.status);
 
     const { progress, status } = (await res.json()) as JobStatusResponse;
 
-    console.log(
+    log.info(
       `${config.jobKind} (progress, status, status code): `,
       `${progress.successful_blobs}/${progress.total} (invalid: ${progress.invalid_blobs})`,
       status,
@@ -118,13 +120,13 @@ const checkBackgroundJobStatus = async (
   } catch (error) {
     const statusCode = error instanceof Response ? error.status : null;
     const isSyntaxError = error instanceof SyntaxError;
-    console.log(`Error checking ${config.jobKind} job status: `, error);
+    log.error(`Error checking ${config.jobKind} job status: `, error);
 
     if (statusCode === 404 || statusCode === 429 || isSyntaxError) {
       const failureCount = (state[config.failuresKey] ?? 0) + 1;
       session.set(config.failuresKey, failureCount);
 
-      console.log(
+      log.warn(
         `${config.jobKind} job check failed with status ${statusCode} and error ${error}. Failure count: ${failureCount}`
       );
 

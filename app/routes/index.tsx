@@ -64,8 +64,7 @@ export async function action({ request }: Route.ActionArgs) {
     const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
   } catch (e) {
-    logger.error("error in index action");
-    console.log(e, e instanceof BaseAppError ? e.errorType : "Not BaseAppError");
+    logger.withDid(session.get("did")).error("error in index action", e, e instanceof BaseAppError ? e.errorType : "Not BaseAppError");
     if (e instanceof BaseAppError) {
       session.flash("error", e.message);
       session.flash("errorType", e.errorType);
@@ -137,7 +136,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       }
     );
   } catch (e) {
-    console.error(e, state);
+    logger.withDid(state.did).error("Error in loader:", e, state);
     return data(
       {
         error: (e as Error).message,

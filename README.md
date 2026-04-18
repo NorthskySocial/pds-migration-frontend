@@ -153,13 +153,13 @@ Note:
 - PDS/PLC endpoints: During local testing, pass `?destination=...&plc=...` in the URL to point to specific services (as done in tests).
 
 ### Logging
-The app uses a simple environment-driven logger (`app/util/logger.ts`) that supports levels: `silent`, `error`, `info`, `debug`.
+The app uses a simple environment-driven logger (`app/util/logger.ts`) that supports levels: `silent`, `error`, `warn`, `info`, `debug`.
 
 - Defaults:
   - Dev (`npm run dev`): `debug`
   - Prod/Build: `info`
 - Control via environment:
-  - Client/SSR (Vite): set `VITE_LOG_LEVEL` to one of `silent|error|info|debug`
+  - Client/SSR (Vite): set `VITE_LOG_LEVEL` to one of `silent|error|warn|info|debug`
     - Examples:
       - Local dev: create a `.env` with `VITE_LOG_LEVEL=debug`
       - Docker: `docker run --env-file ./.env -e VITE_LOG_LEVEL=debug ...`

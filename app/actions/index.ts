@@ -117,7 +117,7 @@ async function refreshAgents(
   origin = true
 ) {
   if (!pds_dest || !pds_origin || !atp_dest_session || !atp_origin_session) {
-    console.error("refreshAgents is missing required params");
+    logger.error("refreshAgents is missing required params");
     throw new MigrationError("Unable to resume session . Please re login");
   }
 
@@ -216,24 +216,26 @@ export async function createDestAccount(
   MIGRATOR_BACKEND: string,
   is_creation_flow: boolean
 ) {
+  const log = logger.withDid(did);
+
   if (pds_origin === undefined) {
-    console.error("pds_origin is undefined");
+    log.error("pds_origin is undefined");
     throw new CreateAccountError("Invalid origin PDS");
   }
   if (pds_dest === undefined) {
-    console.error("pds_dest is undefined");
+    log.error("pds_dest is undefined");
     throw new CreateAccountError("Invalid destination PDS");
   }
   if (email === undefined) {
-    console.error("email is undefined");
+    log.error("email is undefined");
     throw new CreateAccountError("Invalid email");
   }
   if (!is_creation_flow && token_origin === undefined) {
-    console.error("token_origin is undefined");
+    log.error("token_origin is undefined");
     throw new CreateAccountError("Invalid origin token");
   }
 
-  console.log("In creation");
+  log.info("In creation");
   const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
   const handle = ((data.get("handle") as string) ?? "").toLowerCase();
@@ -245,7 +247,7 @@ export async function createDestAccount(
   // (handle_hostname), otherwise assume it's a custom domain.
   let handle_dest = handle;
   if (is_creation_flow || !handle.includes(".")) {
-    console.log(`No domain detected in handle (${handle}), appending .northsky.social`);
+    log.info(`No domain detected in handle (${handle}), appending .northsky.social`);
     handle_dest = handle_dest.concat(handle_hostname);
   }
 
@@ -257,7 +259,7 @@ export async function createDestAccount(
   // Check passwords matching
   if (pw_dest !== pwConfirm && pw_dest.length && pwConfirm.length) {
     passwordMismatch = true;
-    console.log("Password mismatch");
+    log.debug("Password mismatch");
   } else {
     passwordMismatch = false;
   }
@@ -265,7 +267,7 @@ export async function createDestAccount(
   // Check password length
   if (pw_dest?.length < 8 && pw_dest.length > 0) {
     passwordTooShort = true;
-    console.log("Password too short");
+    log.debug("Password too short");
   } else if (pw_dest.length > 0) {
     passwordTooShort = false;
   }
@@ -274,7 +276,7 @@ export async function createDestAccount(
   if (!handle_dest.length) {
     handleIsAvailable = null;
   } else {
-    console.log("Checking handle " + handle_dest);
+    log.info("Checking handle " + handle_dest);
     handleIsAvailable = await f(
       `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`
     )
@@ -283,11 +285,11 @@ export async function createDestAccount(
       )
       .then((d) => d.message === "Unable to resolve handle" || d.did === did)
       .catch((e) => {
-        console.error(e);
+        log.error(e);
         return e.message === "Unable to resolve handle" || e.did === did;
       });
 
-    console.log(`Handle ${handle_dest} available? ` + handleIsAvailable);
+    log.info(`Handle ${handle_dest} available? ` + handleIsAvailable);
   }
 
   // Return early if the user hasn't clicked submit
@@ -325,7 +327,7 @@ export async function createDestAccount(
     if (!response.success) {
       throw new CreateAccountError("Error creating account on destination PDS");
     } else {
-      console.log(`New dest account created successfully with invite code: ${inviteCode}`);
+      log.info(`New dest account created successfully with invite code: ${inviteCode}`);
       const newAccountDid = response.data.did;
       await sendDiscordMessage(
         `New account [**${handle_dest}**](<https://bsky.app/profile/${newAccountDid}>) (${newAccountDid}) created successfully with invite code: ${inviteCode}`
@@ -399,7 +401,7 @@ export async function createDestAccount(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(createAccountRequestBody),
     });
-    console.log("Migrated account creation status: ", createAccountRes.status);
+    log.info("Migrated account creation status: ", createAccountRes.status);
 
     if (!createAccountRes.ok) {
       let errorMessage: string;
@@ -411,10 +413,10 @@ export async function createDestAccount(
         errorMessage = createAccountRes.statusText;
       }
 
-      console.log(`Failed to create migrated account: ${errorMessage}`);
+      log.error(`Failed to create migrated account: ${errorMessage}`);
       throw new CreateAccountError(errorMessage);
     }
-    console.log(`Migrating dest account created successfully with invite code: ${inviteCode}`);
+    log.info(`Migrating dest account created successfully with invite code: ${inviteCode}`);
     await sendDiscordMessage(`Migrating account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode} (migration in progress)`);
 
     // Get new user token
@@ -423,12 +425,12 @@ export async function createDestAccount(
       fetch: f as typeof fetch,
     });
 
-    console.log("Logging into migrated account...");
+    log.info("Logging into migrated account...");
     const { data: destLoginData } = await agent_dest.login({
       identifier: handle_dest,
       password: pw_dest,
     });
-    console.log("Logged into migrated account successfully!");
+    log.info("Logged into migrated account successfully!");
 
     nsToken = destLoginData.accessJwt;
 
@@ -595,7 +597,7 @@ export async function exportBlobs(
 
     return { job_id };
   } catch (e) {
-    console.error(e);
+    logger.withDid(did).error("Error in exportBlobs:", e);
   }
 }
 
@@ -661,7 +663,7 @@ export async function uploadBlobs(
 
     return { job_id };
   } catch (e) {
-    console.error(e);
+    logger.withDid(did).error("Error in uploadBlobs:", e);
   }
 }
 
@@ -898,7 +900,7 @@ export async function checkIfDidExistsInDest(
     return res.ok;
   } catch (e) {
     // Silently fail
-    console.log(`Error checking if DID exists in dest: ${e}`);
+    logger.withDid(did).warn(`Error checking if DID exists in dest: ${e}`);
     return false;
   }
 }
