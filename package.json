@@ -10,6 +10,8 @@
     "start": "react-router-serve ./build/server/index.js",
     "test:env": "tsx bin/testenv.ts",
     "test:jest": "jest --maxWorkers=1",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.unit.config.js",
+    "test:unit:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.unit.config.js --watch",
     "test:backend": "docker pull ghcr.io/northskysocial/pds-migration:main && docker run -it northskysocial/pds-migration:main",
     "test:backend-arm64": "cargo run --bin pdsmigration-web --manifest-path pds-migration/Cargo.toml",
     "test": "npx concurrently -i --kill-others npm:test:env npm:dev:test npm:test:backend",
