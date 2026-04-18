@@ -332,7 +332,9 @@ export const processState = async (
 
       case STAGES.MISSING_BLOBS_LOGIN:
       case STAGES.RESUME_MIGRATION: {
-        const loginResult = await handleOriginLoginWith2FA(session, data, "resume/missing blobs");
+        const isMissingBlobsJourney = state.do_journey === "missing-blobs";
+        const journeyContext = isMissingBlobsJourney ? "missing blobs recovery" : "migration resume";
+        const loginResult = await handleOriginLoginWith2FA(session, data, journeyContext);
 
         if (!loginResult) {
           // 2FA required, session already flashed with error
@@ -346,7 +348,7 @@ export const processState = async (
         // Save dest handle to form in case it's changed somehow
         session.set("handle_dest", handle_dest);
 
-        console.log("Attempting to log in user to destination for resume/missing blobs journey. Handle: ", handle_dest);
+        console.log(`Attempting to log in user to destination for ${journeyContext}. Handle: ${handle_dest}`);
         const { token_dest, atp_dest_session } = await loginDest({
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,
@@ -357,8 +359,6 @@ export const processState = async (
         session.set("atp_dest_session", atp_dest_session);
 
         const did = session.get("did") ?? "unknown DID";
-
-        const isMissingBlobsJourney = state.do_journey === "missing-blobs";
 
         if (isMissingBlobsJourney) {
           await sendDiscordMessage(`Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`);
