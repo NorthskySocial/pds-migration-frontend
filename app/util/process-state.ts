@@ -22,6 +22,82 @@ import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 
 /**
+ * Handles origin PDS login with 2FA support.
+ * On first attempt, reads credentials from form and saves to session.
+ * On 2FA retry, retrieves credentials from session instead.
+ *
+ * @returns login result on success, or null if 2FA is required (session flashed with error)
+ */
+const handleOriginLoginWith2FA = async (
+  session: Session<SessionData, SessionFlashData>,
+  data: FormData,
+  context: string
+): Promise<{
+  token_origin: string;
+  email: string | undefined;
+  did: string;
+  atp_origin_session: unknown;
+} | null> => {
+  const is2faAttempt = session.get("require_2fa_code") ?? false;
+  console.log(`User attempting 2FA login for ${context}? ${is2faAttempt}`);
+
+  let pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
+  let handle_origin = data.get("bsky-handle") as string;
+  let password_origin = (data.get("bsky-password") as string) ?? "";
+
+  if (is2faAttempt) {
+    pds_origin = session.get("pds_origin") ?? pds_origin;
+    handle_origin = session.get("handle_origin") ?? handle_origin;
+    password_origin = session.get("password_origin") ?? password_origin;
+
+    console.log("User session retrieved from first sign-in attempt, handle: ", handle_origin);
+  } else {
+    console.log("User session before update, handle: ", session.get("handle_origin") ?? "not set");
+
+    session.set("pds_origin", pds_origin);
+    session.set("handle_origin", handle_origin);
+    session.set("password_origin", password_origin);
+
+    console.log("User session saved from form, handle: ", handle_origin);
+  }
+
+  try {
+    console.log(`Attempting to log in user to origin for ${context}. Handle: `, handle_origin);
+    const result = await loginOrigin({
+      pds_origin,
+      handle_origin,
+      password_origin,
+      authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+    });
+
+    session.set("email", result.email);
+    session.set("token_origin", result.token_origin);
+    session.set("did", result.did);
+    session.set("atp_origin_session", result.atp_origin_session);
+
+    // At this point, we no longer need the origin password
+    session.set("password_origin", undefined);
+
+    return result;
+  } catch (e) {
+    console.log(`Error during origin login for ${context}: `, e);
+
+    if (e instanceof AuthFactorTokenRequiredError) {
+      console.log("2FA code required for origin login, prompting user to enter 2FA code");
+      session.set("require_2fa_code", true);
+      session.flash(
+        "error",
+        "Please check your email for your login code and enter it below"
+      );
+      session.flash("errorType", "Expected");
+      return null;
+    }
+
+    throw e;
+  }
+};
+
+/**
  * Takes the form data, runs any side-effect actions,
  * sets new session data, return redirect.
  * @param session
@@ -128,73 +204,22 @@ export const processState = async (
       }
 
       case STAGES.ORIGIN_PDS_LOGIN: {
-        // If at this point we know the user requires a 2FA code, that means
-        // this stage as already submitted once so we already have PDS/handle/password.
-        // In that case, we don't read from form or save to session and just retrieve.
-        // Otherwise (first attempt or no 2FA), read from form and save to session.
-        const is2faAttempt = session.get("require_2fa_code") ?? false;
-        console.log("User attempting 2FA login? " + is2faAttempt);
+        const loginResult = await handleOriginLoginWith2FA(session, data, "origin login");
 
-        let pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
-        let handle_origin = data.get("bsky-handle") as string;
-        let password_origin = (data.get("bsky-password") as string) ?? "";
-
-        if (is2faAttempt) {
-          pds_origin = session.get("pds_origin") ?? pds_origin;
-          handle_origin = session.get("handle_origin") ?? handle_origin;
-          password_origin = session.get("password_origin") ?? password_origin;
-
-          console.log("User session retrieved from first sign-in attempt, handle: ", handle_origin);
-        } else {
-          console.log("User session before update, handle: ", session.get("handle_origin") ?? "not set");
-
-          session.set("pds_origin", pds_origin);
-          session.set("handle_origin", handle_origin);
-          session.set("password_origin", password_origin);
-
-          console.log("User session saved from form, handle: ", handle_origin);
-        }
-
-        try {
-          const { token_origin, email, did, atp_origin_session } =
-            await loginOrigin({
-              pds_origin,
-              handle_origin,
-              password_origin,
-              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
-            });
-
-          session.set("email", email);
-          session.set("token_origin", token_origin);
-          session.set("did", did);
-          session.set("atp_origin_session", atp_origin_session);
-
-          // At this point, we no longer need the origin password
-          session.set("password_origin", undefined);
-
-          const did_exists_in_dest = await checkIfDidExistsInDest(
-            did,
-            session.get("pds_dest") ?? "https://northsky.social",
-          );
-          session.set("did_exists_in_dest", did_exists_in_dest);
-
-          console.log(`Origin login successful! DID ${did}, exists in destination PDS: ${did_exists_in_dest}`);
+        if (!loginResult) {
+          // 2FA required, session already flashed with error
           break;
-        } catch (e) {
-          console.log("Error during origin login: ", e);
-
-          if (e instanceof AuthFactorTokenRequiredError) {
-            session.set("require_2fa_code", true);
-            session.flash(
-              "error",
-              "Please check your email for your login code and enter it below"
-            );
-            session.flash("errorType", "Expected");
-            break;
-          }
-
-          throw e;
         }
+
+        const { did } = loginResult;
+        const did_exists_in_dest = await checkIfDidExistsInDest(
+          did,
+          session.get("pds_dest") ?? "https://northsky.social",
+        );
+        session.set("did_exists_in_dest", did_exists_in_dest);
+
+        console.log(`Origin login successful! DID ${did}, exists in destination PDS: ${did_exists_in_dest}`);
+        break;
       }
 
       case STAGES.CREATE_DEST_ACCOUNT: {
@@ -307,46 +332,11 @@ export const processState = async (
 
       case STAGES.MISSING_BLOBS_LOGIN:
       case STAGES.RESUME_MIGRATION: {
-        try {
-          //Get origin, handle and password from form, immediately save to session
-          const pds_origin =
-            (data.get("pds") as string) ?? "https://bsky.social";
-          session.set("pds_origin", pds_origin);
+        const loginResult = await handleOriginLoginWith2FA(session, data, "resume/missing blobs");
 
-          const handle_origin = data.get("bsky-handle") as string;
-          session.set("handle_origin", handle_origin);
-
-          const password_origin = (data.get("bsky-password") as string) ?? "";
-          session.set("password_origin", password_origin);
-
-          console.log("Attempting to log in user to origin for resume/missing blobs journey. Handle: ", handle_origin);
-          const { token_origin, email, did, atp_origin_session } =
-            await loginOrigin({
-              pds_origin,
-              handle_origin,
-              password_origin,
-              authFactorToken: (data.get("2fa_code") as string) ?? undefined,
-            });
-
-          session.set("email", email);
-          session.set("token_origin", token_origin);
-          session.set("did", did);
-          session.set("atp_origin_session", atp_origin_session);
-
-          // At this point, we no longer need the origin password
-          session.set("password_origin", undefined);
-        } catch (e) {
-          if (e instanceof AuthFactorTokenRequiredError) {
-            console.log("2FA required for resume/missing blobs login attempt, prompting user for 2FA code");
-            session.set("require_2fa_code", true);
-            session.flash(
-              "error",
-              "Please check your email for your login code and enter it below"
-            );
-            session.flash("errorType", "Expected");
-            break;
-          }
-          throw e;
+        if (!loginResult) {
+          // 2FA required, session already flashed with error
+          break;
         }
 
         //Get dest handle and password from form
