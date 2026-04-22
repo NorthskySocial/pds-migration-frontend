@@ -10,6 +10,7 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet } from "~/util/redis";
+import { isInvalidInviteCodeError, isRetryableServerError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 const HEALTH_CHECK_CACHE_KEY = "pds:health";
 const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
@@ -320,23 +321,19 @@ export async function createDestAccount(
         response = await agent_dest.createAccount(createAccountParams);
         break;
       } catch (e) {
-        if (e instanceof XRPCError) {
-          if (e.message.includes("invite code not available")) {
-            throw new CreateAccountError(
-              "The invite code you entered is invalid or has already been used. \
-              If you previously started your migration to Northsky, please go to the home screen and select Resume migration. \
-              If you believe this is an error, please contact Support.",
-              "Unexpected"
-            );
-          }
+        if (isInvalidInviteCodeError(e)) {
+          throw new CreateAccountError(
+            XRPC_ERROR_MESSAGES.INVALID_INVITE_CODE,
+            "Unexpected"
+          );
+        }
 
-          if (e.status >= 500) {
-            lastError = e;
-            if (attempt === 0) {
-              log.warn(`Server error during account creation (attempt ${attempt + 1}), retrying in 2 seconds: ${e.message}`);
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-              continue;
-            }
+        if (isRetryableServerError(e)) {
+          lastError = e as XRPCError;
+          if (attempt === 0) {
+            log.warn(`Server error during account creation (attempt ${attempt + 1}), retrying in 2 seconds: ${lastError.message}`);
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue;
           }
         }
 
@@ -348,8 +345,7 @@ export async function createDestAccount(
       // We exhausted retries due to server errors
       log.error(`XRPCError during account creation after retry: ${lastError.message}`);
       throw new CreateAccountError(
-        "We encountered a server error while creating your account on the Northsky PDS. \
-        Please try again in a few minutes. If the problem persists, please contact Support.",
+        XRPC_ERROR_MESSAGES.SERVER_ERROR,
         "Unexpected"
       );
     }
