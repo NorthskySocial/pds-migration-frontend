@@ -1,6 +1,6 @@
 "use server";
 
-import { AtpAgent } from "@atproto/api";
+import { AtpAgent, XRPCError } from "@atproto/api";
 
 import { sendDiscordMessage } from "~/util/discord";
 import { type SessionData } from "~/sessions.server";
@@ -302,12 +302,38 @@ export async function createDestAccount(
       service: pds_dest,
       fetch: f as typeof fetch,
     });
-    const response = await agent_dest.createAccount({
-      email: email,
-      handle: handle_dest,
-      inviteCode: inviteCode,
-      password: pw_dest,
-    });
+
+    let response;
+    try {
+      response = await agent_dest.createAccount({
+        email: email,
+        handle: handle_dest,
+        inviteCode: inviteCode,
+        password: pw_dest,
+      });
+    } catch (e) {
+      if (e instanceof XRPCError) {
+        if (e.message.includes("invite code not available")) {
+          throw new CreateAccountError(
+            "The invite code you entered is invalid or has already been used. \
+            If you previously started your migration to Northsky, please go to the home screen and select Resume migration. \
+            If you believe this is an error, please contact Support.",
+            "Unexpected"
+          );
+        }
+
+        if (e.status >= 500) {
+          log.error(`XRPCError during account creation: ${e.message}`);
+          throw new CreateAccountError(
+            "We encountered a server error while creating your account on the Northsky PDS. \
+            Please try again in a few minutes. If the problem persists, please contact Support.",
+            "Unexpected"
+          );
+        }
+      }
+
+      throw e;
+    }
 
     if (!response.success) {
       throw new CreateAccountError("Error creating account on destination PDS");
