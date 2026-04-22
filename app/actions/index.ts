@@ -1,6 +1,6 @@
 "use server";
 
-import { AtpAgent } from "@atproto/api";
+import { AtpAgent, XRPCError } from "@atproto/api";
 
 import { sendDiscordMessage } from "~/util/discord";
 import { type SessionData } from "~/sessions.server";
@@ -10,6 +10,7 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet } from "~/util/redis";
+import { isInvalidInviteCodeError, isRetryableServerError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 const HEALTH_CHECK_CACHE_KEY = "pds:health";
 const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
@@ -302,14 +303,54 @@ export async function createDestAccount(
       service: pds_dest,
       fetch: f as typeof fetch,
     });
-    const response = await agent_dest.createAccount({
+
+    const createAccountParams = {
       email: email,
       handle: handle_dest,
       inviteCode: inviteCode,
       password: pw_dest,
-    });
+    };
 
-    if (!response.success) {
+    let response;
+    let lastError: XRPCError | null = null;
+
+    // Optimistic approach: retrying once immediately on internal server errors, expecting
+    // them to be transient.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        response = await agent_dest.createAccount(createAccountParams);
+        break;
+      } catch (e) {
+        if (isInvalidInviteCodeError(e)) {
+          throw new CreateAccountError(
+            XRPC_ERROR_MESSAGES.INVALID_INVITE_CODE,
+            "Unexpected"
+          );
+        }
+
+        if (isRetryableServerError(e)) {
+          lastError = e as XRPCError;
+          if (attempt === 0) {
+            log.warn(`Server error during account creation (attempt ${attempt + 1}), retrying in 2 seconds: ${lastError.message}`);
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue;
+          }
+        }
+
+        throw e;
+      }
+    }
+
+    if (!response && lastError) {
+      // We exhausted retries due to server errors
+      log.error(`XRPCError during account creation after retry: ${lastError.message}`);
+      throw new CreateAccountError(
+        XRPC_ERROR_MESSAGES.SERVER_ERROR,
+        "Unexpected"
+      );
+    }
+
+    if (!response?.success) {
       throw new CreateAccountError("Error creating account on destination PDS");
     } else {
       log.info(`New dest account created successfully with invite code: ${inviteCode}`);
