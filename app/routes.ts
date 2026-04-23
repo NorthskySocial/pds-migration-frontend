@@ -4,4 +4,5 @@ export default [
   index("routes/index.tsx"),
   route("failed", "routes/failed.tsx"),
   route("success", "routes/success.tsx"),
+  route("healthcheck", "routes/healthcheck.ts"),
 ] satisfies RouteConfig;
