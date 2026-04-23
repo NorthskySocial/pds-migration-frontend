@@ -20,12 +20,15 @@ type Pages = {
   "/success": {
     params: {};
   };
+  "/healthcheck": {
+    params: {};
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/failed" | "/success";
+    page: "/" | "/failed" | "/success" | "/healthcheck";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -39,6 +42,10 @@ type RouteFiles = {
     id: "routes/success";
     page: "/success";
   };
+  "routes/healthcheck.ts": {
+    id: "routes/healthcheck";
+    page: "/healthcheck";
+  };
 };
 
 type RouteModules = {
@@ -46,4 +53,5 @@ type RouteModules = {
   "routes/index": typeof import("./app/routes/index.tsx");
   "routes/failed": typeof import("./app/routes/failed.tsx");
   "routes/success": typeof import("./app/routes/success.tsx");
+  "routes/healthcheck": typeof import("./app/routes/healthcheck.ts");
 };
