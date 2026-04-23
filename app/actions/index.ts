@@ -912,21 +912,3 @@ export async function validatePlcToken(
 
   return { ok: false };
 }
-
-export async function checkIfDidExistsInDest(
-  did: string,
-  pds_dest: string
-): Promise<boolean> {
-  try {
-    const res = await f(`${pds_dest}/xrpc/com.atproto.sync.getRepoStatus?did=${did}`, {
-      method: "get",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    return res.ok;
-  } catch (e) {
-    // Silently fail
-    logger.withDid(did).warn(`Error checking if DID exists in dest: ${e}`);
-    return false;
-  }
-}

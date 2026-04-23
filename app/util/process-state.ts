@@ -2,7 +2,6 @@
 
 import { type Session } from "react-router";
 import {
-  checkIfDidExistsInDest,
   createDestAccount,
   exportBlobs,
   exportRepo,
@@ -14,6 +13,7 @@ import {
   validatePlcToken,
   loginDest,
 } from "~/actions";
+import { checkIfDidExistsInDest } from "~/util/pds";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
@@ -215,13 +215,13 @@ export const processState = async (
         }
 
         const { did } = loginResult;
-        const did_exists_in_dest = await checkIfDidExistsInDest(
+        const { didExists, didActive } = await checkIfDidExistsInDest(
           did,
           session.get("pds_dest") ?? "https://northsky.social",
         );
-        session.set("did_exists_in_dest", did_exists_in_dest);
+        session.set("did_exists_in_dest", didExists);
 
-        log.info(`Origin login successful! DID ${did}, exists in destination PDS: ${did_exists_in_dest}`);
+        log.info(`Origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
         break;
       }
 
