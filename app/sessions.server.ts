@@ -32,6 +32,7 @@ export type SessionData = {
   password_origin?: string;
   pds_dest?: string;
   did_exists_in_dest?: boolean;
+  did_active_in_dest?: boolean;
   atp_origin_session?: AtpSessionData;
   atp_dest_session?: AtpSessionData;
   pds_origin?: string;

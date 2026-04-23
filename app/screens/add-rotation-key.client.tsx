@@ -14,7 +14,7 @@ import { Secp256k1Keypair } from "@atproto/crypto";
 import "@1password/save-button";
 import { logger } from "~/util/logger";
 
-export default function EncourageBackupScreen({ state }: ScreenProps) {
+export default function AddRotationKeyScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   const [didKeyWizard, setDidKeyWizard] = useState(false);
   const modalClose = useCallback(

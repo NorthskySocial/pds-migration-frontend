@@ -137,6 +137,7 @@ export const processState = async (
     session.set("pds_origin", undefined);
     session.set("atp_origin_session", undefined);
     session.set("did_exists_in_dest", undefined);
+    session.set("did_active_in_dest", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
     session.set("plc_hostname", undefined);
@@ -215,13 +216,14 @@ export const processState = async (
         }
 
         const { did } = loginResult;
-        const did_exists_in_dest = await checkIfDidExistsInDest(
+        const { didExists, didActive } = await checkIfDidExistsInDest(
           did,
           session.get("pds_dest") ?? "https://northsky.social",
         );
-        session.set("did_exists_in_dest", did_exists_in_dest);
+        session.set("did_exists_in_dest", didExists);
+        session.set("did_active_in_dest", didActive);
 
-        log.info(`Origin login successful! DID ${did}, exists in destination PDS: ${did_exists_in_dest}`);
+        log.info(`Origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
         break;
       }
 
@@ -344,6 +346,18 @@ export const processState = async (
           break;
         }
 
+        const { did } = loginResult;
+
+        // Check if DID already exists and is active in destination
+        const { didExists, didActive } = await checkIfDidExistsInDest(
+          did,
+          session.get("pds_dest") ?? "https://northsky.social",
+        );
+        session.set("did_exists_in_dest", didExists);
+        session.set("did_active_in_dest", didActive);
+
+        log.info(`Resume flow origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
+
         //Get dest handle and password from form
         const handle_dest = data.get("northsky-handle") as string;
         const password_dest = (data.get("northsky-password") as string) ?? "";
@@ -360,8 +374,6 @@ export const processState = async (
 
         session.set("token_dest", token_dest);
         session.set("atp_dest_session", atp_dest_session);
-
-        const did = session.get("did") ?? "unknown DID";
 
         if (isMissingBlobsJourney) {
           await sendDiscordMessage(`Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`);
