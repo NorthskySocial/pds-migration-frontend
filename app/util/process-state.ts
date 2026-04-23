@@ -113,12 +113,12 @@ export const processState = async (
 ) => {
   const state = session.data as SessionData;
   const stage = getStage(state);
-  const log = logger.withDid(state.did);
 
   const isCancelling = data.get("cancel");
   const isResendingPlcToken = data.get("resend_plc_token");
   const isResetResume = data.get("reset-resume");
 
+  let log = logger.withDid(state.did);
   log.info(`On processState with journey: ${state.do_journey} | stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
 
   if (isResendingPlcToken) {
@@ -223,7 +223,7 @@ export const processState = async (
         session.set("did_exists_in_dest", didExists);
         session.set("did_active_in_dest", didActive);
 
-        log.info(`Origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
+        logger.withDid(did).info(`Origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
         break;
       }
 
@@ -356,6 +356,8 @@ export const processState = async (
         session.set("did_exists_in_dest", didExists);
         session.set("did_active_in_dest", didActive);
 
+        // Refreshing DID on logs after login
+        log = logger.withDid(did);
         log.info(`Resume flow origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
 
         //Get dest handle and password from form
