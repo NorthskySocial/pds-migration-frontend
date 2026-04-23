@@ -137,6 +137,7 @@ export const processState = async (
     session.set("pds_origin", undefined);
     session.set("atp_origin_session", undefined);
     session.set("did_exists_in_dest", undefined);
+    session.set("did_active_in_dest", undefined);
     session.set("token_origin", undefined);
     session.set("token_dest", undefined);
     session.set("plc_hostname", undefined);
@@ -220,6 +221,7 @@ export const processState = async (
           session.get("pds_dest") ?? "https://northsky.social",
         );
         session.set("did_exists_in_dest", didExists);
+        session.set("did_active_in_dest", didActive);
 
         log.info(`Origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
         break;
