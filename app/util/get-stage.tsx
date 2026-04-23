@@ -20,6 +20,11 @@ export function getStage(session: SessionData): STAGES {
       return STAGES.RESUME_MIGRATION;
     }
 
+    // If we logged in a user, and the DID already exists (as active) in Northsky, nothing left to do!
+    if (session.did_exists_in_dest === true && session.did_active_in_dest === true) {
+      return STAGES.ALREADY_MIGRATED;
+    }
+
     if (!session.exportedRepo) {
       return STAGES.EXPORT_REPO_ORIGIN;
     }
