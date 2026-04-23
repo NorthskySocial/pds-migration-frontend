@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkIfDidExistsInDest } from "~/util/pds";
+import { checkIfDidExistsInDest } from "~/actions";
 
 vi.mock("~/util/logger", () => ({
   logger: {

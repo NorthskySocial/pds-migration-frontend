@@ -2,6 +2,7 @@
 
 import { type Session } from "react-router";
 import {
+  checkIfDidExistsInDest,
   createDestAccount,
   exportBlobs,
   exportRepo,
@@ -13,7 +14,6 @@ import {
   validatePlcToken,
   loginDest,
 } from "~/actions";
-import { checkIfDidExistsInDest } from "~/util/pds";
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
