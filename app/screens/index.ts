@@ -14,12 +14,14 @@ export const ResumeMigration = lazy(() => import("./migration-resume"));
 export const Maintenance = lazy(() => import("./maintenance"));
 export const MissingBlobsProgress = lazy(() => import("./missing-blobs-progress"));
 export const MissingBlobsDone = lazy(() => import("./missing-blobs-done"));
+export const AlreadyMigrated = lazy(() => import("./already-migrated"));
 
 export const SCREENS = {
   [STAGES.INVITE_CODE]: Intro,
   [STAGES.MAINTENANCE]: Maintenance,
   [STAGES.BACKUP_NOTICE]: EncourageBackup,
   [STAGES.ORIGIN_PDS_LOGIN]: OriginLogin,
+  [STAGES.ALREADY_MIGRATED]: AlreadyMigrated,
   [STAGES.GENERATE_RECOVERY_KEY]: AddRotationKey,
   [STAGES.CREATE_DEST_ACCOUNT]: NewAccount,
   [STAGES.EXPORT_REPO_ORIGIN]: MigrationProgress,

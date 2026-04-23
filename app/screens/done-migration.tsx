@@ -8,7 +8,7 @@ import type { ScreenProps } from "~/util/stages";
 
 import { useFetcher } from "react-router";
 
-export default function EncourageBackupScreen({ state }: ScreenProps) {
+export default function MigrationDoneScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
     <>

@@ -84,6 +84,11 @@ export function getStage(session: SessionData): STAGES {
       return STAGES.ORIGIN_PDS_LOGIN;
     }
 
+    // If we logged in a user, and the DID already exists (as active) in Northsky, nothing left to do!
+    if (session.did_exists_in_dest === true && session.did_active_in_dest === true) {
+      return STAGES.ALREADY_MIGRATED;
+    }
+
     if (!all(session.token_dest, session.handle_dest, session.pds_dest)) {
       return STAGES.CREATE_DEST_ACCOUNT;
     }

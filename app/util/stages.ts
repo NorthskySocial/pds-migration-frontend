@@ -7,6 +7,7 @@ export enum STAGES {
   INVITE_CODE = "INVITE_CODE",
   BACKUP_NOTICE = "BACKUP_NOTICE",
   ORIGIN_PDS_LOGIN = "ORIGIN_PDS_LOGIN",
+  ALREADY_MIGRATED = "ALREADY_MIGRATED",
   CREATE_DEST_ACCOUNT = "CREATE_DEST_ACCOUNT",
   EXPORT_REPO_ORIGIN = "EXPORT_REPO_ORIGIN",
   IMPORT_REPO_DEST = "IMPORT_REPO_DEST",
@@ -52,6 +53,11 @@ export const stageInfo = {
     stageIdx: -1,
     stageTitle: "",
     stageDescription: "",
+  },
+  [STAGES.ALREADY_MIGRATED]: {
+    stageIdx: -1,
+    stageTitle: "Already Migrated",
+    stageDescription: "Your account has already been migrated to Northsky",
   },
   [STAGES.ACTIVATE_DEST]: {
     stageIdx: -1,
