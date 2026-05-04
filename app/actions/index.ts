@@ -826,6 +826,8 @@ export async function validatePlcToken(
     atp_dest_session,
     atp_origin_session,
     handle_dest,
+    had_invalid_blobs,
+    upload_progress,
   }: SessionData,
   data: FormData,
   MIGRATOR_BACKEND: string
@@ -905,7 +907,10 @@ export async function validatePlcToken(
       );
     }
 
-    await sendDiscordMessage(`Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) successfully migrated PLC and deactivated old account (migration complete)`);
+    const invalidBlobsNote = had_invalid_blobs
+      ? ` (with ${upload_progress?.invalid_blobs ?? "some"} invalid blob(s) during migration)`
+      : "";
+    await sendDiscordMessage(`Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) successfully migrated PLC and deactivated old account (migration complete)${invalidBlobsNote}`);
 
     return { ok: true };
   }
