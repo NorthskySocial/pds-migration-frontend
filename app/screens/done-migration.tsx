@@ -110,6 +110,14 @@ export default function MigrationDoneScreen({ state }: ScreenProps) {
                 <List.Item>
                   Select "Next" to finish logging in
                 </List.Item>
+                <List.Item>
+                  Optional: Subscribe to the
+                  <Link color={"emphasized"}
+                    variant="underline"
+                    target="_blank"
+                    href="https://bsky.app/profile/moderation.northsky.social" >Northsky Moderation Labeller</Link>
+
+                </List.Item>
               </List.Root>
 
             </VStack>
@@ -118,10 +126,10 @@ export default function MigrationDoneScreen({ state }: ScreenProps) {
             <VStack>
               <Image src={nsNewAccount} alt="Adding a new account" maxWidth="100%" height="auto" />
               <Image src={nsSignIn2} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
-                                          <Image src={nsOtherAccount} alt="Choose other account" maxWidth="100%" height="auto" />
-
+              <Image src={nsOtherAccount} alt="Choose other account" maxWidth="100%" height="auto" />
               <Image src={nsSignIn} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
               <Image src={nsChooseProvider} alt="Choose your Provder" maxWidth="100%" height="auto" />
+
             </VStack>
           </GridItem>
         </Grid>
