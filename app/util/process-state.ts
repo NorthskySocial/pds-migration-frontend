@@ -52,15 +52,19 @@ const handleOriginLoginWith2FA = async (
     handle_origin = session.get("handle_origin") ?? handle_origin;
     password_origin = session.get("password_origin") ?? password_origin;
 
-    log.info("User session retrieved from first sign-in attempt, handle: ", handle_origin);
+    log.info(
+      `[${context}] 2FA retry: using session origin creds. ` +
+      `pds=${pds_origin}, handle=${handle_origin}, password present=${Boolean(password_origin)}`
+    );
   } else {
-    log.info("User session before update, handle: ", session.get("handle_origin") ?? "not set");
+    log.info(
+      `[${context}] First attempt: persisting origin creds to session. ` +
+      `prev_handle=${session.get("handle_origin")} -> new_handle=${handle_origin}`
+    );
 
     session.set("pds_origin", pds_origin);
     session.set("handle_origin", handle_origin);
     session.set("password_origin", password_origin);
-
-    log.info("User session saved from form, handle: ", handle_origin);
   }
 
   try {
@@ -85,7 +89,13 @@ const handleOriginLoginWith2FA = async (
     log.error(`Error during origin login for ${context}: `, e);
 
     if (e instanceof AuthFactorTokenRequiredError) {
-      log.info("2FA code required for origin login, prompting user to enter 2FA code");
+      log.info(
+        `[${context}] 2FA code required by origin PDS. ` +
+        `Persisted in session: handle_origin=${session.get("handle_origin")}, ` +
+        `password_origin present=${Boolean(session.get("password_origin"))}, ` +
+        `handle_dest=${session.get("handle_dest")}, ` +
+        `password_dest present=${Boolean(session.get("password_dest"))}`
+      );
       session.set("require_2fa_code", true);
       session.flash(
         "error",
@@ -146,6 +156,7 @@ export const processState = async (
     session.set("email", undefined);
     session.set("user_recover_key", undefined);
     session.set("password_origin", undefined);
+    session.set("password_dest", undefined);
 
     // state flags
     session.set("require_2fa_code", false);
@@ -339,6 +350,34 @@ export const processState = async (
       case STAGES.RESUME_MIGRATION: {
         const isMissingBlobsJourney = state.do_journey === "missing-blobs";
         const journeyContext = isMissingBlobsJourney ? "missing blobs recovery" : "migration resume";
+
+        // Persist dest credentials before attempting origin login, so they
+        // survive the 2FA retry where the form only submits the 2FA code.
+        const is2faAttempt = session.get("require_2fa_code") ?? false;
+        log.info(
+          `[${journeyContext}] Entering login stage. is2faAttempt=${is2faAttempt}. ` +
+          `Form dest creds: handle=${data.get("northsky-handle")}, ` +
+          `password present=${Boolean(data.get("northsky-password"))}. ` +
+          `Session dest creds: handle=${session.get("handle_dest")}, ` +
+          `password present=${Boolean(session.get("password_dest"))}`
+        );
+
+        if (!is2faAttempt) {
+          session.set("handle_dest", data.get("northsky-handle") as string);
+          session.set("password_dest", (data.get("northsky-password") as string) ?? "");
+          log.info(
+            `[${journeyContext}] First attempt: persisted dest creds to session. ` +
+            `handle_dest=${session.get("handle_dest")}, ` +
+            `password_dest present=${Boolean(session.get("password_dest"))}`
+          );
+        } else {
+          log.info(
+            `[${journeyContext}] 2FA retry: keeping previously-persisted dest creds. ` +
+            `handle_dest=${session.get("handle_dest")}, ` +
+            `password_dest present=${Boolean(session.get("password_dest"))}`
+          );
+        }
+
         const loginResult = await handleOriginLoginWith2FA(session, data, journeyContext);
 
         if (!loginResult) {
@@ -360,14 +399,24 @@ export const processState = async (
         log = logger.withDid(did);
         log.info(`Resume flow origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
 
-        //Get dest handle and password from form
-        const handle_dest = data.get("northsky-handle") as string;
-        const password_dest = (data.get("northsky-password") as string) ?? "";
+        // Read dest handle and password from session
+        const handle_dest = session.get("handle_dest") as string;
+        const password_dest = session.get("password_dest") ?? "";
 
-        // Save dest handle to form in case it's changed somehow
-        session.set("handle_dest", handle_dest);
+        log.info(
+          `[${journeyContext}] Calling loginDest: ` +
+          `handle_dest=${handle_dest}, ` +
+          `password_dest present=${Boolean(password_dest)}`
+        );
 
-        log.info(`Attempting to log in user to destination for ${journeyContext}. Handle: ${handle_dest}`);
+        if (!handle_dest || handle_dest.length === 0) {
+          log.error(
+            `[${journeyContext}] handle_dest is empty before loginDest! ` +
+            `is2faAttempt=${is2faAttempt}, ` +
+            `form handle=${data.get("northsky-handle")}, ` +
+            `session handle=${session.get("handle_dest")}`
+          );
+        }
         const { token_dest, atp_dest_session } = await loginDest({
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,
@@ -376,6 +425,9 @@ export const processState = async (
 
         session.set("token_dest", token_dest);
         session.set("atp_dest_session", atp_dest_session);
+
+        // Dest password no longer needed after successful login
+        session.set("password_dest", undefined);
 
         if (isMissingBlobsJourney) {
           await sendDiscordMessage(`Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`);
