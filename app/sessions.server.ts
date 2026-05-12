@@ -30,6 +30,7 @@ export type SessionData = {
   handle_origin?: string;
   handle_dest?: string;
   password_origin?: string;
+  password_dest?: string;
   pds_dest?: string;
   did_exists_in_dest?: boolean;
   did_active_in_dest?: boolean;
