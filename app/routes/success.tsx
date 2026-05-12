@@ -2,6 +2,10 @@ import { data } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import type { Route } from "./+types";
 
+export function meta(_: Route.MetaArgs): ReturnType<Route.MetaFunction> {
+  return [{ title: "Migration complete!" }];
+}
+
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   return data(

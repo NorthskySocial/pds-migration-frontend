@@ -25,6 +25,10 @@ import { logger } from "~/util/logger";
 import { BaseAppError } from "~/errors";
 import { checkPdsHealth } from "~/actions";
 
+export function meta(_: Route.MetaArgs): ReturnType<Route.MetaFunction> {
+  return [{ title: "Migrate to Northsky!" }];
+}
+
 export async function action({ request }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
