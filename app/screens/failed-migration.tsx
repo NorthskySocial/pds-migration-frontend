@@ -1,8 +1,10 @@
 import { Heading, Text, VStack } from "@chakra-ui/react";
 import melted_clock from "../assets/melted.jpg";
 import type { ScreenProps } from "~/util/stages";
+import { useAttentionAlert } from "~/util/use-attention-alert";
 
 export default function FailedMigrationScreen({ state }: ScreenProps) {
+  useAttentionAlert();
   return (
     <>
       <VStack mb="5" width="100%">
