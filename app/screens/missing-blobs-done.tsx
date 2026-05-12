@@ -1,9 +1,11 @@
 import { Heading, Text, Button, VStack, Center } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
+import { useAttentionAlert } from "~/util/use-attention-alert";
 
 export default function MissingBlobsDoneScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
+  useAttentionAlert();
   return (
     <fetcher.Form method="post" style={{ width: "100%" }}>
       <VStack mb="5" width="100%">
