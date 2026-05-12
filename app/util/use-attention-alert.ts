@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { logger } from "~/util/logger";
 
 /**
  * Use the browser's native Page Visibility API to alert
@@ -14,20 +15,31 @@ export function useAttentionAlert(): void {
   useEffect(() => {
     if (typeof document === "undefined") return;
 
+    const safe = <T>(fn: () => T): T | undefined => {
+      try {
+        return fn();
+      } catch (e) {
+        logger.warn("useAttentionAlert: ignoring error", e);
+        return undefined;
+      }
+    };
+
     const originalTitle = document.title;
     const flaggedTitle = `(!) ${originalTitle}`;
 
-    const applyFlag = () => {
-      if (document.hidden && document.title !== flaggedTitle) {
-        document.title = flaggedTitle;
-      }
-    };
+    const applyFlag = () =>
+      safe(() => {
+        if (document.hidden && document.title !== flaggedTitle) {
+          document.title = flaggedTitle;
+        }
+      });
 
-    const clearFlag = () => {
-      if (document.title === flaggedTitle) {
-        document.title = originalTitle;
-      }
-    };
+    const clearFlag = () =>
+      safe(() => {
+        if (document.title === flaggedTitle) {
+          document.title = originalTitle;
+        }
+      });
 
     const onVisibilityChange = () => {
       if (document.hidden) {
@@ -42,10 +54,17 @@ export function useAttentionAlert(): void {
       applyFlag();
     }
 
-    document.addEventListener("visibilitychange", onVisibilityChange);
+    const added = safe(() => {
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      return true;
+    });
 
     return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
+      if (added) {
+        safe(() =>
+          document.removeEventListener("visibilitychange", onVisibilityChange)
+        );
+      }
       clearFlag();
     };
   }, []);
