@@ -81,8 +81,9 @@ const handleOriginLoginWith2FA = async (
     session.set("did", result.did);
     session.set("atp_origin_session", result.atp_origin_session);
 
-    // At this point, we no longer need the origin password
+    // At this point, we no longer need the origin password or the 2FA flag
     session.set("password_origin", undefined);
+    session.set("require_2fa_code", false);
 
     return result;
   } catch (e) {
@@ -198,6 +199,7 @@ export const processState = async (
         session.set("do_journey", state.do_journey);
         session.set("handle_dest", undefined);
         session.set("email", undefined);
+        session.set("require_2fa_code", false);
 
         //initialize the origin PDS to bluesky
         session.set("pds_origin", "https://bsky.social");
