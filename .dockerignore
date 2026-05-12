@@ -28,3 +28,24 @@ build
 
 .env
 .env.*
+
+# Github
+.git
+.github
+pds-migration
+coverage
+
+# Tests
+test
+bin
+jest.config.js
+jest-puppeteer.config.js
+vitest.config.ts
+eslint.config.js
+
+# Docker and docs
+Dockerfile
+docker-compose.yaml
+docker-compose.prod.yaml
+README.md
+LICENSE
