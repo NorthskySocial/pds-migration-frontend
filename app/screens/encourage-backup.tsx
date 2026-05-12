@@ -96,12 +96,13 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           </Checkbox>
         </Box>
         <HStack align={"left"} gap={"10"}>
-          <Button type="submit" name="submit">
-            Continue
-          </Button>
           <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
             Cancel
           </Button>
+          <Button type="submit" name="submit">
+            Continue
+          </Button>
+
         </HStack>
       </VStack>
     </fetcher.Form>

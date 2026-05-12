@@ -160,12 +160,13 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         </Field>
         <br />
         <HStack>
-          <Button type="submit" name="submit" margin={"0 auto"}>
-            Continue
-          </Button>
           <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
             Cancel
           </Button>
+          <Button type="submit" name="submit" margin={"0 auto"}>
+            Continue
+          </Button>
+
         </HStack>
       </VStack>
     </fetcher.Form>

@@ -40,9 +40,9 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
             <Text fontSize="md" textAlign={"justify"}>
               {
                 isMissingBlobsJourney
-                ?
+                  ?
                   "Please provide us with the following information so we can recover any missing blobs from your previous PDS."
-                : "Please provide us with the following information so we can resume migrating your data."
+                  : "Please provide us with the following information so we can resume migrating your data."
               }
 
             </Text>
@@ -94,6 +94,9 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
           </>
         )}
         <HStack>
+          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+            Cancel
+          </Button>
           <Button
             type="submit"
             name="submit"
@@ -102,9 +105,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
           >
             Continue
           </Button>
-          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-            Cancel
-          </Button>
+
         </HStack>
       </VStack>
     </fetcher.Form>

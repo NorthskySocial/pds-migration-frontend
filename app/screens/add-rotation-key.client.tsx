@@ -60,6 +60,9 @@ export default function AddRotationKeyScreen({ state }: ScreenProps) {
           <br />
           <br />
           <HStack>
+            <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+              Cancel
+            </Button>
             <Button
               size="lg"
               variant="outline"
@@ -72,9 +75,7 @@ export default function AddRotationKeyScreen({ state }: ScreenProps) {
                 : "Continue without generating rotation key"}
             </Button>
 
-            <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-              Cancel
-            </Button>
+
           </HStack>
         </div>
       </VStack>
