@@ -10,7 +10,7 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet } from "~/util/redis";
-import { isInvalidInviteCodeError, isRetryableServerError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
+import { isInvalidInviteCodeError, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 const HEALTH_CHECK_CACHE_KEY = "pds:health";
 const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
@@ -184,11 +184,20 @@ export async function loginOrigin({
   }
 
   // Login to origin PDS
-  const { data: agentSessionData } = await origin_agent.login({
-    identifier: handle_origin,
-    password: password_origin,
-    authFactorToken,
-  });
+  let agentSessionData;
+  try {
+    ({ data: agentSessionData } = await origin_agent.login({
+      identifier: handle_origin,
+      password: password_origin,
+      authFactorToken,
+    }));
+  } catch (e) {
+    if (isUnreachableHostError(e)) {
+      logger.warn(`Unable to reach origin PDS at ${pds_origin}`, e);
+      throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS);
+    }
+    throw e;
+  }
 
   const { did, email, accessJwt: token_origin } = agentSessionData;
 
@@ -800,10 +809,19 @@ export async function loginDest({
   }
 
   // Login to origin PDS
-  const { data: agentSessionData } = await dest_agent.login({
-    identifier: handle_dest,
-    password: password_dest,
-  });
+  let agentSessionData;
+  try {
+    ({ data: agentSessionData } = await dest_agent.login({
+      identifier: handle_dest,
+      password: password_dest,
+    }));
+  } catch (e) {
+    if (isUnreachableHostError(e)) {
+      logger.warn(`Unable to reach destination PDS at ${pds_dest}`, e);
+      throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_DEST_PDS);
+    }
+    throw e;
+  }
 
   const { accessJwt: token_dest } = agentSessionData;
 

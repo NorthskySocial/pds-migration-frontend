@@ -2,6 +2,7 @@ import { XRPCError } from "@atproto/api";
 import {
   isInvalidInviteCodeError,
   isRetryableServerError,
+  isUnreachableHostError,
   XRPC_ERROR_MESSAGES,
 } from "~/util/xrpc-errors";
 
@@ -114,6 +115,67 @@ describe("xrpc-errors", () => {
       expect(XRPC_ERROR_MESSAGES.SERVER_ERROR).toContain("server error");
       expect(XRPC_ERROR_MESSAGES.SERVER_ERROR).toContain("try again");
       expect(XRPC_ERROR_MESSAGES.SERVER_ERROR).toContain("contact Support");
+    });
+
+    it("has UNREACHABLE_ORIGIN_PDS message", () => {
+      expect(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS).toContain("PDS");
+      expect(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS).toContain("try again");
+    });
+
+    it("has UNREACHABLE_DEST_PDS message", () => {
+      expect(XRPC_ERROR_MESSAGES.UNREACHABLE_DEST_PDS).toContain("Northsky PDS");
+    });
+  });
+
+  describe("isUnreachableHostError", () => {
+    it("returns true for TypeError with 'fetch failed' message", () => {
+      const error = new TypeError("fetch failed");
+      expect(isUnreachableHostError(error)).toBe(true);
+    });
+
+    it("returns true when cause has an unreachable code (ENOTFOUND)", () => {
+      const error = new Error("Some wrapped error");
+      (error as Error & { cause: unknown }).cause = { code: "ENOTFOUND" };
+      expect(isUnreachableHostError(error)).toBe(true);
+    });
+
+    it("returns true when cause has ECONNREFUSED code", () => {
+      const error = new Error("connection failure");
+      (error as Error & { cause: unknown }).cause = { code: "ECONNREFUSED" };
+      expect(isUnreachableHostError(error)).toBe(true);
+    });
+
+    it("returns true for nested causes", () => {
+      const error = new Error("outer");
+      (error as Error & { cause: unknown }).cause = {
+        message: "inner",
+        cause: { code: "EAI_AGAIN" },
+      };
+      expect(isUnreachableHostError(error)).toBe(true);
+    });
+
+    it("returns true when AggregateError-like errors array contains a match", () => {
+      const error = new Error("aggregate");
+      (error as Error & { errors: unknown[] }).errors = [
+        { message: "fetch failed" },
+      ];
+      expect(isUnreachableHostError(error)).toBe(true);
+    });
+
+    it("returns false for unrelated errors", () => {
+      expect(isUnreachableHostError(new Error("something else"))).toBe(false);
+    });
+
+    it("returns false for non-objects", () => {
+      expect(isUnreachableHostError(null)).toBe(false);
+      expect(isUnreachableHostError(undefined)).toBe(false);
+      expect(isUnreachableHostError("fetch failed")).toBe(false);
+    });
+
+    it("returns false for unknown cause codes", () => {
+      const error = new Error("oops");
+      (error as Error & { cause: unknown }).cause = { code: "ESOMETHING" };
+      expect(isUnreachableHostError(error)).toBe(false);
     });
   });
 });
