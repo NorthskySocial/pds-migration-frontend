@@ -13,9 +13,11 @@ import { useCallback, useState } from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
 import "@1password/save-button";
 import { logger } from "~/util/logger";
+import { useAttentionAlert } from "~/util/use-attention-alert";
 
 export default function AddRotationKeyScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
+  useAttentionAlert();
   const [didKeyWizard, setDidKeyWizard] = useState(false);
   const modalClose = useCallback(
     async (keypair: Secp256k1Keypair) => {
