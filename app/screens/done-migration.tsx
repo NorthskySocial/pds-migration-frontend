@@ -115,7 +115,7 @@ export default function MigrationDoneScreen({ state }: ScreenProps) {
                   <Link color={"emphasized"}
                     variant="underline"
                     target="_blank"
-                    href="https://bsky.app/profile/moderation.northsky.social" >Northsky Moderation Labeller</Link>
+                    href="https://bsky.app/profile/moderation.northsky.social" >Northsky Moderation Labeler</Link>
 
                 </List.Item>
               </List.Root>
