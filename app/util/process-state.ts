@@ -420,6 +420,7 @@ export const processState = async (
           );
         }
         const { token_dest, atp_dest_session } = await loginDest({
+          did,
           pds_dest: state.pds_dest ?? "https://northsky.social",
           handle_dest,
           password_dest,
