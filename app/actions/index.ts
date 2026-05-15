@@ -181,6 +181,55 @@ async function refreshAgents(
   return { destResumeAgent, originResumeAgent };
 }
 
+/**
+ * Verify that a given origin PDS URL is reachable and responds like
+ * a valid PDS.
+ * @param pds_origin The URL of the origin PDS to check
+ * @throws LoginError if the PDS is unreachable or does not respond as expected
+ */
+export async function verifyOriginPdsReachable(pds_origin: string): Promise<void> {
+  let describeRes: Response;
+  try {
+    const describeUrl = new URL(
+      "/xrpc/com.atproto.server.describeServer",
+      pds_origin
+    ).toString();
+    describeRes = await f(describeUrl, { method: "GET" });
+  } catch (e) {
+    if (isUnreachableHostError(e)) {
+      logger.warn(`Unable to reach origin PDS at ${pds_origin} during describeServer`, e);
+    } else {
+      logger.warn(`Unexpected error calling describeServer for ${pds_origin}`, e);
+    }
+    throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS);
+  }
+
+  if (!describeRes.ok) {
+    logger.warn(
+      `describeServer for origin PDS ${pds_origin} returned status ${describeRes.status}`
+    );
+    throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS);
+  }
+
+  let describeBody: { did?: string } | null = null;
+  try {
+    describeBody = (await describeRes.json()) as { did?: string } | null;
+  } catch (parseError) {
+    logger.warn(
+      `describeServer for origin PDS ${pds_origin} returned invalid JSON`,
+      parseError
+    );
+    throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS);
+  }
+
+  if (!describeBody || typeof describeBody.did !== "string" || !describeBody.did) {
+    logger.warn(
+      `describeServer for origin PDS ${pds_origin} did not return a did`
+    );
+    throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS);
+  }
+}
+
 export async function loginOrigin({
   pds_origin,
   handle_origin,
@@ -206,6 +255,9 @@ export async function loginOrigin({
     logger.warn(`loginOrigin called without a password (handle: ${handle_origin})`);
     throw new LoginError("Invalid password");
   }
+
+  // Sanity-checking the origin PDS is reachable
+  await verifyOriginPdsReachable(pds_origin);
 
   // Login to origin PDS
   let agentSessionData;
@@ -418,6 +470,9 @@ export async function createDestAccount(
     const pds_dest_hostname: string = 'northsky.social';
     const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname}`;
 
+    // Sanity-checking the origin PDS is reachable before getting the service token
+    await verifyOriginPdsReachable(pds_origin);
+
     // Generate service token
     log.info(`Requesting service token from ${MIGRATOR_BACKEND}/service-auth (aud: ${aud}, pds_host: ${serviceEndpoint})`);
     const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
@@ -439,7 +494,8 @@ export async function createDestAccount(
         `Service token request failed: status=${res.status} statusText=${res.statusText}, body=${nonOkBody}}`
       );
       throw new LoginError(
-        `Unexpected response when requesting service token; please contact support with error: ${res.statusText}`
+        `Unexpected response when requesting service token; please contact support with error: ${res.statusText}`,
+        "Unexpected"
       );
     }
 
@@ -449,7 +505,8 @@ export async function createDestAccount(
         `Service token response missing token field (status=${res.status})"}`
       );
       throw new LoginError(
-        `Invalid service token received; please contact support with error: ${res.statusText}`
+        `Invalid service token received; please contact support with error: ${res.statusText}`,
+        "Unexpected"
       );
     }
     log.info("Service token received successfully");
