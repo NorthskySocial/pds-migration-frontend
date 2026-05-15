@@ -111,6 +111,7 @@ async function handleHealthCheckFailure(): Promise<boolean> {
  * @param origin Resume the origin agent if true. Defaults to true.
  */
 async function refreshAgents(
+  did: string,
   pds_dest?: string,
   atp_dest_session?: AtpSessionData,
   pds_origin?: string,
@@ -118,8 +119,15 @@ async function refreshAgents(
   destination = true,
   origin = true
 ) {
+  const log = logger.withDid(did);
+
   if (!pds_dest || !pds_origin || !atp_dest_session || !atp_origin_session) {
-    logger.error("refreshAgents is missing required params");
+    log.error("refreshAgents is missing required params", {
+      has_pds_dest: !!pds_dest,
+      has_pds_origin: !!pds_origin,
+      has_atp_dest_session: !!atp_dest_session,
+      has_atp_origin_session: !!atp_origin_session,
+    });
     throw new MigrationError("Unable to resume session . Please re login");
   }
 
@@ -129,22 +137,34 @@ async function refreshAgents(
   if (destination) {
     //Resume destination agent session
 
-    if (!pds_dest || !atp_dest_session)
-      throw new MigrationError("Unable to resume session . Please re login");
+    if (!pds_dest || !atp_dest_session) {
+      log.error("refreshAgents missing destination params", {
+        has_pds_dest: !!pds_dest,
+        has_atp_dest_session: !!atp_dest_session,
+      });
+      throw new MigrationError("Unable to resume session on destination PDS. Please re login");
+    }
 
     destResumeAgent = new AtpAgent({
       service: pds_dest,
     });
     //this will automatically check the session and refresh if needed
     const { success } = await destResumeAgent.resumeSession(atp_dest_session);
-    if (!success)
-      throw new MigrationError("Unable to resume session. Please re login");
+    if (!success) {
+      log.error(`Failed to resume destination session at ${pds_dest}`);
+      throw new MigrationError("Unable to resume session on destination PDS. Please re login");
+    }
   }
 
   if (origin) {
     //Resume origin agent session
-    if (!pds_origin || !atp_origin_session)
-      throw new MigrationError("Unable to resume session . Please re login");
+    if (!pds_origin || !atp_origin_session) {
+      log.error("refreshAgents missing origin params", {
+        has_pds_origin: !!pds_origin,
+        has_atp_origin_session: !!atp_origin_session,
+      });
+      throw new MigrationError("Unable to resume session on origin PDS. Please re login");
+    }
 
     originResumeAgent = new AtpAgent({
       service: pds_origin,
@@ -152,8 +172,10 @@ async function refreshAgents(
     //this will automatically check the session and refresh if needed
     const { success } =
       await originResumeAgent.resumeSession(atp_origin_session);
-    if (!success)
-      throw new MigrationError("Unable to resume session. Please re login");
+    if (!success) {
+      log.error(`Failed to resume origin session at ${pds_origin}`);
+      throw new MigrationError("Unable to resume session on origin PDS. Please re login");
+    }
   }
 
   return { destResumeAgent, originResumeAgent };
@@ -176,10 +198,12 @@ export async function loginOrigin({
   });
 
   if (!handle_origin) {
+    logger.warn("loginOrigin called without a handle");
     throw new LoginError("Invalid handle");
   }
 
   if (!password_origin) {
+    logger.warn(`loginOrigin called without a password (handle: ${handle_origin})`);
     throw new LoginError("Invalid password");
   }
 
@@ -202,6 +226,7 @@ export async function loginOrigin({
   const { did, email, accessJwt: token_origin } = agentSessionData;
 
   if (!did) {
+    logger.error(`loginOrigin succeeded but did is missing for handle ${handle_origin} on ${pds_origin}`);
     throw new LoginError("Unable to resolve DID");
   }
 
@@ -246,7 +271,7 @@ export async function createDestAccount(
     throw new CreateAccountError("Invalid origin token");
   }
 
-  log.info("In creation");
+  log.info("In create destination account logic");
   const pw_dest = (data.get("password") as string) ?? "";
   const pwConfirm = (data.get("password-confirm") as string) ?? "";
   const handle = ((data.get("handle") as string) ?? "");
@@ -296,6 +321,7 @@ export async function createDestAccount(
     passwordTooShort ||
     passwordMismatch
   ) {
+    log.info("Early return from createDestAccount to handle user feedback");
     return {
       handle_not_available: !handleIsAvailable,
       handle_dest: handle_dest,
@@ -360,10 +386,11 @@ export async function createDestAccount(
     }
 
     if (!response?.success) {
+      log.error(`createAccount returned a non-success response for handle ${handle_dest} on ${pds_dest}: ${JSON.stringify(response)}`);
       throw new CreateAccountError("Error creating account on destination PDS");
     } else {
-      log.info(`New dest account created successfully with invite code: ${inviteCode}`);
       const newAccountDid = response.data.did;
+      log.info(`New dest account created successfully with invite code: ${inviteCode}, DID: ${newAccountDid}`);
       await sendDiscordMessage(
         `New account [**${handle_dest}**](<https://bsky.app/profile/${newAccountDid}>) (${newAccountDid}) created successfully with invite code: ${inviteCode}`
       );
@@ -373,7 +400,6 @@ export async function createDestAccount(
       identifier: handle_dest,
       password: pw_dest,
     });
-
 
     return {
       token_dest: data.accessJwt,
@@ -393,6 +419,7 @@ export async function createDestAccount(
     const aud = `did:web:${pds_dest_hostname.match("localhost") ? "localhost" : pds_dest_hostname}`;
 
     // Generate service token
+    log.info(`Requesting service token from ${MIGRATOR_BACKEND}/service-auth (aud: ${aud}, pds_host: ${serviceEndpoint})`);
     const res = await f(`${MIGRATOR_BACKEND}/service-auth`, {
       headers: {
         "Content-Type": "application/json",
@@ -406,19 +433,26 @@ export async function createDestAccount(
       }),
     });
 
-
     if (!res.ok) {
+      const nonOkBody = await res.text();
+      log.error(
+        `Service token request failed: status=${res.status} statusText=${res.statusText}, body=${nonOkBody}}`
+      );
       throw new LoginError(
-        `Invalid service token received; please contact support with error: ${res.statusText}`
+        `Unexpected response when requesting service token; please contact support with error: ${res.statusText}`
       );
     }
 
     const token_service = await res.json<{ token: string }>();
     if (!token_service.token) {
+      log.error(
+        `Service token response missing token field (status=${res.status})"}`
+      );
       throw new LoginError(
         `Invalid service token received; please contact support with error: ${res.statusText}`
       );
     }
+    log.info("Service token received successfully");
 
     const createAccountRequestBody = {
       pds_host: pds_dest,
@@ -490,13 +524,17 @@ export async function exportRepo(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
+  const log = logger.withDid(did);
+
   if (!pds_origin || !did) {
+    log.error("exportRepo missing required params", { has_pds_origin: !!pds_origin, has_did: !!did });
     throw new MigrationError(
       "Unable to resolve original account; please login again."
     );
   }
 
   const { originResumeAgent } = await refreshAgents(
+    did,
     pds_dest,
     atp_dest_session,
     pds_origin,
@@ -517,7 +555,9 @@ export async function exportRepo(
   logger.debug("exportRepo", res);
 
   if (!res.ok) {
-    throw new MigrationError(await res.text());
+    const errBody = await res.text();
+    log.error(`export-repo failed: status=${res.status} body=${errBody}`);
+    throw new MigrationError(errBody);
   }
 
   return { ok: true };
@@ -533,13 +573,16 @@ export async function importRepo(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
+  const log = logger.withDid(did);
   if (!pds_dest || !did) {
+    log.error("importRepo missing required params", { has_pds_dest: !!pds_dest, has_did: !!did });
     throw new MigrationError(
       "Unable to resolve new account; please contact support."
     );
   }
 
   const { destResumeAgent } = await refreshAgents(
+    did,
     pds_dest,
     atp_dest_session,
     pds_origin,
@@ -562,7 +605,9 @@ export async function importRepo(
   logger.debug("importRepo", res);
 
   if (!res.ok) {
-    throw new MigrationError((await res?.text()) ?? "Unknown migration error");
+    const errBody = (await res?.text()) ?? "Unknown migration error";
+    log.error(`import-repo failed: status=${res.status} body=${errBody}`);
+    throw new MigrationError(errBody);
   }
 
   return { ok: true };
@@ -579,13 +624,16 @@ export async function exportBlobs(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
+  const log = logger.withDid(did);
   if (!pds_origin || !pds_dest || !did) {
+    log.error("exportBlobs missing required params", { has_pds_origin: !!pds_origin, has_pds_dest: !!pds_dest, has_did: !!did });
     throw new MigrationError(
       "Unable to resolve original account; please login again."
     );
   }
 
   const { destResumeAgent, originResumeAgent } = await refreshAgents(
+    did,
     pds_dest,
     atp_dest_session,
     pds_origin,
@@ -646,13 +694,16 @@ export async function uploadBlobs(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
+  const log = logger.withDid(did);
   if (!pds_dest || !did) {
+    log.error("uploadBlobs missing required params", { has_pds_dest: !!pds_dest, has_did: !!did });
     throw new MigrationError(
       "Unable to resolve destination account; please login again."
     );
   }
 
   const { destResumeAgent } = await refreshAgents(
+    did,
     pds_dest,
     atp_dest_session,
     pds_origin,
@@ -712,11 +763,14 @@ export async function migratePreferences(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
+  const log = logger.withDid(did);
   if (!pds_origin || !pds_dest || !did) {
+    log.error("migratePreferences missing required params", { has_pds_origin: !!pds_origin, has_pds_dest: !!pds_dest, has_did: !!did });
     throw new MigrationError("Not able to migrate preferences");
   }
 
   const { destResumeAgent, originResumeAgent } = await refreshAgents(
+    did,
     pds_dest,
     atp_dest_session,
     pds_origin,
@@ -737,7 +791,9 @@ export async function migratePreferences(
   });
 
   if (!res.ok) {
-    throw new MigrationError((await res.json<{ message: string }>()).message);
+    const message = (await res.json<{ message: string }>()).message;
+    log.error(`migrate-preferences failed: status=${res.status} message=${message}`);
+    throw new MigrationError(message);
   }
 
   return { ok: true };
@@ -753,12 +809,15 @@ export async function requestPlcToken(
   }: SessionData,
   MIGRATOR_BACKEND: string
 ) {
+  const log = logger.withDid(did);
   if (!pds_origin || !did) {
+    log.error("requestPlcToken missing required params", { has_pds_origin: !!pds_origin, has_did: !!did });
     throw new MigrationError(
       "Not able to request PLC token due to invalid credentials"
     );
   }
   const { originResumeAgent } = await refreshAgents(
+    did,
     pds_dest,
     atp_dest_session,
     pds_origin,
@@ -780,31 +839,38 @@ export async function requestPlcToken(
   });
 
   if (!res.ok) {
-    throw new MigrationError((await res.json<{ message: string }>()).message);
+    const message = (await res.json<{ message: string }>()).message;
+    log.error(`request-token failed: status=${res.status} message=${message}`);
+    throw new MigrationError(message);
   }
 
   return { ok: true };
 }
 
 export async function loginDest({
+  did,
   pds_dest,
   handle_dest,
   password_dest,
 }: {
+  did: string;
   pds_dest: string;
   handle_dest?: string;
   password_dest?: string;
 }) {
+  const log = logger.withDid(did);
   const dest_agent = new AtpAgent({
     service: pds_dest,
     fetch: f as typeof fetch,
   });
 
   if (!handle_dest) {
+    log.warn("loginDest called without a handle");
     throw new LoginError("Invalid Northsky handle");
   }
 
   if (!password_dest) {
+    log.warn(`loginDest called without a password (handle: ${handle_dest})`);
     throw new LoginError("Invalid Northsky password");
   }
 
@@ -817,7 +883,7 @@ export async function loginDest({
     }));
   } catch (e) {
     if (isUnreachableHostError(e)) {
-      logger.warn(`Unable to reach destination PDS at ${pds_dest}`, e);
+      log.warn(`Unable to reach destination PDS at ${pds_dest}`, e);
       throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_DEST_PDS);
     }
     throw e;
@@ -826,6 +892,7 @@ export async function loginDest({
   const { accessJwt: token_dest } = agentSessionData;
 
   if (!token_dest) {
+    log.error(`loginDest succeeded but accessJwt missing for handle ${handle_dest} on ${pds_dest}`);
     throw new LoginError("Unable to login to Northsky");
   }
 
@@ -850,8 +917,14 @@ export async function validatePlcToken(
   data: FormData,
   MIGRATOR_BACKEND: string
 ) {
+  if (!did) {
+    throw new MigrationError("Missing DID for PLC token validation");
+  }
+
+  const log = logger.withDid(did);
+
   if (import.meta.env.DEV) {
-    logger.log("Skipping PlcToken");
+    log.info("Skipping PlcToken");
     return { ok: true };
   }
   const submitted = data.has("submit");
@@ -859,6 +932,7 @@ export async function validatePlcToken(
 
   if (submitted && plcToken) {
     const { destResumeAgent, originResumeAgent } = await refreshAgents(
+      did,
       pds_dest,
       atp_dest_session,
       pds_origin,
@@ -883,10 +957,11 @@ export async function validatePlcToken(
     });
 
     if (!migrateRes.ok) {
-      throw new MigrationError(
+      const message =
         (await migrateRes.json<{ message: string }>())?.message ??
-          migrateRes.statusText
-      );
+        migrateRes.statusText;
+      log.error(`migrate-plc failed: status=${migrateRes.status} message=${message}`);
+      throw new MigrationError(message);
     }
 
     // activate new account
@@ -901,10 +976,11 @@ export async function validatePlcToken(
     });
 
     if (!activateRes.ok) {
-      throw new MigrationError(
+      const message =
         (await activateRes.json<{ message: string }>())?.message ??
-          activateRes.statusText
-      );
+        activateRes.statusText;
+      log.error(`activate-account failed: status=${activateRes.status} message=${message}`);
+      throw new MigrationError(message);
     }
 
     // deactivate old account
@@ -919,10 +995,11 @@ export async function validatePlcToken(
     });
 
     if (!deactivateRes.ok) {
-      throw new MigrationError(
+      const message =
         (await deactivateRes.json<{ message: string }>())?.message ??
-          deactivateRes.statusText
-      );
+        deactivateRes.statusText;
+      log.error(`deactivate-account failed: status=${deactivateRes.status} message=${message}`);
+      throw new MigrationError(message);
     }
 
     const invalidBlobsNote = had_invalid_blobs
