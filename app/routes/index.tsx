@@ -11,6 +11,7 @@ import {
   getSession,
   commitSession,
   type SessionData,
+  type ErrorType,
 } from "../sessions.server";
 import { Layout } from "~/components/layout";
 import { Suspense } from "react";
@@ -21,9 +22,14 @@ import { ErrorMessage } from "~/components/error-message";
 import { STAGES } from "~/util/stages";
 import { SCREENS } from "~/screens";
 import { logger } from "~/util/logger";
-import f from "~/util/mock-fetch";
+import { BaseAppError } from "~/errors";
+import { checkPdsHealth } from "~/actions";
 
-export async function action({ request, context }: Route.ActionArgs) {
+export function meta(_: Route.MetaArgs): ReturnType<Route.MetaFunction> {
+  return [{ title: "Migrate to Northsky!" }];
+}
+
+export async function action({ request }: Route.ActionArgs) {
   const session = await getSession(request.headers.get("Cookie"));
   const path = parsePath(request.url);
   const search = createSearchParams(path.search);
@@ -32,8 +38,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     session.set(
       "pds_dest",
       search.get("destination") ??
-        process?.env?.PDS_HOSTNAME ??
-        context.cloudflare.env.PDS_HOSTNAME
+        process?.env?.PDS_HOSTNAME
     );
   }
 
@@ -42,7 +47,6 @@ export async function action({ request, context }: Route.ActionArgs) {
       "plc_hostname",
       search.get("plc") ??
         process?.env?.PLC_HOSTNAME ??
-        context.cloudflare.env.PLC_HOSTNAME ??
         "https://plc.directory"
     );
   }
@@ -56,27 +60,31 @@ export async function action({ request, context }: Route.ActionArgs) {
   const data = await request.formData();
   let stage = STAGES.INVITE_CODE;
 
+  const log = logger.withDid(session.get("did"));
+
   try {
-    const migratorBackend =
-      process?.env?.MIGRATOR_BACKEND ?? context.cloudflare.env.MIGRATOR_BACKEND;
+    const migratorBackend = process?.env?.MIGRATOR_BACKEND;
+    if (!migratorBackend) {
+      throw new Error("MIGRATOR_BACKEND environment variable is not set");
+    }
     const state = await processState(session, data, migratorBackend);
     stage = getStage(state);
+    log.info(`New stage for journey (${session.get("do_journey")}): ${stage}`);
+
   } catch (e) {
-    logger.error("error in index action");
-    console.log(e);
-    if (e instanceof Error) {
+    log.error("error in index action", e, e instanceof BaseAppError ? e.errorType : "Not BaseAppError");
+    if (e instanceof BaseAppError) {
       session.flash("error", e.message);
+      session.flash("errorType", e.errorType);
+    } else if (e instanceof Error) {
+      session.flash("error", e.message);
+      session.flash("errorType", "Unexpected");
     }
   }
 
-  logger.debug("action: ", stage);
+  log.debug("action: ", stage);
 
   return redirect(
-    // stage === STAGES.DONE
-    //   ? "/success"
-    //   : stage === STAGES.FAILED
-    //     ? "/failed"
-    //     : "/",
     "/",
     {
       headers: {
@@ -88,64 +96,50 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("Cookie"));
+  const state = session.data as SessionData;
+  const publicState = Object.fromEntries(
+    Object.entries(state).filter(([key]) => key !== "pds_dest")
+  ) as Omit<SessionData, "pds_dest">;
+  const supportFormUrl = process.env?.SUPPORT_FORM_URL;
 
-  // TODO: why can't we replace with session.data???
-  const state: SessionData = {
-    do_journey: session.get("do_journey"),
-    handle_origin: session.get("handle_origin"),
-    handle_dest: session.get("handle_dest"),
-    pds_dest: session.get("pds_dest"),
-    pds_origin: session.get("pds_origin"),
-    token_origin: session.get("token_origin"),
-    token_dest: session.get("token_dest"),
-    plc_hostname: session.get("plc_hostname"),
-    did: session.get("did"),
-    inviteCode: session.get("inviteCode"),
-    email: session.get("email"),
-    user_recover_key: session.get("user_recover_key"),
-    require_2fa_code: session.get("require_2fa_code") ?? false,
-    export_job_failures: session.get("export_job_failures"),
-    export_job_id: session.get("export_job_id"),
-    export_total: null,
-    export_pct_done: null,
-    last_export_check: session.get("last_export_check"),
-    handle_not_available: session.get("handle_not_available"),
-    password_mismatch: session.get("password_mismatch"),
-    password_too_short: session.get("password_too_short"),
+  const forceMaintenance = new URL(request.url)
+    .searchParams
+    .get("force_maintenance") === "true";
 
-    // state flags
-    hasBackup: session.get("hasBackup") ?? false,
-    exportedRepo: session.get("exportedRepo") ?? false,
-    importedRepo: session.get("importedRepo") ?? false,
-    exportedBlobs: session.get("exportedBlobs") ?? false,
-    importedBlobs: session.get("importedBlobs") ?? false,
-    migratedPrefs: session.get("migratedPrefs") ?? false,
-    requestedPlcToken: session.get("requestedPlcToken") ?? false,
-    originDeactivated: session.get("originDeactivated") ?? false,
-    destActivated: session.get("destActivated") ?? false,
-    migratedPlc: session.get("migratedPlc") ?? false,
-  };
+  const upstreamOutage = process.env?.UPSTREAM_OUTAGE === "true";
 
-  try {
-    const stage = getStage(state);
-    logger.debug(
-      stage,
+  if (forceMaintenance || upstreamOutage || !(await checkPdsHealth())) {
+    return data(
       {
-        ...session.data,
-        token_origin: "<HIDDEN>",
-        token_dest: "<HIDDEN>",
+        error: undefined,
+        errorType: undefined,
+        stage: STAGES.MAINTENANCE,
+        state: publicState,
+        supportFormUrl,
+        isUpstreamOutage: upstreamOutage,
       },
       {
-        ...state,
-        token_dest: "<HIDDEN>",
-        token_origin: "<HIDDEN>",
+        headers: {
+          "Set-Cookie": await commitSession(session),
+        },
       }
     );
+  }
+
+  const log = logger.withDid(state.did);
+  try {
+    const stage = getStage(state);
+    if (session.get("do_journey") !== undefined) {
+      log.info(`Loading data for journey (${session.get("do_journey")}): ${stage}`);
+    }
     return data(
       {
         error: session.get("error"),
+        errorType: session.get("errorType"),
         stage,
-        state,
+        state: publicState,
+        supportFormUrl,
+        isUpstreamOutage: false,
       },
       {
         headers: {
@@ -154,12 +148,15 @@ export async function loader({ request }: Route.LoaderArgs) {
       }
     );
   } catch (e) {
-    console.error(e, state);
+    log.error("Error in loader:", e, state);
     return data(
       {
         error: (e as Error).message,
+        errorType: "Unexpected" as ErrorType,
         stage: STAGES.FAILED,
-        state,
+        state: publicState,
+        supportFormUrl,
+        isUpstreamOutage: false,
       },
       {
         headers: {
@@ -171,19 +168,19 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Index({ loaderData }: Route.ComponentProps) {
-  const { error, state, stage = STAGES.INVITE_CODE } = loaderData;
+  const { error, errorType, state, stage = STAGES.INVITE_CODE, supportFormUrl, isUpstreamOutage } = loaderData;
   const fetcher = useFetcher();
 
   const Stage = SCREENS[stage];
 
   return (
     <Layout>
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && <ErrorMessage errorType={errorType} supportFormUrl={supportFormUrl}>{error}</ErrorMessage>}
       <Suspense fallback={<Loading />}>
         {fetcher.state !== "idle" ? (
           <Loading />
         ) : (
-          <Stage stage={stage} state={state} error={error} />
+          <Stage stage={stage} state={state} error={error} supportFormUrl={supportFormUrl} isUpstreamOutage={isUpstreamOutage} />
         )}
       </Suspense>
     </Layout>

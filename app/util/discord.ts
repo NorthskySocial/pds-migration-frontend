@@ -1,3 +1,5 @@
+import { logger } from "./logger";
+
 /**
  * Sends a message to a Discord webhook.
  * Catches and ignores any failures silently.
@@ -9,7 +11,7 @@ export async function sendDiscordMessage(message: string): Promise<void> {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
     if (!webhookUrl) {
-        console.log("[sendDiscordMessage] Discord webhook URL not configured.");
+        logger.info("[sendDiscordMessage] Discord webhook URL not configured.");
       return;
     }
 
@@ -22,8 +24,8 @@ export async function sendDiscordMessage(message: string): Promise<void> {
         content: message,
       }),
     });
-    console.log("[sendDiscordMessage] Discord message sent successfully!");
+    logger.info("[sendDiscordMessage] Discord message sent successfully!");
   } catch {
-    console.log("[sendDiscordMessage] Failed to send Discord message!");
+    logger.warn("[sendDiscordMessage] Failed to send Discord message!");
   }
 }

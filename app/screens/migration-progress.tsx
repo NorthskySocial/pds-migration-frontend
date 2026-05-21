@@ -1,4 +1,4 @@
-import { Heading, Text, Progress, VStack } from "@chakra-ui/react";
+import { Heading, Text, Progress, VStack, Button, Alert } from "@chakra-ui/react";
 import clock_art from "../assets/KTPClock.gif";
 import { InfoTip } from "@/components/ui/toggle-tip";
 import type { ScreenProps } from "~/util/stages";
@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 export default function MigrationProgressScreen({
   stage,
-  state: { export_progress },
+  state: { export_progress, upload_progress },
   error,
 }: ScreenProps) {
   const fetcher = useFetcher();
@@ -16,7 +16,84 @@ export default function MigrationProgressScreen({
 
   const { stageIdx, stageTitle, stageDescription } = stageInfo[stage];
 
-  // Immediately submit to go to next step
+  const getSecondaryProgressBar = () => {
+    switch (stage) {
+      case STAGES.EXPORT_BLOBS_ORIGIN:
+        if (!export_progress) return null;
+
+        return (
+            <Progress.Root
+              width="100%"
+              max={export_progress?.total}
+              min={0}
+              value={
+                export_progress.invalid_blobs + export_progress.successful_blobs
+              }
+              striped
+              animated
+            >
+              <Progress.Label mb="2">
+                Export progress:
+                {
+                  stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
+                  export_progress.successful_blobs > 0 && export_progress.total > 0 &&
+                  ` ${export_progress.successful_blobs}/${export_progress.total} blobs`
+                }
+                <InfoTip>We're collecting your blobs from your origin PDS, this might take a while</InfoTip>
+              </Progress.Label>
+              <Progress.Track>
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
+          );
+      case STAGES.IMPORT_BLOBS_DEST:
+        if (!upload_progress) return null;
+
+        return (
+          <>
+            <Progress.Root
+              width="100%"
+              max={upload_progress?.total}
+              min={0}
+              value={
+                upload_progress.invalid_blobs + upload_progress.successful_blobs
+              }
+              striped
+              animated
+            >
+              <Progress.Label mb="2">
+                Import progress:
+                {
+                  stage === STAGES.IMPORT_BLOBS_DEST && upload_progress &&
+                  upload_progress.successful_blobs > 0 && upload_progress.total > 0 &&
+                  ` ${upload_progress.successful_blobs}/${upload_progress.total} blobs`
+                }
+                <InfoTip>We're importing your blobs to the Northsky PDS, this might take a while</InfoTip>
+              </Progress.Label>
+              <Progress.Track>
+                <Progress.Range />
+              </Progress.Track>
+            </Progress.Root>
+            {upload_progress.invalid_blobs > 0 && (
+              <Alert.Root status="warning" mt="3">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>Some media blobs could not be imported</Alert.Title>
+                  <Alert.Description>
+                    {upload_progress.invalid_blobs} blob(s) could not be transferred during the migration process. Don't worry, you can recover these later from the home screen!
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert.Root>
+            )}
+          </>
+          );
+    }
+
+    return null;
+  };
+
+  // These stage are managed by the migrator app, so we trigger
+  // them automatically (every 1 second) to move to the next stage
   useEffect(() => {
     (async () => {
       if (
@@ -35,15 +112,15 @@ export default function MigrationProgressScreen({
           async () => {
             await fetcher.submit({}, { method: "post" });
           },
-          import.meta.env.DEV ? 500 : 0
+          1000
         );
       }
     })();
   }, [fetcher, stage, error]);
 
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <VStack
           margin="0 auto"
           maxWidth={"350px"}
@@ -63,29 +140,6 @@ export default function MigrationProgressScreen({
             className="katie-clock"
           />
 
-          {stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress && (
-            <Progress.Root
-              width="100%"
-              max={export_progress?.total}
-              min={0}
-              value={
-                (export_progress.invalid_blobs +
-                  export_progress.successful_blobs) /
-                export_progress.total
-              }
-              striped
-              animated
-            >
-              <Progress.Label mb="2">
-                Export blobs progress
-                <InfoTip>This might take a while</InfoTip>
-              </Progress.Label>
-              <Progress.Track>
-                <Progress.Range />
-              </Progress.Track>
-            </Progress.Root>
-          )}
-
           <Progress.Root
             width="100%"
             max={6}
@@ -95,18 +149,34 @@ export default function MigrationProgressScreen({
             animated
           >
             <Progress.Label mb="2">
-              {stageTitle}
-              {
-                stage === STAGES.EXPORT_BLOBS_ORIGIN && export_progress &&
-                export_progress.successful_blobs && export_progress.total &&
-                ` (${export_progress.successful_blobs}/${export_progress.total} blobs exported)`
-              }
+              Migration stage {stageIdx + 1} of 8: {stageTitle}
               <InfoTip>{stageDescription}</InfoTip>
             </Progress.Label>
             <Progress.Track>
               <Progress.Range />
             </Progress.Track>
           </Progress.Root>
+
+          {getSecondaryProgressBar()}
+
+          {error && (
+            <>
+              <Text fontSize="md" color="red.500" textAlign="center">
+                Please click the button below to resume the migration process.
+                You can log in with your Bluesky and Northsky credentials to kick off
+                the migration where it left off. If the problem persists, please
+                contact support.
+              </Text>
+              <Button
+                name="reset-resume"
+                type="submit"
+                value="reset-resume"
+                mt="4"
+              >
+                Resume Failed Migration
+              </Button>
+            </>
+          )}
         </VStack>
       </VStack>
     </fetcher.Form>

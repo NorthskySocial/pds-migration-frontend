@@ -2,14 +2,38 @@ import { createSessionStorage } from "react-router";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet, redisDel } from "./util/redis";
 
-const SESSION_TTL_SECONDS = 60 * 60 * 24; // 1 day
+const SESSION_TTL_SECONDS = 60 * 60 * 4; // 4 hours
+
+const SESSION_BOOLEAN_DEFAULTS = {
+  hasBackup: false,
+  exportedRepo: false,
+  importedRepo: false,
+  exportedBlobs: false,
+  importedBlobs: false,
+  migratedPrefs: false,
+  requestedPlcToken: false,
+  originDeactivated: false,
+  destActivated: false,
+  migratedPlc: false,
+  require_2fa_code: false,
+  had_invalid_blobs: false,
+} as const;
+
+export type BackgroundJobProgress = {
+  invalid_blobs: number;
+  successful_blobs: number;
+  total: number;
+};
 
 export type SessionData = {
-  do_journey?: "create" | "migrate" | "resume" | "fail";
+  do_journey?: "create" | "migrate" | "resume" | "fail" | "missing-blobs";
   handle_origin?: string;
   handle_dest?: string;
   password_origin?: string;
+  password_dest?: string;
   pds_dest?: string;
+  did_exists_in_dest?: boolean;
+  did_active_in_dest?: boolean;
   atp_origin_session?: AtpSessionData;
   atp_dest_session?: AtpSessionData;
   pds_origin?: string;
@@ -22,21 +46,20 @@ export type SessionData = {
   inviteCode?: string;
   email?: string;
   user_recover_key?: string | null;
-  export_progress?: {
-    invalid_blobs: number;
-    successful_blobs: number;
-    total: number;
-  } | null;
+  export_progress?: BackgroundJobProgress | null;
+  upload_progress?: BackgroundJobProgress | null;
   export_job_id?: string | null;
+  import_job_id?: string | null;
   export_job_failures?: number;
-  export_total?: number | null;
-  export_pct_done?: string | null;
+  import_job_failures?: number;
   last_export_check?: number;
+  last_import_check?: number;
   handle_not_available?: boolean | null;
   password_mismatch?: boolean | null;
   password_too_short?: boolean | null;
 
-  // state flags
+  // state flags, set a default on the object above when
+  // adding new ones
   hasBackup: boolean;
   exportedRepo: boolean;
   importedRepo: boolean;
@@ -48,25 +71,29 @@ export type SessionData = {
   destActivated: boolean;
   migratedPlc: boolean;
   require_2fa_code: boolean;
+  had_invalid_blobs: boolean;
 };
+
+export type ErrorType = "Expected" | "Unexpected";
 
 export type SessionFlashData = {
   error?: string;
+  errorType?: ErrorType;
 };
 
 export const initSession = (hostname?: string) =>
   createSessionStorage<SessionData, SessionFlashData>({
     cookie: {
       name: "__session",
-      domain: hostname, // @TODO get from context
+      domain: hostname,
       httpOnly: true,
       maxAge: SESSION_TTL_SECONDS, // in seconds (1 day)
       path: "/",
       sameSite: "strict",
-      secrets: ["toastytoast"],
+      secrets: [process.env?.SESSION_SECRET ?? "toastytoast"],
       secure: true,
     },
-    async createData(data: SessionData, expires?: Date | number) {
+    async createData(data: Partial<SessionData>, expires?: Date | number) {
       const id = `sid:${crypto.randomUUID()}`;
       const ttl = computeTtlSeconds(expires, SESSION_TTL_SECONDS);
       await redisSet(sessionKey(id), ttl, JSON.stringify(data ?? {}));
@@ -79,16 +106,19 @@ export const initSession = (hostname?: string) =>
       if (!raw) return null;
 
       try {
-        return JSON.parse(raw) as SessionData;
+        const parsed = JSON.parse(raw) as Partial<SessionData>;
+        return {
+          ...SESSION_BOOLEAN_DEFAULTS,
+          ...parsed,
+        };
       } catch {
         // Corrupt payload, drop it
         return null;
       }
     },
-    async updateData(id: string, data: SessionData, expires?: Date | number) {
+    async updateData(id: string, data: Partial<SessionData>, expires?: Date | number) {
       const ttl = computeTtlSeconds(expires, SESSION_TTL_SECONDS);
       await redisSet(sessionKey(id), ttl, JSON.stringify(data ?? {}));
-      return id;
     },
     async deleteData(id: string) {
       if (!id) return;

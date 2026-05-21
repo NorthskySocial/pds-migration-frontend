@@ -7,6 +7,7 @@ export enum STAGES {
   INVITE_CODE = "INVITE_CODE",
   BACKUP_NOTICE = "BACKUP_NOTICE",
   ORIGIN_PDS_LOGIN = "ORIGIN_PDS_LOGIN",
+  ALREADY_MIGRATED = "ALREADY_MIGRATED",
   CREATE_DEST_ACCOUNT = "CREATE_DEST_ACCOUNT",
   EXPORT_REPO_ORIGIN = "EXPORT_REPO_ORIGIN",
   IMPORT_REPO_DEST = "IMPORT_REPO_DEST",
@@ -21,16 +22,28 @@ export enum STAGES {
   MIGRATE_PLC = "MIGRATE_PLC",
   DONE = "DONE",
   FAILED = "FAILED",
+  MAINTENANCE = "MAINTENANCE",
+  MISSING_BLOBS_LOGIN = "MISSING_BLOBS_LOGIN",
+  MISSING_BLOBS_EXPORT = "MISSING_BLOBS_EXPORT",
+  MISSING_BLOBS_IMPORT = "MISSING_BLOBS_IMPORT",
+  MISSING_BLOBS_DONE = "MISSING_BLOBS_DONE",
 }
 
 export type ScreenProps = {
   state: SessionData;
   stage?: STAGES;
   error?: string;
+  supportFormUrl?: string;
+  isUpstreamOutage?: boolean;
 };
 
 export const stageInfo = {
   [STAGES.INVITE_CODE]: { stageIdx: -1, stageTitle: "", stageDescription: "" },
+  [STAGES.MAINTENANCE]: {
+    stageIdx: -1,
+    stageTitle: "Maintenance",
+    stageDescription: "The migration tool is temporarily unavailable",
+  },
   [STAGES.BACKUP_NOTICE]: {
     stageIdx: -1,
     stageTitle: "",
@@ -40,6 +53,11 @@ export const stageInfo = {
     stageIdx: -1,
     stageTitle: "",
     stageDescription: "",
+  },
+  [STAGES.ALREADY_MIGRATED]: {
+    stageIdx: -1,
+    stageTitle: "Already Migrated",
+    stageDescription: "Your account has already been migrated to Northsky",
   },
   [STAGES.ACTIVATE_DEST]: {
     stageIdx: -1,
@@ -95,9 +113,29 @@ export const stageInfo = {
     stageTitle: "Requesting PLC token...",
     stageDescription: "Almost done! Check your email!",
   },
-    [STAGES.RESUME_MIGRATION]: {
+  [STAGES.RESUME_MIGRATION]: {
     stageIdx: 8,
     stageTitle: "Resuming migration",
     stageDescription: "Let's resume your migration.",
+  },
+  [STAGES.MISSING_BLOBS_LOGIN]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
+  },
+  [STAGES.MISSING_BLOBS_EXPORT]: {
+    stageIdx: 0,
+    stageTitle: "Exporting missing blobs...",
+    stageDescription: "Finding and exporting blobs that need to be imported",
+  },
+  [STAGES.MISSING_BLOBS_IMPORT]: {
+    stageIdx: 1,
+    stageTitle: "Importing blobs...",
+    stageDescription: "Importing blobs to Northsky",
+  },
+  [STAGES.MISSING_BLOBS_DONE]: {
+    stageIdx: -1,
+    stageTitle: "",
+    stageDescription: "",
   },
 };

@@ -18,8 +18,8 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
   const [altPds, setAltPds] = useState(false);
   const fetcher = useFetcher();
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Bluesky">Login to Bluesky</Highlight>
         </Heading>
@@ -28,7 +28,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
             <Text fontSize="md" textAlign={"justify"}>
               Please check your email for a 2FA code and enter it below
             </Text>
-            <Field required label="Email 2fa code">
+            <Field required label="Email 2FA code">
               <Input name="2fa_code" required />
             </Field>
           </>
@@ -65,15 +65,17 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
             <Field required label="Bluesky password">
               <PasswordInput autoComplete="password" name="bsky-password" />
             </Field>
+            <Text>⚠️ Do not use an app password. An app password usually looks like this: xxxx-xxxx-xxxx-xxxx.</Text>
           </>
         )}
         <HStack>
-          <Button type="submit" name="submit" margin={"0 auto"}>
-            Continue
-          </Button>
           <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
             Cancel
           </Button>
+          <Button type="submit" name="submit" margin={"0 auto"}>
+            Continue
+          </Button>
+
         </HStack>
       </VStack>
     </fetcher.Form>

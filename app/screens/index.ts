@@ -11,11 +11,17 @@ export const DoneMigration = lazy(() => import("./done-migration"));
 export const FailedMigration = lazy(() => import("./failed-migration"));
 export const AddRotationKey = lazy(() => import("./add-rotation-key.client"));
 export const ResumeMigration = lazy(() => import("./migration-resume"));
+export const Maintenance = lazy(() => import("./maintenance"));
+export const MissingBlobsProgress = lazy(() => import("./missing-blobs-progress"));
+export const MissingBlobsDone = lazy(() => import("./missing-blobs-done"));
+export const AlreadyMigrated = lazy(() => import("./already-migrated"));
 
 export const SCREENS = {
   [STAGES.INVITE_CODE]: Intro,
+  [STAGES.MAINTENANCE]: Maintenance,
   [STAGES.BACKUP_NOTICE]: EncourageBackup,
   [STAGES.ORIGIN_PDS_LOGIN]: OriginLogin,
+  [STAGES.ALREADY_MIGRATED]: AlreadyMigrated,
   [STAGES.GENERATE_RECOVERY_KEY]: AddRotationKey,
   [STAGES.CREATE_DEST_ACCOUNT]: NewAccount,
   [STAGES.EXPORT_REPO_ORIGIN]: MigrationProgress,
@@ -30,5 +36,8 @@ export const SCREENS = {
   [STAGES.DONE]: DoneMigration,
   [STAGES.FAILED]: FailedMigration,
   [STAGES.RESUME_MIGRATION]: ResumeMigration,
-
+  [STAGES.MISSING_BLOBS_LOGIN]: ResumeMigration,
+  [STAGES.MISSING_BLOBS_EXPORT]: MissingBlobsProgress,
+  [STAGES.MISSING_BLOBS_IMPORT]: MissingBlobsProgress,
+  [STAGES.MISSING_BLOBS_DONE]: MissingBlobsDone,
 };

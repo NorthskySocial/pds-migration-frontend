@@ -13,9 +13,11 @@ import { useCallback, useState } from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
 import "@1password/save-button";
 import { logger } from "~/util/logger";
+import { useAttentionAlert } from "~/util/use-attention-alert";
 
-export default function EncourageBackupScreen({ state }: ScreenProps) {
+export default function AddRotationKeyScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
+  useAttentionAlert();
   const [didKeyWizard, setDidKeyWizard] = useState(false);
   const modalClose = useCallback(
     async (keypair: Secp256k1Keypair) => {
@@ -37,8 +39,8 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
   }, [fetcher]);
 
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="your Data">Add a rotation key</Highlight>
         </Heading>
@@ -60,6 +62,9 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           <br />
           <br />
           <HStack>
+            <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+              Cancel
+            </Button>
             <Button
               size="lg"
               variant="outline"
@@ -72,9 +77,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
                 : "Continue without generating rotation key"}
             </Button>
 
-            <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-              Cancel
-            </Button>
+
           </HStack>
         </div>
       </VStack>

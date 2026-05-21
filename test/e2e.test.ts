@@ -1,5 +1,4 @@
-import { type AtpAgent } from "@atproto/api";
-import { once, EventEmitter } from "node:events";
+import { EventEmitter } from "node:events";
 import {
   SeedClient,
   TestNetworkNoAppView,
@@ -8,7 +7,6 @@ import {
 } from "@atproto/dev-env";
 import "jest-puppeteer";
 import "expect-puppeteer";
-import Mail from "nodemailer/lib/mailer";
 import { STAGES } from "../app/util/stages";
 
 describe("account migration tool", () => {
@@ -27,8 +25,6 @@ describe("account migration tool", () => {
         dbPostgresSchema: "account_migration",
         pds: {
           devMode: true,
-          // hostname: PDS_ORIGIN_HOSTNAME,
-          // port: PDS_ORIGIN_PORT,
         },
       });
 
@@ -39,24 +35,9 @@ describe("account migration tool", () => {
         devMode: true,
         didPlcUrl: originNetwork.plc.url,
         inviteRequired: true,
-        // hostname: PDS_DEST_HOSTNAME,
-        // port: PDS_DEST_PORT,
       });
 
       mockNetworkUtilities(destPds);
-
-      // const origin_config: ProxyOptions = {
-      //   from: `${originNetwork.pds.url}:${originNetwork.pds.port}`,
-      //   to: PDS_ORIGIN_HOSTNAME,
-      // };
-
-      // const dest_config: ProxyOptions = {
-      //   from: `${destPds.url}:${destPds.port}`,
-      //   to: PDS_DEST_HOSTNAME,
-      // };
-
-      // startProxy(origin_config);
-      // startProxy(dest_config);
 
       sc = originNetwork.getSeedClient();
 
@@ -68,7 +49,6 @@ describe("account migration tool", () => {
       });
 
       await originNetwork.processAll();
-      // sampleKey = (await Secp256k1Keypair.create()).did();
 
       // Catch emails for use in tests
       _origSendMail = mailer.transporter.sendMail;
@@ -86,7 +66,7 @@ describe("account migration tool", () => {
 
       alice = sc.dids.alice;
 
-      const res = await destPds.getClient().com.atproto.server.createInviteCode(
+      const res = await destPds.getAgent().com.atproto.server.createInviteCode(
         { useCount: 5 },
         {
           encoding: "application/json",

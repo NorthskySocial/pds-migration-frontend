@@ -73,6 +73,75 @@ jobs:
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
+  deploy_pr_to_staging:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: build-and-push-image
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Trigger staging deployment via webhook
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          token: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
+          repository: ${{ secrets.DEPLOYMENT_WEBHOOK_REPOSITORY }}
+          event-type: deploy-migration-fe-preview
+          client-payload: '{"pr_number": "${{ github.event.pull_request.number }}"}'
+
+      - name: Compute preview URL
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "PREVIEW_URL=https://pr-${PR_NUMBER}.pr.migrate.staging.northsky.social" >> $GITHUB_ENV
+
+      - name: Compute deployment time
+        run: |
+          DEPLOY_TIME="$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          DEPLOY_TIME_PT="$(TZ='America/Los_Angeles' date +"%H:%M:%S %Z")"
+          echo "DEPLOY_TIME=$DEPLOY_TIME" >> $GITHUB_ENV
+          echo "DEPLOY_TIME_PT=$DEPLOY_TIME_PT" >> $GITHUB_ENV
+
+      - name: Wait for 2 minutes to allow deployment to complete
+        run: sleep 120s
+
+      - name: Update PR comment with preview link
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PREVIEW_URL: ${{ env.PREVIEW_URL }}
+          DEPLOY_TIME: ${{ env.DEPLOY_TIME }}
+          DEPLOY_TIME_PT: ${{ env.DEPLOY_TIME_PT }}
+        run: |
+          BODY="<!-- preview-env-comment -->
+          🚀 **Staging environment is ready**
+
+          **URL:** ${PREVIEW_URL}
+          **Last deployed:** ${DEPLOY_TIME} (${DEPLOY_TIME_PT})
+
+          *This environment resets on every push and auto-expires in 3 days.*"
+
+          # Find existing comment using GitHub API
+          COMMENT_ID=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.body | contains("preview-env-comment")) | .id')
+
+          if [ -z "$COMMENT_ID" ]; then
+            echo "Creating new comment"
+            gh pr comment $PR_NUMBER --body "$BODY"
+          else
+            echo "Updating existing comment $COMMENT_ID"
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${{ github.repository }}/issues/comments/${COMMENT_ID}" \
+              -f body="$BODY"
+          fi
+
   deploy_to_kubernetes:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'

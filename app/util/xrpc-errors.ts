@@ -1,0 +1,99 @@
+import { XRPCError } from "@atproto/api";
+
+/**
+ * Check if an XRPCError indicates an invalid or already-used invite code.
+ */
+export function isInvalidInviteCodeError(error: unknown): boolean {
+  if (!(error instanceof XRPCError)) {
+    return false;
+  }
+
+  return error.message.includes("invite code not available");
+}
+
+/**
+ * Check if an XRPCError is a server error (5xx status code), an internal
+ * server error coming from a PDS.
+ */
+export function isRetryableServerError(error: unknown): boolean {
+  if (!(error instanceof XRPCError)) {
+    return false;
+  }
+
+  return error.status >= 500;
+}
+
+/**
+ * Check if an error indicates a network-level failure reaching a PDS
+ * (e.g. invalid hostname, DNS failure, connection refused, TLS errors).
+ */
+export function isUnreachableHostError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const message = (error as { message?: unknown }).message;
+  if (typeof message === "string" && message.toLowerCase().includes("fetch failed")) {
+    return true;
+  }
+
+  const cause = (error as { cause?: unknown }).cause;
+  if (cause && typeof cause === "object") {
+    const code = (cause as { code?: unknown }).code;
+    if (typeof code === "string" && UNREACHABLE_HOST_ERROR_CODES.has(code)) {
+      return true;
+    }
+
+    // Recurse through wrapped causes
+    if (isUnreachableHostError(cause)) {
+      return true;
+    }
+  }
+
+  const errors = (error as { errors?: unknown }).errors;
+  if (Array.isArray(errors)) {
+    for (const inner of errors) {
+      if (isUnreachableHostError(inner)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Network-level error codes (undici/DNS layer) that indicate the
+ * PDS hostname is unreachable.
+ */
+const UNREACHABLE_HOST_ERROR_CODES = new Set([
+  "ENOTFOUND",
+  "EAI_AGAIN",
+  "ECONNREFUSED",
+  "ECONNRESET",
+  "EHOSTUNREACH",
+  "ENETUNREACH",
+  "ETIMEDOUT",
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_SOCKET",
+  "CERT_HAS_EXPIRED",
+]);
+
+/**
+ * User-friendly error messages for XRPC errors during account creation.
+ */
+export const XRPC_ERROR_MESSAGES = {
+  INVALID_INVITE_CODE:
+    "The invite code you entered is invalid or has already been used. \
+If you previously started your migration to Northsky, please go to the home screen and select Resume migration. \
+If you believe this is an error, please contact Support.",
+  SERVER_ERROR:
+    "We encountered a server error while creating your account on the Northsky PDS. \
+Please try again in a few minutes. If the problem persists, please contact Support.",
+  UNREACHABLE_ORIGIN_PDS:
+    "We couldn't reach your origin PDS. Please double-check the PDS URL you entered \
+and make sure the service is online, then try again.",
+  UNREACHABLE_DEST_PDS:
+    "We couldn't reach the Northsky PDS. Please try again in a few minutes. \
+If the problem persists, please contact Support.",
+} as const;

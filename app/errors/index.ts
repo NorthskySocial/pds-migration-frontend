@@ -1,55 +1,29 @@
-export class PasswordValidationError extends Error {
-  constructor(message: string) {
+import type { ErrorType } from "~/sessions.server";
+
+export class BaseAppError extends Error {
+  errorType: ErrorType;
+
+  constructor(message: string, errorType: ErrorType = "Unexpected") {
     super(message);
     this.name = this.constructor.name;
+    this.errorType = errorType;
   }
 }
 
-export class PasswordTooShortError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
+export class CreateAccountError extends BaseAppError {
+  constructor(message: string, errorType: ErrorType = "Unexpected") {
+    super(message, errorType);
   }
 }
 
-export class PasswordMatchError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
+export class MigrationError extends BaseAppError {
+  constructor(message: string, errorType: ErrorType = "Unexpected") {
+    super(message, errorType);
   }
 }
 
-export class EMailValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-export class HandleNotAvailableError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-export class CreateAccountError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-export class MigrationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
-  }
-}
-
-export class LoginError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = this.constructor.name;
+export class LoginError extends BaseAppError {
+  constructor(message: string, errorType: ErrorType = "Expected") {
+    super(message, errorType);
   }
 }

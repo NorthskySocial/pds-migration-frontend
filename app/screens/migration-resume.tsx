@@ -19,9 +19,10 @@ import { useFetcher } from "react-router";
 export default function OriginLoginScreen({ state }: ScreenProps) {
   const [altPds, setAltPds] = useState(false);
   const fetcher = useFetcher();
+  const isMissingBlobsJourney = state.do_journey === "missing-blobs";
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Bluesky">Login to both services</Highlight>
         </Heading>
@@ -30,17 +31,22 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
             <Text fontSize="md" textAlign={"justify"}>
               Please check your email for a 2FA code and enter it below
             </Text>
-            <Field required label="Email 2fa code">
+            <Field required label="Email 2FA code">
               <Input name="2fa_code" required />
             </Field>
           </>
         ) : (
           <>
             <Text fontSize="md" textAlign={"justify"}>
-              Please provide us with the following information so we can resume
-              migrating your data.
+              {
+                isMissingBlobsJourney
+                  ?
+                  "Please provide us with the following information so we can recover any missing blobs from your previous PDS."
+                  : "Please provide us with the following information so we can resume migrating your data."
+              }
+
             </Text>
-            <Grid templateColumns="repeat(2, 1fr)" gap="6">
+            <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap="6" width="100%">
               <VStack>
                 <Switch
                   name="has-pds"
@@ -67,6 +73,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
                 <Field required label="Bluesky password">
                   <PasswordInput autoComplete="password" name="bsky-password" />
                 </Field>
+                <Text>⚠️ Do not use an app password. An app password usually looks like this: xxxx-xxxx-xxxx-xxxx.</Text>
               </VStack>
               <VStack>
                 <Field required label="Northsky login">
@@ -87,17 +94,18 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
           </>
         )}
         <HStack>
+          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+            Cancel
+          </Button>
           <Button
             type="submit"
             name="submit"
             margin={"0 auto"}
-            value="resume-migration-login"
+            value={isMissingBlobsJourney ? "missing-blobs-login" : "resume-migration-login"}
           >
             Continue
           </Button>
-          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
-            Cancel
-          </Button>
+
         </HStack>
       </VStack>
     </fetcher.Form>

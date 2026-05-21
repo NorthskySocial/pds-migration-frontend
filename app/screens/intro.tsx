@@ -4,7 +4,6 @@ import {
   VStack,
   Text,
   Input,
-  HStack,
   Button,
   Box,
   Link,
@@ -17,8 +16,8 @@ import { useFetcher } from "react-router";
 export default function IntroScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (
-    <fetcher.Form method="post">
-      <VStack mb="5">
+    <fetcher.Form method="post" style={{ width: "100%" }}>
+      <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
           <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
         </Heading>
@@ -42,9 +41,20 @@ export default function IntroScreen({ state }: ScreenProps) {
           By entering your invite code, you accept these terms, and consent to
           migrating your data to Northsky's servers.
         </Text>
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/wKPBH8j5HDM?si=uf4ioqAn80p2L3UY" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+        <Box width="100%" maxWidth="560px" aspectRatio="16/9">
+          <iframe
+            width="100%"
+            height="100%"
+            src="https://www.youtube.com/embed/wKPBH8j5HDM?si=uf4ioqAn80p2L3UY"
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+        </Box>
       </VStack>
-      <VStack>
+      <VStack width="100%">
         <Heading size="xl">Enter your invite code to get started</Heading>
         <Field
           invalid={fetcher?.data?.error}
@@ -85,17 +95,31 @@ export default function IntroScreen({ state }: ScreenProps) {
             </Checkbox>
           </VStack>
         </Box>
-        <HStack>
-          <Button width="33%" type="submit" name="migrate" value="migrate">
-            Migrate existing account
-          </Button>
-          <Button width="33%" type="submit" name="create" value="create">
-            Create new account
-          </Button>
-          <Button formNoValidate width="33%" type="submit" name="resume" value="resume">
-            Resume failed migration
-          </Button>
-        </HStack>
+        <VStack width="100%" gap={4} marginBottom={4}>
+          <VStack width="100%" gap={2}>
+            <Text fontSize="sm" color="fg.muted">If it's your first time here:</Text>
+            <Button width="100%" type="submit" name="migrate" value="migrate">
+              Migrate existing account
+            </Button>
+            <Button width="100%" type="submit" name="create" value="create">
+              Create new account
+            </Button>
+          </VStack>
+
+          <VStack width="100%" gap={2}>
+            <Text fontSize="sm" color="fg.muted">If you previously started a migration and it failed:</Text>
+            <Button formNoValidate width="100%" type="submit" name="resume" value="resume">
+              Resume failed migration
+            </Button>
+          </VStack>
+
+          <VStack width="100%" gap={2}>
+            <Text fontSize="sm" color="fg.muted">If you migrated to Northsky successfully but are missing blobs:</Text>
+            <Button formNoValidate width="100%" type="submit" name="missing-blobs" value="missing-blobs">
+              Import missing blobs
+            </Button>
+          </VStack>
+        </VStack>
       </VStack>
     </fetcher.Form>
   );
