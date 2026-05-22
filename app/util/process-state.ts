@@ -21,6 +21,7 @@ import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com
 import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
+import { LoginError } from "~/errors";
 
 /**
  * Handles origin PDS login with 2FA support.
@@ -396,6 +397,16 @@ export const processState = async (
         );
         session.set("did_exists_in_dest", didExists);
         session.set("did_active_in_dest", didActive);
+
+        if (!didExists) {
+          log.warn(
+            `[${journeyContext}] Destination account does not exist yet; skipping dest login and warning user. ` +
+            `handle_dest=${session.get("handle_dest")}`
+          );
+          throw new LoginError(
+            "We couldn't find a Northsky account associated with your account's DID! Please go back to the home screen and click on 'Migrate existing account' to start your migration."
+          );
+        }
 
         // Refreshing DID on logs after login
         log = logger.withDid(did);
