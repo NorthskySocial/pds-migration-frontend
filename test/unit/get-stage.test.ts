@@ -350,6 +350,26 @@ describe("getStage", () => {
   });
 
   describe("resume journey", () => {
+    it("should return ALREADY_MIGRATED when destination DID exists and is active", () => {
+      const session = createBaseSession({
+        do_journey: "resume",
+        did_exists_in_dest: true,
+        did_active_in_dest: true,
+      });
+      expect(getStage(session)).toBe(STAGES.ALREADY_MIGRATED);
+    });
+
+    it("should keep resume flow when destination DID exists but is inactive", () => {
+      const session = createBaseSession({
+        do_journey: "resume",
+        token_origin: "origin-token",
+        token_dest: "dest-token",
+        did_exists_in_dest: true,
+        did_active_in_dest: false,
+      });
+      expect(getStage(session)).toBe(STAGES.EXPORT_REPO_ORIGIN);
+    });
+
     it("should return RESUME_MIGRATION when starting resume without tokens", () => {
       const session = createBaseSession({
         do_journey: "resume",

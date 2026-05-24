@@ -16,13 +16,13 @@ export function getStage(session: SessionData): STAGES {
 
   //Resume path
   if (session.do_journey === "resume") {
-    if (!session.token_dest || !session.token_origin) {
-      return STAGES.RESUME_MIGRATION;
-    }
-
-    // If we logged in a user, and the DID already exists (as active) in Northsky, nothing left to do!
+    // If we identified an active destination account for this DID, do not resume migration. Nothing left to do!
     if (session.did_exists_in_dest === true && session.did_active_in_dest === true) {
       return STAGES.ALREADY_MIGRATED;
+    }
+
+    if (!session.token_dest || !session.token_origin) {
+      return STAGES.RESUME_MIGRATION;
     }
 
     if (!session.exportedRepo) {
