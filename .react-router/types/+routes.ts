@@ -23,12 +23,17 @@ type Pages = {
   "/healthcheck": {
     params: {};
   };
+  "/*": {
+    params: {
+      "*": string;
+    };
+  };
 };
 
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/failed" | "/success" | "/healthcheck";
+    page: "/" | "/failed" | "/success" | "/healthcheck" | "/*";
   };
   "routes/index.tsx": {
     id: "routes/index";
@@ -46,6 +51,10 @@ type RouteFiles = {
     id: "routes/healthcheck";
     page: "/healthcheck";
   };
+  "routes/not-found.tsx": {
+    id: "routes/not-found";
+    page: "/*";
+  };
 };
 
 type RouteModules = {
@@ -54,4 +63,5 @@ type RouteModules = {
   "routes/failed": typeof import("./app/routes/failed.tsx");
   "routes/success": typeof import("./app/routes/success.tsx");
   "routes/healthcheck": typeof import("./app/routes/healthcheck.ts");
+  "routes/not-found": typeof import("./app/routes/not-found.tsx");
 };
