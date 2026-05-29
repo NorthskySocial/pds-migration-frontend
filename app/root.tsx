@@ -9,7 +9,7 @@ import {
 import type { Route } from "./+types/root";
 import "@fontsource-variable/museomoderno/index.css";
 import "@fontsource-variable/geist/index.css";
-import bg from "./assets/Northsky-Background.jpg";
+import bg from "./assets/Northsky-Background.webp";
 import { logger } from "./util/logger";
 
 export default function App() {
