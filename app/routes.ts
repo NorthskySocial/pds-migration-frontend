@@ -5,4 +5,5 @@ export default [
   route("failed", "routes/failed.tsx"),
   route("success", "routes/success.tsx"),
   route("healthcheck", "routes/healthcheck.ts"),
+  route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;
