@@ -13,6 +13,16 @@ export const MIN_PASSWORD_LENGTH = 8;
 export const DEFAULT_HANDLE_DOMAIN = ".northsky.social";
 
 /**
+ * Default domain to append to Bluesky (origin PDS) handles without a domain
+ */
+export const BSKY_HANDLE_DOMAIN = ".bsky.social";
+
+/**
+ * Default Bluesky origin PDS URL
+ */
+export const BSKY_PDS_URL = "https://bsky.social";
+
+/**
  * Checks if a password meets the minimum length requirement.
  * Only validates if the password has been entered (length > 0).
  * @param password - The password to validate
@@ -67,6 +77,25 @@ export function normalizeHandle(
   }
 
   return normalizedHandle;
+}
+
+/**
+ * Autocompletes a Bluesky (origin PDS) handle when the user is logging into
+ * the default Bluesky PDS and entered a handle without a domain.
+ *
+ * @param handle - The raw handle input from the user
+ * @param pds_origin - The origin PDS URL the user is logging into
+ * @returns Possibly autocompleted handle
+ */
+export function maybeAutocompleteBskyHandle(
+  handle: string,
+  pds_origin: string
+): string {
+  if (!handle) return handle;
+  if (pds_origin !== BSKY_PDS_URL) return handle;
+  if (handle.includes(".")) return handle;
+
+  return normalizeHandle(handle, false, BSKY_HANDLE_DOMAIN);
 }
 
 /**

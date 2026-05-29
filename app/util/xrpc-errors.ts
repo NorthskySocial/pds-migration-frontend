@@ -1,4 +1,5 @@
 import { XRPCError } from "@atproto/api";
+import { ResponseType } from '@atproto/xrpc'
 
 /**
  * Check if an XRPCError indicates an invalid or already-used invite code.
@@ -12,6 +13,22 @@ export function isInvalidInviteCodeError(error: unknown): boolean {
 }
 
 /**
+ * Check if an XRPCError indicates the user provided invalid login
+ * credentials (wrong identifier/handle or password).
+ */
+export function isInvalidCredentialsError(error: unknown): boolean {
+  if (!(error instanceof XRPCError)) {
+    return false;
+  }
+
+  if (error.status !== ResponseType.AuthenticationRequired) {
+    return false;
+  }
+
+  return error.error === "AuthenticationRequired";
+}
+
+/**
  * Check if an XRPCError is a server error (5xx status code), an internal
  * server error coming from a PDS.
  */
@@ -20,7 +37,7 @@ export function isRetryableServerError(error: unknown): boolean {
     return false;
   }
 
-  return error.status >= 500;
+  return error.status >= ResponseType.InternalServerError;
 }
 
 /**

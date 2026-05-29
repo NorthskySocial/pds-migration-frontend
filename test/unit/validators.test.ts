@@ -2,9 +2,12 @@ import {
   isPasswordTooShort,
   doPasswordsMismatch,
   normalizeHandle,
+  maybeAutocompleteBskyHandle,
   all,
   MIN_PASSWORD_LENGTH,
   DEFAULT_HANDLE_DOMAIN,
+  BSKY_HANDLE_DOMAIN,
+  BSKY_PDS_URL,
 } from "~/util/validators";
 
 describe("validators", () => {
@@ -15,6 +18,14 @@ describe("validators", () => {
 
     it("should have DEFAULT_HANDLE_DOMAIN of .northsky.social", () => {
       expect(DEFAULT_HANDLE_DOMAIN).toBe(".northsky.social");
+    });
+
+    it("should have BSKY_HANDLE_DOMAIN of .bsky.social", () => {
+      expect(BSKY_HANDLE_DOMAIN).toBe(".bsky.social");
+    });
+
+    it("should have BSKY_PDS_URL of https://bsky.social", () => {
+      expect(BSKY_PDS_URL).toBe("https://bsky.social");
     });
   });
 
@@ -102,6 +113,18 @@ describe("validators", () => {
     it("should handle empty handle", () => {
       expect(normalizeHandle("", true)).toBe(".northsky.social");
     });
+
+    it("should append .bsky.social in migration flow when no domain present", () => {
+      expect(normalizeHandle("myhandle", false, BSKY_HANDLE_DOMAIN)).toBe(
+        "myhandle.bsky.social"
+      );
+    });
+
+    it("should preserve a custom domain even when bsky default is provided", () => {
+      expect(
+        normalizeHandle("myhandle.custom.com", false, BSKY_HANDLE_DOMAIN)
+      ).toBe("myhandle.custom.com");
+    });
   });
 
   describe("all", () => {
@@ -120,6 +143,39 @@ describe("validators", () => {
 
     it("should return true for empty arguments", () => {
       expect(all()).toBe(true);
+    });
+  });
+
+  describe("maybeAutocompleteBskyHandle", () => {
+    it("appends .bsky.social when on default bsky PDS and handle has no dot", () => {
+      expect(maybeAutocompleteBskyHandle("myhandle", BSKY_PDS_URL)).toBe(
+        "myhandle.bsky.social"
+      );
+    });
+
+    it("lowercases the handle when autocompleting", () => {
+      expect(maybeAutocompleteBskyHandle("MyHandle", BSKY_PDS_URL)).toBe(
+        "myhandle.bsky.social"
+      );
+    });
+
+    it("returns handle unchanged when it already contains a dot", () => {
+      expect(
+        maybeAutocompleteBskyHandle("myhandle.bsky.social", BSKY_PDS_URL)
+      ).toBe("myhandle.bsky.social");
+      expect(
+        maybeAutocompleteBskyHandle("myhandle.custom.com", BSKY_PDS_URL)
+      ).toBe("myhandle.custom.com");
+    });
+
+    it("returns handle unchanged when pds_origin is not the default bsky PDS", () => {
+      expect(
+        maybeAutocompleteBskyHandle("myhandle", "https://pds.example.com")
+      ).toBe("myhandle");
+    });
+
+    it("returns empty handle unchanged", () => {
+      expect(maybeAutocompleteBskyHandle("", BSKY_PDS_URL)).toBe("");
     });
   });
 });

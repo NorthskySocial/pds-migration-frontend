@@ -10,7 +10,7 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet } from "~/util/redis";
-import { isInvalidInviteCodeError, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
+import { isInvalidCredentialsError, isInvalidInviteCodeError, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 const HEALTH_CHECK_CACHE_KEY = "pds:health";
 const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
@@ -272,6 +272,12 @@ export async function loginOrigin({
       logger.warn(`Unable to reach origin PDS at ${pds_origin}`, e);
       throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS);
     }
+
+    if (isInvalidCredentialsError(e)) {
+      logger.warn(`Invalid credentials for origin PDS ${pds_origin} (handle: ${handle_origin})`);
+      throw new LoginError(`Authentication error on your origin PDS: ${(e as Error).message}`);
+    }
+
     throw e;
   }
 
@@ -943,6 +949,12 @@ export async function loginDest({
       log.warn(`Unable to reach destination PDS at ${pds_dest}`, e);
       throw new LoginError(XRPC_ERROR_MESSAGES.UNREACHABLE_DEST_PDS);
     }
+
+    if (isInvalidCredentialsError(e)) {
+      log.warn(`Invalid credentials for Northsky PDS ${pds_dest} (handle: ${handle_dest})`);
+      throw new LoginError(`Authentication error on the Northsky PDS: ${(e as Error).message}`);
+    }
+
     throw e;
   }
 
