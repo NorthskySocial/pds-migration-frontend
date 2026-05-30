@@ -90,6 +90,10 @@ const checkBackgroundJobStatus = async (
     const res = await f(`${migratorBackend}/jobs/${jobId}`);
     log.info("Response status from job status check: ", res.status);
 
+    if (!res.ok) {
+      throw res;
+    }
+
     const { progress, status } = (await res.json()) as JobStatusResponse;
 
     log.info(
