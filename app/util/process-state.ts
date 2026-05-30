@@ -398,7 +398,7 @@ export const processState = async (
         session.set("did_exists_in_dest", didExists);
         session.set("did_active_in_dest", didActive);
 
-        if (didExists && didActive) {
+        if (didExists && didActive && !isMissingBlobsJourney) {
           log.info(
             `[${journeyContext}] Destination account for DID is already active; preventing resume flow.`
           );
