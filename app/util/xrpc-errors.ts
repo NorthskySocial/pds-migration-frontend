@@ -80,6 +80,40 @@ const UNREACHABLE_HOST_ERROR_CODES = new Set([
 ]);
 
 /**
+ * Generic prefix used for 5xx backend responses.
+ */
+export const BACKEND_SERVER_ERROR_PREFIX =
+  "We hit a server error during your migration. \
+Please try again in a few minutes, or contact Support if the problem persists.";
+
+/**
+ * Builds a user-friendly error message from a non-OK backend Response.
+ */
+export async function formatBackendErrorMessage(res: Response): Promise<string> {
+  let errorMessage: string;
+
+  try {
+    const errorData = (await res.json()) as { message?: string };
+    errorMessage = errorData?.message ?? `HTTP ${res.status}: ${res.statusText}`;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_jsonError) {
+    try {
+      const textContent = await res.text();
+      errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_textError) {
+      errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+    }
+  }
+
+  if (res.status >= 500) {
+    return `${BACKEND_SERVER_ERROR_PREFIX} (details: ${errorMessage})`;
+  }
+
+  return errorMessage;
+}
+
+/**
  * User-friendly error messages for XRPC errors during account creation.
  */
 export const XRPC_ERROR_MESSAGES = {

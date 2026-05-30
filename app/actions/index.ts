@@ -10,7 +10,7 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet } from "~/util/redis";
-import { isInvalidInviteCodeError, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
+import { formatBackendErrorMessage, isInvalidInviteCodeError, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 const HEALTH_CHECK_CACHE_KEY = "pds:health";
 const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
@@ -612,9 +612,9 @@ export async function exportRepo(
   logger.debug("exportRepo", res);
 
   if (!res.ok) {
-    const errBody = await res.text();
-    log.error(`export-repo failed: status=${res.status} body=${errBody}`);
-    throw new MigrationError(errBody);
+    const message = await formatBackendErrorMessage(res);
+    log.error(`export-repo failed: status=${res.status} message=${message}`);
+    throw new MigrationError(message);
   }
 
   return { ok: true };
@@ -662,9 +662,9 @@ export async function importRepo(
   logger.debug("importRepo", res);
 
   if (!res.ok) {
-    const errBody = (await res?.text()) ?? "Unknown migration error";
-    log.error(`import-repo failed: status=${res.status} body=${errBody}`);
-    throw new MigrationError(errBody);
+    const message = await formatBackendErrorMessage(res);
+    log.error(`import-repo failed: status=${res.status} message=${message}`);
+    throw new MigrationError(message);
   }
 
   return { ok: true };
@@ -713,22 +713,7 @@ export async function exportBlobs(
     });
 
     if (!res.ok) {
-      let errorMessage: string;
-      try {
-        const errorData = await res.json<{ message: string }>();
-        errorMessage = errorData.message;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (jsonError) {
-        // If JSON parsing fails, try to get text content
-        try {
-          const textContent = await res.text();
-          errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (textError) {
-          // If both fail, use the status information
-          errorMessage = `HTTP ${res.status}: ${res.statusText}`;
-        }
-      }
+      const errorMessage = await formatBackendErrorMessage(res);
       logger.error(`Export blobs failed: ${errorMessage}`);
       throw new MigrationError(errorMessage);
     }
@@ -782,22 +767,7 @@ export async function uploadBlobs(
     });
 
     if (!res.ok) {
-      let errorMessage: string;
-      try {
-        const errorData = await res.json<{ message: string }>();
-        errorMessage = errorData.message;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (jsonError) {
-        // If JSON parsing fails, try to get text content
-        try {
-          const textContent = await res.text();
-          errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (textError) {
-          // If both fail, use the status information
-          errorMessage = `HTTP ${res.status}: ${res.statusText}`;
-        }
-      }
+      const errorMessage = await formatBackendErrorMessage(res);
       logger.error(`Upload blobs failed: ${errorMessage}`);
       throw new MigrationError(errorMessage);
     }
@@ -848,7 +818,7 @@ export async function migratePreferences(
   });
 
   if (!res.ok) {
-    const message = (await res.json<{ message: string }>()).message;
+    const message = await formatBackendErrorMessage(res);
     log.error(`migrate-preferences failed: status=${res.status} message=${message}`);
     throw new MigrationError(message);
   }
@@ -896,7 +866,7 @@ export async function requestPlcToken(
   });
 
   if (!res.ok) {
-    const message = (await res.json<{ message: string }>()).message;
+    const message = await formatBackendErrorMessage(res);
     log.error(`request-token failed: status=${res.status} message=${message}`);
     throw new MigrationError(message);
   }
@@ -1014,9 +984,7 @@ export async function validatePlcToken(
     });
 
     if (!migrateRes.ok) {
-      const message =
-        (await migrateRes.json<{ message: string }>())?.message ??
-        migrateRes.statusText;
+      const message = await formatBackendErrorMessage(migrateRes);
       log.error(`migrate-plc failed: status=${migrateRes.status} message=${message}`);
       throw new MigrationError(message);
     }
@@ -1033,9 +1001,7 @@ export async function validatePlcToken(
     });
 
     if (!activateRes.ok) {
-      const message =
-        (await activateRes.json<{ message: string }>())?.message ??
-        activateRes.statusText;
+      const message = await formatBackendErrorMessage(activateRes);
       log.error(`activate-account failed: status=${activateRes.status} message=${message}`);
       throw new MigrationError(message);
     }
@@ -1052,9 +1018,7 @@ export async function validatePlcToken(
     });
 
     if (!deactivateRes.ok) {
-      const message =
-        (await deactivateRes.json<{ message: string }>())?.message ??
-        deactivateRes.statusText;
+      const message = await formatBackendErrorMessage(deactivateRes);
       log.error(`deactivate-account failed: status=${deactivateRes.status} message=${message}`);
       throw new MigrationError(message);
     }
