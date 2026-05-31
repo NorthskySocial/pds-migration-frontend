@@ -22,6 +22,7 @@ import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
 import { LoginError } from "~/errors";
+import { BSKY_PDS_URL, maybeAutocompleteBskyHandle } from "./validators";
 
 /**
  * Handles origin PDS login with 2FA support.
@@ -44,9 +45,23 @@ const handleOriginLoginWith2FA = async (
   const log = logger.withDid(session.get("did"));
   log.info(`User attempting 2FA login for ${context}? ${is2faAttempt}`);
 
-  let pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
+  let pds_origin = (data.get("pds") as string) ?? BSKY_PDS_URL;
   let handle_origin = data.get("bsky-handle") as string;
   let password_origin = (data.get("bsky-password") as string) ?? "";
+
+  // If the user is logging into the default Bluesky PDS (i.e. did not
+  // select a custom PDS) and entered a handle without a domain, assume
+  // it's a bsky.social handle and autocomplete accordingly.
+  const customPdsSelected = pds_origin !== BSKY_PDS_URL;
+  if (!customPdsSelected && handle_origin) {
+    const original = handle_origin;
+    handle_origin = maybeAutocompleteBskyHandle(handle_origin, pds_origin);
+    if (handle_origin !== original) {
+      log.info(
+        `[${context}] Autocompleted bsky.social handle: ${original} -> ${handle_origin}`
+      );
+    }
+  }
 
   if (is2faAttempt) {
     pds_origin = session.get("pds_origin") ?? pds_origin;
@@ -203,7 +218,7 @@ export const processState = async (
         session.set("require_2fa_code", false);
 
         //initialize the origin PDS to bluesky
-        session.set("pds_origin", "https://bsky.social");
+        session.set("pds_origin", BSKY_PDS_URL);
 
         if (state.do_journey === "resume") {
           //Reset tokens

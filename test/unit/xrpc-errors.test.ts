@@ -2,6 +2,7 @@ import { XRPCError } from "@atproto/api";
 import {
   formatBackendErrorMessage,
   BACKEND_SERVER_ERROR_PREFIX,
+  isInvalidCredentialsError,
   isInvalidInviteCodeError,
   isRetryableServerError,
   isUnreachableHostError,
@@ -46,6 +47,55 @@ describe("xrpc-errors", () => {
     it("returns false for plain objects", () => {
       const error = { message: "invite code not available", status: 400 };
       expect(isInvalidInviteCodeError(error)).toBe(false);
+    });
+  });
+
+  describe("isInvalidCredentialsError", () => {
+    it("returns true for XRPCError with status 401 and error name 'AuthenticationRequired'", () => {
+      const error = new XRPCError(
+        401,
+        "AuthenticationRequired",
+        "Invalid identifier or password"
+      );
+      expect(isInvalidCredentialsError(error)).toBe(true);
+    });
+
+    it("returns false for XRPCError 'AuthenticationRequired' with non-401 status", () => {
+      const error = new XRPCError(
+        400,
+        "AuthenticationRequired",
+        "Invalid identifier or password"
+      );
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for XRPCError with 'AuthFactorTokenRequired' (2FA flow)", () => {
+      const error = new XRPCError(
+        401,
+        "AuthFactorTokenRequired",
+        "A second authentication factor is required"
+      );
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for XRPCError with 'AccountTakedown'", () => {
+      const error = new XRPCError(401, "AccountTakedown", "Account has been taken down");
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for unrelated XRPCError 401", () => {
+      const error = new XRPCError(401, "Unauthorized", "Some other auth failure");
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for non-XRPCError", () => {
+      const error = new Error("Invalid identifier or password");
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for null/undefined", () => {
+      expect(isInvalidCredentialsError(null)).toBe(false);
+      expect(isInvalidCredentialsError(undefined)).toBe(false);
     });
   });
 
