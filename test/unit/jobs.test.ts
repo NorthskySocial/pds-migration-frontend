@@ -111,10 +111,8 @@ describe("processBackgroundJobStage", () => {
           id: "job-123",
           kind: "UploadBlobs",
           progress: {
-            invalid_blob_ids: [],
             invalid_blobs: 0,
             successful_blobs: 5,
-            successful_blobs_ids: [],
             total: 10,
           },
           started_at: 0,
@@ -176,10 +174,8 @@ describe("processBackgroundJobStage", () => {
           id: "job-123",
           kind: "UploadBlobs",
           progress: {
-            invalid_blob_ids: [],
             invalid_blobs: 0,
             successful_blobs: 10,
-            successful_blobs_ids: [],
             total: 10,
           },
           started_at: 0,

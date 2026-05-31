@@ -29,10 +29,8 @@ type JobStatusResponse = {
   id: string;
   kind: string;
   progress: {
-    invalid_blob_ids: string[];
     invalid_blobs: number;
     successful_blobs: number;
-    successful_blobs_ids: string[];
     total: number;
   };
   started_at: number;
