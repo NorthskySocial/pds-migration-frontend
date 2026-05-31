@@ -1,5 +1,7 @@
 import { XRPCError } from "@atproto/api";
 import {
+  formatBackendErrorMessage,
+  BACKEND_SERVER_ERROR_PREFIX,
   isInvalidCredentialsError,
   isInvalidInviteCodeError,
   isRetryableServerError,
@@ -226,6 +228,113 @@ describe("xrpc-errors", () => {
       const error = new Error("oops");
       (error as Error & { cause: unknown }).cause = { code: "ESOMETHING" };
       expect(isUnreachableHostError(error)).toBe(false);
+    });
+  });
+
+  describe("formatBackendErrorMessage", () => {
+    const buildResponse = ({
+      status,
+      statusText = "",
+      json,
+      text,
+    }: {
+      status: number;
+      statusText?: string;
+      json?: () => Promise<unknown>;
+      text?: () => Promise<string>;
+    }): Response =>
+      ({
+        status,
+        statusText,
+        json: json ?? (() => Promise.reject(new SyntaxError("invalid json"))),
+        text: text ?? (() => Promise.resolve("")),
+      }) as unknown as Response;
+
+    it("returns the JSON body's `message` field for non-5xx responses", async () => {
+      const res = buildResponse({
+        status: 400,
+        json: () => Promise.resolve({ message: "invite code not available" }),
+      });
+
+      await expect(formatBackendErrorMessage(res)).resolves.toBe(
+        "invite code not available"
+      );
+    });
+
+    it("falls back to truncated text body when JSON parsing fails (non-5xx)", async () => {
+      const longText = "x".repeat(300);
+      const res = buildResponse({
+        status: 400,
+        statusText: "Bad Request",
+        text: () => Promise.resolve(longText),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith("Server error: ")).toBe(true);
+      expect(result.endsWith("...")).toBe(true);
+      // 200-char truncation of the text body
+      expect(result).toContain("x".repeat(200));
+      expect(result).not.toContain("x".repeat(201));
+    });
+
+    it("falls back to HTTP status when both JSON and text fail", async () => {
+      const res = buildResponse({
+        status: 418,
+        statusText: "I'm a teapot",
+        text: () => Promise.reject(new Error("body already used")),
+      });
+
+      await expect(formatBackendErrorMessage(res)).resolves.toBe(
+        "HTTP 418: I'm a teapot"
+      );
+    });
+
+    it("wraps 5xx responses with the support-pointing prefix and includes the detail", async () => {
+      const res = buildResponse({
+        status: 500,
+        statusText: "Internal Server Error",
+        json: () => Promise.resolve({ code: "Runtime", message: "IO error" }),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith(BACKEND_SERVER_ERROR_PREFIX)).toBe(true);
+      expect(result).toContain("(details: IO error)");
+    });
+
+    it("wraps 5xx responses with prefix even when detail comes from text fallback", async () => {
+      const res = buildResponse({
+        status: 503,
+        statusText: "Service Unavailable",
+        text: () => Promise.resolve("upstream timeout"),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith(BACKEND_SERVER_ERROR_PREFIX)).toBe(true);
+      expect(result).toContain("(details: Server error: upstream timeout...)");
+    });
+
+    it("wraps 5xx responses with prefix when both JSON and text fail", async () => {
+      const res = buildResponse({
+        status: 502,
+        statusText: "Bad Gateway",
+        text: () => Promise.reject(new Error("body already used")),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith(BACKEND_SERVER_ERROR_PREFIX)).toBe(true);
+      expect(result).toContain("(details: HTTP 502: Bad Gateway)");
+    });
+
+    it("uses status fallback when JSON body has no `message` field (non-5xx)", async () => {
+      const res = buildResponse({
+        status: 404,
+        statusText: "Not Found",
+        json: () => Promise.resolve({ code: "NotFound" }),
+      });
+
+      await expect(formatBackendErrorMessage(res)).resolves.toBe(
+        "HTTP 404: Not Found"
+      );
     });
   });
 });
