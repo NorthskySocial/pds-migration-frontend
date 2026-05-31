@@ -10,7 +10,7 @@ import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api/src/types";
 import { redisGet, redisSet } from "~/util/redis";
-import { formatBackendErrorMessage, isInvalidCredentialsError, isInvalidInviteCodeError, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
+import { formatBackendErrorMessage, isInvalidCredentialsError, isInvalidInviteCodeError, isInvalidInviteCodeErrorMessage, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 const HEALTH_CHECK_CACHE_KEY = "pds:health";
 const HEALTH_CHECK_CACHE_TTL_SECONDS = 10;
@@ -415,6 +415,7 @@ export async function createDestAccount(
         break;
       } catch (e) {
         if (isInvalidInviteCodeError(e)) {
+          log.warn(`Invalid invite code used during account creation: ${inviteCode}`);
           throw new CreateAccountError(
             XRPC_ERROR_MESSAGES.INVALID_INVITE_CODE,
             "Unexpected"
@@ -543,6 +544,14 @@ export async function createDestAccount(
         errorMessage = errorData.message ?? createAccountRes.statusText;
       } catch {
         errorMessage = createAccountRes.statusText;
+      }
+
+      if (isInvalidInviteCodeErrorMessage(errorMessage)) {
+        log.warn(`Invalid invite code used during account migration: ${inviteCode}`);
+        throw new CreateAccountError(
+          XRPC_ERROR_MESSAGES.INVALID_INVITE_CODE,
+          "Unexpected"
+        );
       }
 
       log.error(`Failed to create migrated account: ${errorMessage}`);

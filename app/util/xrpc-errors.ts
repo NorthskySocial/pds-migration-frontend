@@ -9,7 +9,14 @@ export function isInvalidInviteCodeError(error: unknown): boolean {
     return false;
   }
 
-  return error.message.includes("invite code not available");
+  return isInvalidInviteCodeErrorMessage(error.message);
+}
+
+/**
+ * Check if an error message indicates an invalid or already-used invite code.
+ */
+export function isInvalidInviteCodeErrorMessage(message: string): boolean {
+  return message.includes("invite code not available");
 }
 
 /**

@@ -78,27 +78,17 @@ const checkBackgroundJobStatus = async (
   // Only check job status if enough time has passed
   if (now - lastCheck < JOB_CHECK_INTERVAL_MS) return;
 
-  log.info(
-    `Checking ${config.jobKind} job status (last attempt, now): `,
-    lastCheck,
-    now
-  );
-
   try {
     const res = await f(`${migratorBackend}/jobs/${jobId}`);
-    log.info("Response status from job status check: ", res.status);
-
     if (!res.ok) {
+      log.warn("Response status from job status check: ", res.status);
       throw res;
     }
 
     const { progress, status } = (await res.json()) as JobStatusResponse;
-
     log.info(
-      `${config.jobKind} (progress, status, status code): `,
-      `${progress.successful_blobs}/${progress.total} (invalid: ${progress.invalid_blobs})`,
-      status,
-      res.status
+      `${config.jobKind} updated status: progress=${progress.successful_blobs}/${progress.total} ` +
+      `(invalid: ${progress.invalid_blobs}), status=${status}, status code=${res.status}`
     );
 
     const progressData: BackgroundJobProgress = {

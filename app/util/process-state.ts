@@ -146,15 +146,18 @@ export const processState = async (
   const isResetResume = data.get("reset-resume");
 
   let log = logger.withDid(state.did);
-  log.info(`On processState with journey: ${state.do_journey} | stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
+  log.info(`Processing state with journey: ${state.do_journey} | stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
 
   if (isResendingPlcToken) {
+    log.info("Resending PLC token as requested by user");
     session.set("requestedPlcToken", false);
     return state;
   }
 
   const inviteCode = state.inviteCode;
   if (isCancelling || isResetResume) {
+    log.info(`User is cancelling or resetting the flow. isCancelling: ${isCancelling}, isResetResume: ${isResetResume}`);
+
     //Reset all session variables
     session.set("do_journey", undefined);
     session.set("handle_origin", undefined);
@@ -197,8 +200,6 @@ export const processState = async (
 
     return state;
   } else {
-    log.info("Processing stage: " + stage);
-
     switch (stage) {
       case STAGES.INVITE_CODE: {
         const invite = data.get("invite-code") as string;

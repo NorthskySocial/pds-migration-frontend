@@ -128,15 +128,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const log = logger.withDid(state.did);
   try {
-    const stage = getStage(state);
-    if (session.get("do_journey") !== undefined) {
-      log.info(`Loading data for journey (${session.get("do_journey")}): ${stage}`);
-    }
     return data(
       {
         error: session.get("error"),
         errorType: session.get("errorType"),
-        stage,
+        stage: getStage(state),
         state: publicState,
         supportFormUrl,
         isUpstreamOutage: false,
@@ -148,7 +144,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       }
     );
   } catch (e) {
-    log.error("Error in loader:", e, state);
+    log.error("Error loading data:", e, state);
     return data(
       {
         error: (e as Error).message,
