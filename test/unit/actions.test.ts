@@ -10,10 +10,11 @@ import { XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 vi.mock("~/util/logger", () => ({
   logger: {
-    withDid: () => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn() }),
+    withDid: () => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() }),
     warn: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
+    debug: vi.fn(),
   },
 }));
 

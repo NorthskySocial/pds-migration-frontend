@@ -172,10 +172,40 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
     return new Response();
   } else {
     const timeoutMs = 600 * 1000;
-    return fetch(input, {
-      ...init,
-      signal: AbortSignal.timeout(timeoutMs)
-    });
+    const method = (init?.method ?? "GET").toUpperCase();
+    const url = typeof input === "string" ? input : input.toString();
+    const startedAt = Date.now();
+
+    try {
+      const res = await fetch(input, {
+        ...init,
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+
+      const elapsedMs = Date.now() - startedAt;
+      if (!res.ok) {
+        logger.warn(
+          `HTTP ${method} ${url} responded ${res.status} ${res.statusText} after ${elapsedMs}ms`
+        );
+      } else {
+        logger.debug(`HTTP ${method} ${url} ${res.status} in ${elapsedMs}ms`);
+      }
+
+      return res;
+    } catch (error) {
+      const elapsedMs = Date.now() - startedAt;
+      const err = error as (Error & { code?: string; cause?: unknown }) | undefined;
+      const cause = err?.cause as { code?: string; message?: string } | undefined;
+
+      logger.error(`HTTP ${method} ${url} failed after ${elapsedMs}ms (timeout ${timeoutMs}ms)`, {
+        name: err?.name,
+        message: err?.message,
+        code: err?.code ?? cause?.code,
+        cause: cause?.message ?? err?.cause,
+      });
+
+      throw error;
+    }
   }
 };
 
