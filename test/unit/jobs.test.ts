@@ -55,6 +55,16 @@ const uploadConfig: BackgroundJobConfig = {
   startJob: vi.fn(),
 };
 
+const exportRepoConfig: BackgroundJobConfig = {
+  jobIdKey: "export_repo_job_id",
+  progressKey: "export_repo_progress",
+  lastCheckKey: "last_export_repo_check",
+  failuresKey: "export_repo_job_failures",
+  completedKey: "exportedRepo",
+  jobKind: "ExportRepo",
+  startJob: vi.fn(),
+};
+
 const BACKEND = "https://migrator.example";
 
 const buildState = (overrides: Partial<SessionData> = {}): SessionData => ({
@@ -191,5 +201,59 @@ describe("processBackgroundJobStage", () => {
     await processBackgroundJobStage(state, session, uploadConfig, BACKEND);
 
     expect(session.get("importedBlobs")).toBe(true);
+  });
+
+  it("starts export-repo job and stores job id when none exists", async () => {
+    vi.mocked(exportRepoConfig.startJob).mockResolvedValueOnce({ job_id: "repo-job-1" });
+
+    const state = buildState({
+      import_job_id: undefined,
+      export_repo_job_id: undefined,
+    });
+    const session = buildSession(state);
+
+    await processBackgroundJobStage(state, session, exportRepoConfig, BACKEND);
+
+    expect(exportRepoConfig.startJob).toHaveBeenCalledWith(state, BACKEND);
+    expect(session.get("export_repo_job_id")).toBe("repo-job-1");
+  });
+
+  it("stores export-repo API progress and marks exportedRepo on success", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          created_at: 0,
+          finished_at: 0,
+          id: "repo-job-1",
+          kind: "ExportRepo",
+          progress: {
+            invalid_blobs: 1,
+            successful_blobs: 1,
+            total: 1,
+          },
+          started_at: 0,
+          status: "success",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      )
+    );
+
+    const state = buildState({
+      import_job_id: undefined,
+      export_repo_job_id: "repo-job-1",
+      last_export_repo_check: 0,
+      exportedRepo: false,
+    });
+    const session = buildSession(state);
+
+    await processBackgroundJobStage(state, session, exportRepoConfig, BACKEND);
+
+    expect(session.get("export_repo_progress")).toEqual({
+      invalid_blobs: 1,
+      successful_blobs: 1,
+      total: 1,
+    });
+    expect(session.get("exportedRepo")).toBe(true);
+    expect(session.get("had_invalid_blobs")).toBeUndefined();
   });
 });

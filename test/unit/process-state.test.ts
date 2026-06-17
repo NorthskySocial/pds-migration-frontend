@@ -39,9 +39,11 @@ vi.mock("~/actions", () => ({
 
 import {
   checkIfDidExistsInDest,
+  exportRepo,
   loginOrigin,
   loginDest,
 } from "~/actions";
+import { processBackgroundJobStage } from "~/util/jobs";
 import { processState } from "~/util/process-state";
 import type { SessionData, SessionFlashData } from "~/sessions.server";
 import type { Session } from "react-router";
@@ -80,6 +82,7 @@ describe("processState", () => {
     vi.mocked(loginOrigin).mockReset();
     vi.mocked(loginDest).mockReset();
     vi.mocked(checkIfDidExistsInDest).mockReset();
+    vi.mocked(processBackgroundJobStage).mockReset();
 
     vi.mocked(loginOrigin).mockResolvedValue({
       token_origin: "tok-origin",
@@ -96,6 +99,7 @@ describe("processState", () => {
       didExists: true,
       didActive: true,
     });
+    vi.mocked(processBackgroundJobStage).mockResolvedValue(undefined);
   });
 
   it("missing-blobs journey proceeds with loginDest even when dest account is already active", async () => {
@@ -135,5 +139,34 @@ describe("processState", () => {
     expect(loginDest).not.toHaveBeenCalled();
     expect(session.get("did_active_in_dest")).toBe(true);
     expect(session.get("token_dest")).toBeUndefined();
+  });
+
+  it("routes EXPORT_REPO_ORIGIN through processBackgroundJobStage with export-repo config", async () => {
+    const session = buildSession({
+      do_journey: "migrate",
+      inviteCode: "invite123",
+      hasBackup: true,
+      token_origin: "tok-origin",
+      did: "did:plc:alice",
+      pds_origin: "https://bsky.social",
+      token_dest: "tok-dest",
+      handle_dest: "alice.northsky.social",
+      pds_dest: "https://northsky.social",
+      exportedRepo: false,
+    });
+
+    await processState(session, new FormData(), "https://migrator.example.com");
+
+    expect(processBackgroundJobStage).toHaveBeenCalledTimes(1);
+    const config = vi.mocked(processBackgroundJobStage).mock.calls[0]?.[2];
+    expect(config).toMatchObject({
+      jobIdKey: "export_repo_job_id",
+      progressKey: "export_repo_progress",
+      lastCheckKey: "last_export_repo_check",
+      failuresKey: "export_repo_job_failures",
+      completedKey: "exportedRepo",
+      jobKind: "ExportRepo",
+    });
+    expect(config?.startJob).toBe(exportRepo);
   });
 });
