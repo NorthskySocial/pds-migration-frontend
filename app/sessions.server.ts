@@ -47,12 +47,16 @@ export type SessionData = {
   email?: string;
   user_recover_key?: string | null;
   export_progress?: BackgroundJobProgress | null;
+  export_repo_progress?: BackgroundJobProgress | null;
   upload_progress?: BackgroundJobProgress | null;
   export_job_id?: string | null;
+  export_repo_job_id?: string | null;
   import_job_id?: string | null;
   export_job_failures?: number;
+  export_repo_job_failures?: number;
   import_job_failures?: number;
   last_export_check?: number;
+  last_export_repo_check?: number;
   last_import_check?: number;
   handle_not_available?: boolean | null;
   password_mismatch?: boolean | null;

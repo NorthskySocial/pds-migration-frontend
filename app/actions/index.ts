@@ -614,8 +614,8 @@ export async function exportRepo(
     false
   );
 
-  // export repo
-  const res = await f(`${MIGRATOR_BACKEND}/export-repo`, {
+  // start export repo job
+  const res = await f(`${MIGRATOR_BACKEND}/jobs/export-repo`, {
     method: "post",
     body: JSON.stringify({
       pds_host: pds_origin,
@@ -632,7 +632,9 @@ export async function exportRepo(
     throw new MigrationError(message);
   }
 
-  return { ok: true };
+  const { job_id } = await res.json<{ job_id: string }>();
+
+  return { job_id };
 }
 
 export async function importRepo(

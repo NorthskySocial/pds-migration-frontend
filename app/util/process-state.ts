@@ -177,6 +177,10 @@ export const processState = async (
     session.set("user_recover_key", undefined);
     session.set("password_origin", undefined);
     session.set("password_dest", undefined);
+    session.set("export_repo_job_id", undefined);
+    session.set("export_repo_progress", undefined);
+    session.set("export_repo_job_failures", undefined);
+    session.set("last_export_repo_check", undefined);
 
     // state flags
     session.set("require_2fa_code", false);
@@ -290,10 +294,15 @@ export const processState = async (
       }
 
       case STAGES.EXPORT_REPO_ORIGIN: {
-        const { ok } = await exportRepo(state, migratorBackend);
-        if (ok) {
-          session.set("exportedRepo", ok);
-        }
+        await processBackgroundJobStage(state, session, {
+          jobIdKey: "export_repo_job_id",
+          progressKey: "export_repo_progress",
+          lastCheckKey: "last_export_repo_check",
+          failuresKey: "export_repo_job_failures",
+          completedKey: "exportedRepo",
+          jobKind: "ExportRepo",
+          startJob: exportRepo,
+        }, migratorBackend);
         break;
       }
 
