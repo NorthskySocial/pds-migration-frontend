@@ -70,7 +70,7 @@ jobs:
       # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
       - name: Generate artifact attestation
         if: false  # NOTE: disabled for now as we're on a private repository
-        uses: actions/attest-build-provenance@28959ce8df70de7be546dd1250a005dd32156697 # v4.0.1
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.push.outputs.digest }}
@@ -90,7 +90,7 @@ jobs:
           persist-credentials: false
 
       - name: Trigger staging deployment via webhook
-        uses: peter-evans/repository-dispatch@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4.0.1
         with:
           token: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
           repository: ${{ secrets.DEPLOYMENT_WEBHOOK_REPOSITORY }}
@@ -155,7 +155,7 @@ jobs:
       contents: read
     steps:
       - name: Trigger release through webhook
-        uses: peter-evans/repository-dispatch@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697 # v4.0.1
         with:
           token: ${{ secrets.DEPLOYMENT_WEBHOOK_TOKEN }}
           repository: ${{ secrets.DEPLOYMENT_WEBHOOK_REPOSITORY }}
