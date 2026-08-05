@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "noUnusedLocals": false,
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "vite/client"],
     "lib": ["ES2023", "DOM", "DOM.Iterable", "ScriptHost"],
     "noEmit": true,
     "checkJs": true,
@@ -24,16 +24,20 @@
     "preserveSymlinks": false,
     "useDefineForClassFields": true,
 
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "paths": {
+      "~/*": ["./app/*"],
+      "@/*": ["./node_modules/@NorthskySocial/northwoods-ui/src/*"]
+    },
 
     "noErrorTruncation": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "jsx": "preserve",
-    "module": "CommonJS",
-    "target": "ES2020"
+    "module": "ESNext",
+    "target": "ES2022"
   },
   "typeAcquisition": {
     "enable": false

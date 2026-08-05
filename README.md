@@ -20,7 +20,7 @@ Key entry points and configs:
 - Docker Compose for front-end connected to Production services: `docker-compose.prod.yaml`
 
 ## Requirements
-- Node.js 20 (see `.nvmrc`: `v20.19.0`)
+- Node.js 22 (see `.nvmrc`: `v22.23.2`)
 - npm 10+
 - Optional (for integration and e2e tests):
   - Docker (for running the migrator image and optional services)

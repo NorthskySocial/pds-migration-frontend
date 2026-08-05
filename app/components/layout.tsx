@@ -1,9 +1,10 @@
 import { Provider } from "@/components/ui/provider";
 import { DarkMode } from "@/components/ui/color-mode";
 import { Container, Image, VStack } from "@chakra-ui/react";
+import type { ReactNode } from "react";
 import logo from "../assets/Northsky-IconCentered-Color.png";
 
-export const Layout = ({ children }) => (
+export const Layout = ({ children }: { children: ReactNode }) => (
   <Provider>
     <DarkMode>
       {/* <ColorModeProvider forcedTheme="dark" /> */}
