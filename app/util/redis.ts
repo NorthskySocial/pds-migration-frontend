@@ -21,6 +21,25 @@ export async function redisSet(
   await _client.set(key, value, "EX", ttlSeconds);
 }
 
+export async function redisSetNxEx(
+  key: string,
+  ttlSeconds: number,
+  value: string
+): Promise<boolean> {
+  const result = await _client.set(key, value, "EX", ttlSeconds, "NX");
+  return result === "OK";
+}
+
 export async function redisDel(key: string): Promise<void> {
   await _client.del(key);
+}
+
+export async function redisDelIfValueMatches(key: string, value: string): Promise<boolean> {
+  const result = await _client.eval(
+    "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0",
+    1,
+    key,
+    value
+  );
+  return result === 1;
 }

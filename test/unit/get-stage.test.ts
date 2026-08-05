@@ -19,7 +19,6 @@ function createBaseSession(overrides: Partial<SessionData> = {}): SessionData {
     migratedPlc: false,
     require_2fa_code: false,
     had_invalid_blobs: false,
-    plcMigrationInFlight: false,
     ...overrides,
   };
 }

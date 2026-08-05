@@ -17,7 +17,6 @@ const SESSION_BOOLEAN_DEFAULTS = {
   migratedPlc: false,
   require_2fa_code: false,
   had_invalid_blobs: false,
-  plcMigrationInFlight: false,
 } as const;
 
 export type BackgroundJobProgress = {
@@ -77,7 +76,6 @@ export type SessionData = {
   migratedPlc: boolean;
   require_2fa_code: boolean;
   had_invalid_blobs: boolean;
-  plcMigrationInFlight: boolean;
 };
 
 export type ErrorType = "Expected" | "Unexpected";

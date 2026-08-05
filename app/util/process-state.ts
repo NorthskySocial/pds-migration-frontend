@@ -21,8 +21,9 @@ import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com
 import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
-import { LoginError } from "~/errors";
+import { LoginError, MigrationError } from "~/errors";
 import { BSKY_PDS_URL, maybeAutocompleteBskyHandle } from "./validators";
+import { redisDelIfValueMatches, redisSetNxEx } from "./redis";
 
 /**
  * Handles origin PDS login with 2FA support.
@@ -194,7 +195,6 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
-    session.set("plcMigrationInFlight", false);
     session.set("had_invalid_blobs", false);
 
     if (isResetResume) {
@@ -366,13 +366,24 @@ export const processState = async (
       case STAGES.ACTIVATE_DEST:
       case STAGES.DEACTIVATE_ORIGIN:
       case STAGES.MIGRATE_PLC: {
-        if (session.get("plcMigrationInFlight")) {
-          log.warn("Ignoring PLC migration submission while migration is in flight");
+        const did = state.did;
+        if (!did) {
+          throw new MigrationError("Missing DID for PLC migration");
+        }
+
+        const plcMigrationLockKey = `plc:migration:${did}`;
+        const plcMigrationLockOwner = crypto.randomUUID();
+        const acquiredLock = await redisSetNxEx(
+          plcMigrationLockKey,
+          300,
+          plcMigrationLockOwner
+        );
+        if (!acquiredLock) {
+          log.warn("Rejecting duplicate PLC migration submission while another request is active");
           break;
         }
 
         log.info("Starting PLC migration process");
-        session.set("plcMigrationInFlight", true);
         try {
           const { ok } = await validatePlcToken(state, data, migratorBackend);
           if (ok) {
@@ -381,7 +392,7 @@ export const processState = async (
             session.set("migratedPlc", ok);
           }
         } finally {
-          session.set("plcMigrationInFlight", false);
+          await redisDelIfValueMatches(plcMigrationLockKey, plcMigrationLockOwner);
         }
         break;
       }
