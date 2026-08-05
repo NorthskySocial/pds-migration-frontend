@@ -8,7 +8,7 @@ import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { normalizeHandle, doPasswordsMismatch, isPasswordTooShort } from "~/util/validators";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
-import type { AtpSessionData } from "@atproto/api/src/types";
+import type { AtpSessionData } from "@atproto/api";
 import { redisGet, redisSet } from "~/util/redis";
 import { formatBackendErrorMessage, isInvalidCredentialsError, isInvalidInviteCodeError, isInvalidInviteCodeErrorMessage, isRetryableServerError, isUnreachableHostError, XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
@@ -352,7 +352,7 @@ export async function createDestAccount(
   }
 
   // Check handle availability
-  let handleIsAvailable = null;
+  let handleIsAvailable: boolean | null = null;
   if (handle_dest.length) {
     log.info("Checking handle " + handle_dest);
     handleIsAvailable = await f(
@@ -506,7 +506,7 @@ export async function createDestAccount(
       );
     }
 
-    const token_service = await res.json<{ token: string }>();
+    const token_service: { token: string } = await res.json();
     if (!token_service.token) {
       log.error(
         `Service token response missing token field (status=${res.status})"}`
@@ -540,7 +540,7 @@ export async function createDestAccount(
       let errorMessage: string;
 
       try {
-        const errorData = await createAccountRes.json<{ message?: string }>();
+        const errorData: { message?: string } = await createAccountRes.json();
         errorMessage = errorData.message ?? createAccountRes.statusText;
       } catch {
         errorMessage = createAccountRes.statusText;
@@ -632,7 +632,7 @@ export async function exportRepo(
     throw new MigrationError(message);
   }
 
-  const { job_id } = await res.json<{ job_id: string }>();
+  const { job_id }: { job_id: string } = await res.json();
 
   return { job_id };
 }
@@ -735,7 +735,7 @@ export async function exportBlobs(
       throw new MigrationError(errorMessage);
     }
 
-    const { job_id } = await res.json<{ job_id: string }>();
+    const { job_id }: { job_id: string } = await res.json();
 
     return { job_id };
   } catch (e) {
@@ -789,7 +789,7 @@ export async function uploadBlobs(
       throw new MigrationError(errorMessage);
     }
 
-    const { job_id } = await res.json<{ job_id: string }>();
+    const { job_id }: { job_id: string } = await res.json();
 
     return { job_id };
   } catch (e) {

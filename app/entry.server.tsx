@@ -1,4 +1,4 @@
-import type { AppLoadContext, EntryContext } from "react-router";
+import type { EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { logger } from "./util/logger";
@@ -14,8 +14,7 @@ async function handleRequestNode(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  routerContext: EntryContext,
-  loadContext: AppLoadContext
+  routerContext: EntryContext
   // If you have middleware enabled:
   // loadContext: RouterContextProvider
 ) {

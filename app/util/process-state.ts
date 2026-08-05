@@ -17,7 +17,7 @@ import {
 import { type SessionData, type SessionFlashData } from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
-import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
+import { ComAtprotoServerCreateSession } from "@atproto/api";
 import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
@@ -105,7 +105,7 @@ const handleOriginLoginWith2FA = async (
   } catch (e) {
     log.error(`Error during origin login for ${context}: `, e);
 
-    if (e instanceof AuthFactorTokenRequiredError) {
+    if (e instanceof ComAtprotoServerCreateSession.AuthFactorTokenRequiredError) {
       log.info(
         `[${context}] 2FA code required by origin PDS. ` +
         `Persisted in session: handle_origin=${session.get("handle_origin")}, ` +
