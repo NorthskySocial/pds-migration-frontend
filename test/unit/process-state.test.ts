@@ -42,6 +42,7 @@ import {
   exportRepo,
   loginOrigin,
   loginDest,
+  validatePlcToken,
 } from "~/actions";
 import { processBackgroundJobStage } from "~/util/jobs";
 import { processState } from "~/util/process-state";
@@ -81,6 +82,7 @@ describe("processState", () => {
   beforeEach(() => {
     vi.mocked(loginOrigin).mockReset();
     vi.mocked(loginDest).mockReset();
+    vi.mocked(validatePlcToken).mockReset();
     vi.mocked(checkIfDidExistsInDest).mockReset();
     vi.mocked(processBackgroundJobStage).mockReset();
 
@@ -168,5 +170,34 @@ describe("processState", () => {
       jobKind: "ExportRepo",
     });
     expect(config?.startJob).toBe(exportRepo);
+  });
+
+  it("does not start another PLC migration while one is in flight", async () => {
+    const session = buildSession({
+      do_journey: "migrate",
+      inviteCode: "invite123",
+      hasBackup: true,
+      token_origin: "tok-origin",
+      token_dest: "tok-dest",
+      handle_dest: "alice.northsky.social",
+      pds_dest: "https://northsky.social",
+      pds_origin: "https://bsky.social",
+      exportedRepo: true,
+      importedRepo: true,
+      exportedBlobs: true,
+      importedBlobs: true,
+      migratedPrefs: true,
+      user_recover_key: "recovery-key",
+      requestedPlcToken: true,
+      destActivated: true,
+      originDeactivated: true,
+      migratedPlc: false,
+      plcMigrationInFlight: true,
+    });
+
+    await processState(session, new FormData(), "https://migrator.example.com");
+
+    expect(validatePlcToken).not.toHaveBeenCalled();
+    expect(session.get("plcMigrationInFlight")).toBe(true);
   });
 });

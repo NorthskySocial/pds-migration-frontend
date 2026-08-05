@@ -194,6 +194,7 @@ export const processState = async (
     session.set("originDeactivated", false);
     session.set("destActivated", false);
     session.set("migratedPlc", false);
+    session.set("plcMigrationInFlight", false);
     session.set("had_invalid_blobs", false);
 
     if (isResetResume) {
@@ -365,11 +366,22 @@ export const processState = async (
       case STAGES.ACTIVATE_DEST:
       case STAGES.DEACTIVATE_ORIGIN:
       case STAGES.MIGRATE_PLC: {
-        const { ok } = await validatePlcToken(state, data, migratorBackend);
-        if (ok) {
-          session.set("destActivated", ok);
-          session.set("originDeactivated", ok);
-          session.set("migratedPlc", ok);
+        if (session.get("plcMigrationInFlight")) {
+          log.warn("Ignoring PLC migration submission while migration is in flight");
+          break;
+        }
+
+        log.info("Starting PLC migration process");
+        session.set("plcMigrationInFlight", true);
+        try {
+          const { ok } = await validatePlcToken(state, data, migratorBackend);
+          if (ok) {
+            session.set("destActivated", ok);
+            session.set("originDeactivated", ok);
+            session.set("migratedPlc", ok);
+          }
+        } finally {
+          session.set("plcMigrationInFlight", false);
         }
         break;
       }
