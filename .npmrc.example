@@ -3,7 +3,6 @@ save-exact=true
 package-lock=true
 audit=true
 audit-level=high
-ignore-scripts=true
 engine-strict=true
 fund=false
 min-release-age=4
