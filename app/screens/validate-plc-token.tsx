@@ -14,6 +14,7 @@ import { useFetcher } from "react-router";
 
 export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
+  const isSubmitting = fetcher.state !== "idle";
   return (
     <fetcher.Form method="post" style={{ width: "100%" }}>
       <VStack mb="5" width="100%">
@@ -31,10 +32,10 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
         </Field>
 
         <HStack>
-          <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
+          <Button name="cancel" type="submit" value={"cancel"} formNoValidate disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" name="submit" margin={"0 auto"}>
+          <Button type="submit" name="submit" margin={"0 auto"} disabled={isSubmitting}>
             Continue
           </Button>
           <Button
@@ -42,6 +43,7 @@ export default function ValidatePLCTokenScreen({ state }: ScreenProps) {
             type="submit"
             value="resend"
             formNoValidate
+            disabled={isSubmitting}
           >
             Resend Code
           </Button>

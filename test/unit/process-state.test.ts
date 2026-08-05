@@ -23,6 +23,11 @@ vi.mock("~/util/jobs", () => ({
   processBackgroundJobStage: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("~/util/redis", () => ({
+  redisSetNxEx: vi.fn(),
+  redisDelIfValueMatches: vi.fn(),
+}));
+
 vi.mock("~/actions", () => ({
   checkIfDidExistsInDest: vi.fn(),
   createDestAccount: vi.fn(),
@@ -42,8 +47,10 @@ import {
   exportRepo,
   loginOrigin,
   loginDest,
+  validatePlcToken,
 } from "~/actions";
 import { processBackgroundJobStage } from "~/util/jobs";
+import { redisDelIfValueMatches, redisSetNxEx } from "~/util/redis";
 import { processState } from "~/util/process-state";
 import type { SessionData, SessionFlashData } from "~/sessions.server";
 import type { Session } from "react-router";
@@ -77,10 +84,42 @@ const buildLoginFormData = (): FormData => {
   return fd;
 };
 
+const buildPlcMigrationSession = (): AnySession =>
+  buildSession({
+    do_journey: "migrate",
+    inviteCode: "invite123",
+    hasBackup: true,
+    token_origin: "tok-origin",
+    token_dest: "tok-dest",
+    handle_dest: "alice.northsky.social",
+    pds_dest: "https://northsky.social",
+    pds_origin: "https://bsky.social",
+    exportedRepo: true,
+    importedRepo: true,
+    exportedBlobs: true,
+    importedBlobs: true,
+    migratedPrefs: true,
+    user_recover_key: "recovery-key",
+    requestedPlcToken: true,
+    destActivated: true,
+    originDeactivated: true,
+    migratedPlc: false,
+    did: "did:plc:alice",
+  });
+
+const createDeferred = <T>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((res) => {
+    resolve = res;
+  });
+  return { promise, resolve };
+};
+
 describe("processState", () => {
   beforeEach(() => {
     vi.mocked(loginOrigin).mockReset();
     vi.mocked(loginDest).mockReset();
+    vi.mocked(validatePlcToken).mockReset();
     vi.mocked(checkIfDidExistsInDest).mockReset();
     vi.mocked(processBackgroundJobStage).mockReset();
 
@@ -100,6 +139,8 @@ describe("processState", () => {
       didActive: true,
     });
     vi.mocked(processBackgroundJobStage).mockResolvedValue(undefined);
+    vi.mocked(redisSetNxEx).mockReset();
+    vi.mocked(redisDelIfValueMatches).mockReset();
   });
 
   it("missing-blobs journey proceeds with loginDest even when dest account is already active", async () => {
@@ -168,5 +209,40 @@ describe("processState", () => {
       jobKind: "ExportRepo",
     });
     expect(config?.startJob).toBe(exportRepo);
+  });
+
+  it("rejects concurrent PLC migration submissions so only one validates the token", async () => {
+    const firstSession = buildPlcMigrationSession();
+    const secondSession = buildPlcMigrationSession();
+    const firstCall = createDeferred<{ ok: boolean }>();
+
+    vi.mocked(redisSetNxEx)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    vi.mocked(redisDelIfValueMatches).mockResolvedValue(true);
+    vi.mocked(validatePlcToken).mockReturnValueOnce(firstCall.promise as never);
+
+    const firstRequest = processState(
+      firstSession,
+      new FormData(),
+      "https://migrator.example.com",
+    );
+    await Promise.resolve();
+
+    const secondRequest = processState(
+      secondSession,
+      new FormData(),
+      "https://migrator.example.com",
+    );
+
+    firstCall.resolve({ ok: true });
+
+    await Promise.all([firstRequest, secondRequest]);
+
+    expect(redisSetNxEx).toHaveBeenCalledTimes(2);
+    expect(validatePlcToken).toHaveBeenCalledTimes(1);
+    expect(redisDelIfValueMatches).toHaveBeenCalledTimes(1);
+    expect(firstSession.get("migratedPlc")).toBe(true);
+    expect(secondSession.get("migratedPlc")).toBe(false);
   });
 });

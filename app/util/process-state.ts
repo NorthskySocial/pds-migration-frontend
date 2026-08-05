@@ -21,8 +21,9 @@ import { ComAtprotoServerCreateSession } from "@atproto/api";
 import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
-import { LoginError } from "~/errors";
+import { LoginError, MigrationError } from "~/errors";
 import { BSKY_PDS_URL, maybeAutocompleteBskyHandle } from "./validators";
+import { redisDelIfValueMatches, redisSetNxEx } from "./redis";
 
 /**
  * Handles origin PDS login with 2FA support.
@@ -365,11 +366,33 @@ export const processState = async (
       case STAGES.ACTIVATE_DEST:
       case STAGES.DEACTIVATE_ORIGIN:
       case STAGES.MIGRATE_PLC: {
-        const { ok } = await validatePlcToken(state, data, migratorBackend);
-        if (ok) {
-          session.set("destActivated", ok);
-          session.set("originDeactivated", ok);
-          session.set("migratedPlc", ok);
+        const did = state.did;
+        if (!did) {
+          throw new MigrationError("Missing DID for PLC migration");
+        }
+
+        const plcMigrationLockKey = `plc:migration:${did}`;
+        const plcMigrationLockOwner = crypto.randomUUID();
+        const acquiredLock = await redisSetNxEx(
+          plcMigrationLockKey,
+          300,
+          plcMigrationLockOwner
+        );
+        if (!acquiredLock) {
+          log.warn("Rejecting duplicate PLC migration submission while another request is active");
+          break;
+        }
+
+        log.info("Starting PLC migration process");
+        try {
+          const { ok } = await validatePlcToken(state, data, migratorBackend);
+          if (ok) {
+            session.set("destActivated", ok);
+            session.set("originDeactivated", ok);
+            session.set("migratedPlc", ok);
+          }
+        } finally {
+          await redisDelIfValueMatches(plcMigrationLockKey, plcMigrationLockOwner);
         }
         break;
       }
