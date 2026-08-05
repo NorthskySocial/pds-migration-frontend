@@ -55,8 +55,8 @@ export default function AddRotationKeyScreen({ state }: ScreenProps) {
 
         <div>
           <OpenRotationKeyModal
-            did={state.did}
-            handle={state.handle}
+            did={state.did ?? ""}
+            handle={state.handle_dest ?? ""}
             onClose={modalClose}
           />
           <br />

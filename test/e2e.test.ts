@@ -15,7 +15,7 @@ describe("account migration tool", () => {
 
   let sc: SeedClient;
   let inviteCode: string;
-  let alice: string;
+  let alice: SeedClient["dids"]["alice"];
   const mailCatcher = new EventEmitter();
   let _origSendMail;
 
