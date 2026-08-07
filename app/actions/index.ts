@@ -260,6 +260,11 @@ export async function loginOrigin({
   await verifyOriginPdsReachable(pds_origin);
 
   // Login to origin PDS
+  logger.info(
+    `Attempting origin login for handle ${handle_origin}. ` +
+    `2FA token present=${Boolean(authFactorToken)}, length=${authFactorToken?.length ?? 0}`
+  );
+
   let agentSessionData;
   try {
     ({ data: agentSessionData } = await origin_agent.login({
