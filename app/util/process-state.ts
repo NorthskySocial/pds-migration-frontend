@@ -86,11 +86,15 @@ const handleOriginLoginWith2FA = async (
 
   try {
     log.info(`Attempting to log in user to origin for ${context}. Handle: `, handle_origin);
+    const twoFaCode = data.get("2fa_code") as string;
+    log.info(
+      `Calling loginOrigin for ${context}. 2FA code present=${Boolean(twoFaCode)}, length=${twoFaCode?.length ?? 0}`
+    );
     const result = await loginOrigin({
       pds_origin,
       handle_origin,
       password_origin,
-      authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+      authFactorToken: twoFaCode ?? undefined,
     });
 
     session.set("email", result.email);
@@ -104,11 +108,13 @@ const handleOriginLoginWith2FA = async (
 
     return result;
   } catch (e) {
+    const twoFaCode = data.get("2fa_code") as string;
     log.error(`Error during origin login for ${context}: `, e);
 
     if (e instanceof ComAtprotoServerCreateSession.AuthFactorTokenRequiredError) {
       log.info(
         `[${context}] 2FA code required by origin PDS. ` +
+        `Attempted 2FA code present=${Boolean(twoFaCode)}, length=${twoFaCode?.length ?? 0}. ` +
         `Persisted in session: handle_origin=${session.get("handle_origin")}, ` +
         `password_origin present=${Boolean(session.get("password_origin"))}, ` +
         `handle_dest=${session.get("handle_dest")}, ` +
