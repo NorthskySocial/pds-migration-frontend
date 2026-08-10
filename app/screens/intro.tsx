@@ -103,7 +103,7 @@ export default function IntroScreen({ state }: ScreenProps) {
             </Button>
           </VStack>
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you've never made an account on Bluesky or ATprotocol</Text>
+            <Text fontSize="sm" color="fg.muted">If you've never made an account on Bluesky or ATprotocol:</Text>
 
             <Button width="100%" type="submit" name="create" value="create">
               Create brand new account
