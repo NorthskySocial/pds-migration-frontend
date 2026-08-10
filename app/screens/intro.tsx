@@ -97,24 +97,28 @@ export default function IntroScreen({ state }: ScreenProps) {
         </Box>
         <VStack width="100%" gap={4} marginBottom={4}>
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If it's your first time here:</Text>
+            <Text fontSize="sm" color="fg.muted">If you have an existing ATprotocol Account (Bluesky/Blacksky/Eurosky/etc...)</Text>
             <Button width="100%" type="submit" name="migrate" value="migrate">
-              Migrate existing account
+              Migrate your account
             </Button>
+          </VStack>
+          <VStack width="100%" gap={2}>
+            <Text fontSize="sm" color="fg.muted">If you've never made an account on Bluesky or ATprotocol:</Text>
+
             <Button width="100%" type="submit" name="create" value="create">
-              Create new account
+              Create brand new account
             </Button>
           </VStack>
 
           <VStack width="100%" gap={2}>
             <Text fontSize="sm" color="fg.muted">If you previously started a migration and it failed:</Text>
             <Button formNoValidate width="100%" type="submit" name="resume" value="resume">
-              Resume failed migration
+              Resume interrupted migration
             </Button>
           </VStack>
 
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you migrated to Northsky successfully but are missing blobs:</Text>
+            <Text fontSize="sm" color="fg.muted">If you migrated to Northsky successfully but there are missing blobs:</Text>
             <Button formNoValidate width="100%" type="submit" name="missing-blobs" value="missing-blobs">
               Import missing blobs
             </Button>
