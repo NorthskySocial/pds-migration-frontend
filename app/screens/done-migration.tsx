@@ -57,50 +57,82 @@ export default function MigrationDoneScreen({ state }: ScreenProps) {
                     username and password.
                   </Text>
 
+        <VStack mb="5">
 
-                </>
-              ) : (
-                <>
-                  <Text fontSize="md" textAlign={"justify"}>
-                    Your new Northsky account is ready!
-                  </Text>
-                  <Text fontSize="md" textAlign={"justify"}>
-                    You may now login via the Bluesky app using your new account's credentials.
-                  </Text>
-                </>
-              )
+          <iframe width="560" height="315" src="https://www.youtube.com/embed/oOnQ6lt0iCE?si=KTmuuwFsZXcS4kLy" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
 
-              }
-              <List.Root as="ol">
-                <List.Item>Go to {" "}
-                  <Link
-                    color={"emphasized"}
-                    variant="underline"
-                    target="_blank"
-                    href="https://bsky.app/"
-                  >
-                    Bluesky</Link>
-                </List.Item>
-                <List.Item>
-                  Under Settings, select "Switch Account"
-                </List.Item>
-                <List.Item>
-                  Select "Add Another Account"
-                </List.Item>
-                <List.Item>
-                  Select "Sign In"
-                </List.Item>
-                <List.Item>
-                  Select "Other Account"
-                </List.Item>
-                <List.Item>
-                  On the Sign In dialog, select "Hosting Provider"
+          {state.do_journey === "migrate" ? (
+            <>
+              <Text fontSize="md" textAlign={"justify"}>
+                Your account has been migrated to Northsky successfully.
+              </Text>
+              <Text fontSize="md" textAlign={"justify"}>
+                When you next log in, Bluesky will prompt you to re-activate your
+                old account.
+              </Text>
+              <Text fontSize="md" textAlign={"justify"}>
+                If you try Yes,{" "}
+                <strong style={{ textDecoration: "underline" }}>
+                  it will not work.
+                </strong>
+              </Text>
+              <Text fontSize="md" textAlign={"justify"}>
+                Instead, hit <strong>Cancel</strong> and log in with your new
+                username and password.
+              </Text>
 
 
-                </List.Item>
-                <List.Item>
-                  Select "Custom", and then fill in https://northsky.social as your server address
+            </>
+          ) : (
+            <>
+              <Text fontSize="md" textAlign={"justify"}>
+                Your new Northsky account is ready!
+              </Text>
+              <Text fontSize="md" textAlign={"justify"}>
+                You may now login via the Bluesky app using your new account's credentials.
+              </Text>
+            </>
+          )
 
+          }
+          <List.Root as="ol">
+            <List.Item>Go to {" "}
+              <Link
+                color={"emphasized"}
+                variant="underline"
+                target="_blank"
+                href="https://bsky.app/"
+              >
+                Bluesky</Link>
+            </List.Item>
+            <List.Item>
+              Under Settings, select "Switch Account"
+            </List.Item>
+            <List.Item>
+              Select "Add Another Account"
+            </List.Item>
+            <List.Item>
+              Select "Sign In"
+            </List.Item>
+            <List.Item>
+              Select "Other Account"
+            </List.Item>
+            <List.Item>
+              On the Sign In dialog, select "Hosting Provider"
+            </List.Item>
+            <List.Item>
+              Select "Custom", and then fill in https://northsky.social as your server address
+            </List.Item>
+            <List.Item>
+              Select "Done"
+            </List.Item>
+            <List.Item>
+              Fill in your new Northsky account and password
+            </List.Item>
+            <List.Item>
+              Select "Next" to finish logging in
+            </List.Item>
+          </List.Root>
 
                 </List.Item>
                 <List.Item>
