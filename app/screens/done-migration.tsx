@@ -71,6 +71,7 @@ export default function MigrationDoneScreen({ state }: ScreenProps) {
               )
 
               }
+              <iframe width="560" height="315" src="https://www.youtube.com/embed/oOnQ6lt0iCE?si=KTmuuwFsZXcS4kLy" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
               <List.Root as="ol">
                 <List.Item>Go to {" "}
                   <Link
@@ -121,16 +122,6 @@ export default function MigrationDoneScreen({ state }: ScreenProps) {
 
                 </List.Item>
               </List.Root>
-
-            </VStack>
-          </GridItem>
-          <GridItem>
-            <VStack>
-              <Image src={nsNewAccount} alt="Adding a new account" maxWidth="100%" height="auto" />
-              <Image src={nsSignIn2} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
-              <Image src={nsOtherAccount} alt="Choose other account" maxWidth="100%" height="auto" />
-              <Image src={nsSignIn} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
-              <Image src={nsChooseProvider} alt="Choose your Provder" maxWidth="100%" height="auto" />
 
             </VStack>
           </GridItem>
