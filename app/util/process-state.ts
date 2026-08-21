@@ -188,10 +188,18 @@ export const processState = async (
     session.set("user_recover_key", undefined);
     session.set("password_origin", undefined);
     session.set("password_dest", undefined);
+    session.set("export_job_id", undefined);
+    session.set("export_progress", undefined);
+    session.set("export_job_failures", undefined);
+    session.set("last_export_check", undefined);
     session.set("export_repo_job_id", undefined);
     session.set("export_repo_progress", undefined);
     session.set("export_repo_job_failures", undefined);
     session.set("last_export_repo_check", undefined);
+    session.set("import_job_id", undefined);
+    session.set("upload_progress", undefined);
+    session.set("import_job_failures", undefined);
+    session.set("last_import_check", undefined);
 
     // state flags
     session.set("require_2fa_code", false);

@@ -629,7 +629,7 @@ export async function exportRepo(
     }),
     headers: { "Content-Type": "application/json" },
   });
-  logger.debug("exportRepo", res);
+  log.info("Starting ExportRepo job request");
 
   if (!res.ok) {
     const message = await formatBackendErrorMessage(res);
@@ -639,6 +639,7 @@ export async function exportRepo(
 
   const { job_id }: { job_id: string } = await res.json();
 
+  log.info(`ExportRepo job request succeeded with job ID ${job_id}`);
   return { job_id };
 }
 
@@ -721,6 +722,7 @@ export async function exportBlobs(
 
   const isMissingBlobsJourney = do_journey === "missing-blobs";
   try {
+    log.info("Starting ExportBlobs job request");
     const res = await f(`${MIGRATOR_BACKEND}/jobs/export-blobs`, {
       method: "post",
       body: JSON.stringify({
@@ -742,6 +744,7 @@ export async function exportBlobs(
 
     const { job_id }: { job_id: string } = await res.json();
 
+    log.info(`ExportBlobs job request succeeded with job ID ${job_id}`);
     return { job_id };
   } catch (e) {
     logger.withDid(did).error("Error in exportBlobs:", e);
@@ -778,6 +781,7 @@ export async function uploadBlobs(
 
   // upload blobs
   try {
+    log.info("Starting UploadBlobs job request");
     const res = await f(`${MIGRATOR_BACKEND}/jobs/upload-blobs`, {
       method: "post",
       body: JSON.stringify({
@@ -796,6 +800,7 @@ export async function uploadBlobs(
 
     const { job_id }: { job_id: string } = await res.json();
 
+    log.info(`UploadBlobs job request succeeded with job ID ${job_id}`);
     return { job_id };
   } catch (e) {
     logger.withDid(did).error("Error in uploadBlobs:", e);
