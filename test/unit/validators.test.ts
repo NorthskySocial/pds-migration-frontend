@@ -100,7 +100,13 @@ describe("validators", () => {
     it("should convert handle to lowercase", () => {
       expect(normalizeHandle("MyHandle", true)).toBe("myhandle.northsky.social");
       expect(normalizeHandle("MYHANDLE.Custom.COM", false)).toBe(
-        "myhandle.custom.com"
+        "myhandle.custom.com",
+      );
+    });
+
+    it("should remove a leading at-sign from handles", () => {
+      expect(normalizeHandle("@example.northsky.social", false)).toBe(
+        "example.northsky.social",
       );
     });
 
@@ -166,6 +172,12 @@ describe("validators", () => {
       expect(
         maybeAutocompleteBskyHandle("myhandle.custom.com", BSKY_PDS_URL)
       ).toBe("myhandle.custom.com");
+    });
+
+    it("removes a leading at-sign from dotted handles", () => {
+      expect(
+        maybeAutocompleteBskyHandle("@example.northsky.social", BSKY_PDS_URL),
+      ).toBe("example.northsky.social");
     });
 
     it("returns handle unchanged when pds_origin is not the default bsky PDS", () => {
