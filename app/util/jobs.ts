@@ -53,6 +53,7 @@ const startBackgroundJobIfNeeded = async (
   if (result?.job_id) {
     session.set(config.jobIdKey, result.job_id);
     state[config.jobIdKey] = result.job_id;
+    logger.withDid(state.did).info(`${config.jobKind} job started with job ID ${result.job_id}`);
   }
   return true;
 };

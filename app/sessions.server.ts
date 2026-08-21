@@ -4,21 +4,6 @@ import { redisGet, redisSet, redisDel } from "./util/redis";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 4; // 4 hours
 
-const SESSION_BOOLEAN_DEFAULTS = {
-  hasBackup: false,
-  exportedRepo: false,
-  importedRepo: false,
-  exportedBlobs: false,
-  importedBlobs: false,
-  migratedPrefs: false,
-  requestedPlcToken: false,
-  originDeactivated: false,
-  destActivated: false,
-  migratedPlc: false,
-  require_2fa_code: false,
-  had_invalid_blobs: false,
-} as const;
-
 export type BackgroundJobProgress = {
   invalid_blobs: number;
   successful_blobs: number;
@@ -78,6 +63,56 @@ export type SessionData = {
   had_invalid_blobs: boolean;
 };
 
+export const INITIAL_SESSION_DATA = {
+  do_journey: undefined,
+  handle_origin: undefined,
+  handle_dest: undefined,
+  password_origin: undefined,
+  password_dest: undefined,
+  pds_dest: undefined,
+  did_exists_in_dest: undefined,
+  did_active_in_dest: undefined,
+  atp_origin_session: undefined,
+  atp_dest_session: undefined,
+  pds_origin: undefined,
+  token_origin: undefined,
+  token_dest: undefined,
+  token_ref_origin: undefined,
+  token_ref_dest: undefined,
+  plc_hostname: undefined,
+  did: undefined,
+  inviteCode: undefined,
+  email: undefined,
+  user_recover_key: undefined,
+  export_progress: undefined,
+  export_repo_progress: undefined,
+  upload_progress: undefined,
+  export_job_id: undefined,
+  export_repo_job_id: undefined,
+  import_job_id: undefined,
+  export_job_failures: undefined,
+  export_repo_job_failures: undefined,
+  import_job_failures: undefined,
+  last_export_check: undefined,
+  last_export_repo_check: undefined,
+  last_import_check: undefined,
+  handle_not_available: undefined,
+  password_mismatch: undefined,
+  password_too_short: undefined,
+  hasBackup: false,
+  exportedRepo: false,
+  importedRepo: false,
+  exportedBlobs: false,
+  importedBlobs: false,
+  migratedPrefs: false,
+  requestedPlcToken: false,
+  originDeactivated: false,
+  destActivated: false,
+  migratedPlc: false,
+  require_2fa_code: false,
+  had_invalid_blobs: false,
+} satisfies { [Key in keyof SessionData]: SessionData[Key] | undefined };
+
 export type ErrorType = "Expected" | "Unexpected";
 
 export type SessionFlashData = {
@@ -112,7 +147,7 @@ export const initSession = (hostname?: string) =>
       try {
         const parsed = JSON.parse(raw) as Partial<SessionData>;
         return {
-          ...SESSION_BOOLEAN_DEFAULTS,
+          ...INITIAL_SESSION_DATA,
           ...parsed,
         };
       } catch {
