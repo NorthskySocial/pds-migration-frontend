@@ -149,7 +149,11 @@ describe("processState", () => {
       pds_dest: "https://northsky.social",
     });
 
-    await processState(session, buildLoginFormData(), "https://migrator.example.com");
+    await processState(
+      session,
+      buildLoginFormData(),
+      "https://migrator.example.com",
+    );
 
     expect(checkIfDidExistsInDest).toHaveBeenCalledWith(
       "did:plc:alice",
@@ -168,13 +172,42 @@ describe("processState", () => {
     expect(session.get("did_active_in_dest")).toBe(true);
   });
 
+  it("removes leading at-signs from origin and destination login handles", async () => {
+    const session = buildSession({
+      do_journey: "missing-blobs",
+      pds_dest: "https://northsky.social",
+    });
+    const data = buildLoginFormData();
+    data.set("bsky-handle", "@example.northsky.social");
+    data.set("northsky-handle", "@example.northsky.social");
+
+    await processState(session, data, "https://migrator.example.com");
+
+    expect(loginOrigin).toHaveBeenCalledWith(
+      expect.objectContaining({
+        handle_origin: "example.northsky.social",
+      }),
+    );
+    expect(loginDest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        handle_dest: "example.northsky.social",
+      }),
+    );
+    expect(session.get("handle_origin")).toBe("example.northsky.social");
+    expect(session.get("handle_dest")).toBe("example.northsky.social");
+  });
+
   it("resume journey does NOT call loginDest when dest account is already active", async () => {
     const session = buildSession({
       do_journey: "resume",
       pds_dest: "https://northsky.social",
     });
 
-    await processState(session, buildLoginFormData(), "https://migrator.example.com");
+    await processState(
+      session,
+      buildLoginFormData(),
+      "https://migrator.example.com",
+    );
 
     expect(checkIfDidExistsInDest).toHaveBeenCalledTimes(1);
     expect(loginDest).not.toHaveBeenCalled();

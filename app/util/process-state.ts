@@ -22,7 +22,11 @@ import { sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
 import { LoginError, MigrationError } from "~/errors";
-import { BSKY_PDS_URL, maybeAutocompleteBskyHandle } from "./validators";
+import {
+  BSKY_PDS_URL,
+  maybeAutocompleteBskyHandle,
+  normalizeHandle,
+} from "./validators";
 import { redisDelIfValueMatches, redisSetNxEx } from "./redis";
 
 /**
@@ -420,8 +424,14 @@ export const processState = async (
         );
 
         if (!is2faAttempt) {
-          session.set("handle_dest", data.get("northsky-handle") as string);
-          session.set("password_dest", (data.get("northsky-password") as string) ?? "");
+          session.set(
+            "handle_dest",
+            normalizeHandle(data.get("northsky-handle") as string, false),
+          );
+          session.set(
+            "password_dest",
+            (data.get("northsky-password") as string) ?? "",
+          );
           log.info(
             `[${journeyContext}] First attempt: persisted dest creds to session. ` +
             `handle_dest=${session.get("handle_dest")}, ` +

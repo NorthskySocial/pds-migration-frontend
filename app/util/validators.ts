@@ -31,7 +31,7 @@ export const BSKY_PDS_URL = "https://bsky.social";
  */
 export function isPasswordTooShort(
   password: string,
-  minLength: number = MIN_PASSWORD_LENGTH
+  minLength: number = MIN_PASSWORD_LENGTH,
 ): boolean {
   return password.length > 0 && password.length < minLength;
 }
@@ -45,7 +45,7 @@ export function isPasswordTooShort(
  */
 export function doPasswordsMismatch(
   password: string,
-  confirmPassword: string
+  confirmPassword: string,
 ): boolean {
   return (
     password.length > 0 &&
@@ -66,9 +66,9 @@ export function doPasswordsMismatch(
 export function normalizeHandle(
   handle: string,
   isCreationFlow: boolean,
-  defaultDomain: string = DEFAULT_HANDLE_DOMAIN
+  defaultDomain: string = DEFAULT_HANDLE_DOMAIN,
 ): string {
-  const normalizedHandle = handle.toLowerCase();
+  const normalizedHandle = handle.replace(/^@+/, "").toLowerCase();
 
   // In creation flow, always use the default domain
   // In migration flow, only append if no custom domain is present
@@ -89,13 +89,15 @@ export function normalizeHandle(
  */
 export function maybeAutocompleteBskyHandle(
   handle: string,
-  pds_origin: string
+  pds_origin: string,
 ): string {
   if (!handle) return handle;
-  if (pds_origin !== BSKY_PDS_URL) return handle;
-  if (handle.includes(".")) return handle;
+  const normalizedHandle = handle.replace(/^@+/, "").toLowerCase();
 
-  return normalizeHandle(handle, false, BSKY_HANDLE_DOMAIN);
+  if (pds_origin !== BSKY_PDS_URL) return normalizedHandle;
+  if (normalizedHandle.includes(".")) return normalizedHandle;
+
+  return normalizeHandle(normalizedHandle, false, BSKY_HANDLE_DOMAIN);
 }
 
 /**
