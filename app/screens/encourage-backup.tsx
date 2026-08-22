@@ -10,10 +10,9 @@ import {
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box } from "@chakra-ui/react";
-import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
-export default function EncourageBackupScreen({ state }: ScreenProps) {
+export default function EncourageBackupScreen() {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post" style={{ width: "100%" }}>
@@ -23,10 +22,11 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
         </Heading>
         <VStack align={"left"} mb="5">
           <Text fontSize="md" textAlign={"justify"} mb="4">
-            The migration process is non-destructive, but if you would like to backup your account before migrating, we recommend using one of these tools:
+            The migration process is non-destructive, but if you would like to
+            backup your account before migrating, we recommend using one of
+            these tools:
           </Text>
           <List.Root ps="5">
-
             <List.Item>
               <Link
                 color={"emphasized"}
@@ -58,8 +58,6 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
               <List.Item>Downloadable for Windows + Linux</List.Item>
               <List.Item>Free local backups to your computer</List.Item>
             </List.Root>
-
-
           </List.Root>
           <Text fontSize="md" textAlign={"justify"} mb="4">
             Once it has completed, your backup should contain:
@@ -84,7 +82,6 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           <Button type="submit" name="submit">
             Continue
           </Button>
-
         </HStack>
       </VStack>
     </fetcher.Form>

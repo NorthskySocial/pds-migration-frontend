@@ -1,8 +1,9 @@
 type LogLevel = "silent" | "error" | "warn" | "info" | "debug";
+type LogArg = unknown;
 
 // Determine log level from env; default to "debug" in dev and "info" in prod.
 // Priority: global SSR override -> VITE_LOG_LEVEL -> DEBUG flag -> DEV default
-const globalLevel = (globalThis as any)?.__LOG_LEVEL as string | undefined;
+const globalLevel = (globalThis as { __LOG_LEVEL?: string }).__LOG_LEVEL;
 const explicitLevel = (
   import.meta.env.VITE_LOG_LEVEL as string | undefined
 )?.toLowerCase();
@@ -41,7 +42,7 @@ function formatDidPrefix(did: string | undefined): string {
  * Prepends DID prefix to the first argument if it's a string,
  * otherwise inserts the prefix as the first element.
  */
-function prependDid(did: string | undefined, args: any[]): any[] {
+function prependDid(did: string | undefined, args: LogArg[]): LogArg[] {
   const prefix = formatDidPrefix(did);
   if (!prefix) return args;
 
@@ -55,11 +56,11 @@ function prependDid(did: string | undefined, args: any[]): any[] {
 }
 
 export type Logger = {
-  log: (...args: any[]) => void;
-  info: (...args: any[]) => void;
-  warn: (...args: any[]) => void;
-  error: (...args: any[]) => void;
-  debug: (...args: any[]) => void;
+  log: (...args: LogArg[]) => void;
+  info: (...args: LogArg[]) => void;
+  warn: (...args: LogArg[]) => void;
+  error: (...args: LogArg[]) => void;
+  debug: (...args: LogArg[]) => void;
   /**
    * Creates a scoped logger that automatically prepends the user's DID to all log messages.
    * Use this to track a user's journey through the application.
@@ -79,19 +80,19 @@ export type Logger = {
  */
 function createLogger(did?: string): Logger {
   return {
-    log: (...args: any[]) => {
+    log: (...args: LogArg[]) => {
       if (enabled("info")) console.log(...prependDid(did, args));
     },
-    info: (...args: any[]) => {
+    info: (...args: LogArg[]) => {
       if (enabled("info")) console.info(...prependDid(did, args));
     },
-    warn: (...args: any[]) => {
+    warn: (...args: LogArg[]) => {
       if (enabled("warn")) console.warn(...prependDid(did, args));
     },
-    error: (...args: any[]) => {
+    error: (...args: LogArg[]) => {
       if (enabled("error")) console.error(...prependDid(did, args));
     },
-    debug: (...args: any[]) => {
+    debug: (...args: LogArg[]) => {
       if (enabled("debug")) console.debug(...prependDid(did, args));
     },
     withDid: (newDid: string | undefined) => createLogger(newDid),

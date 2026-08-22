@@ -1,11 +1,9 @@
-import type { Route } from "./+types";
-
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader() {
   return Response.json(
     {
       status: "ok",
       timestamp: new Date().toISOString(),
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

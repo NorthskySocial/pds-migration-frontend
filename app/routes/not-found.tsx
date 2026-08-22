@@ -3,11 +3,11 @@ import { Heading, Text, VStack, Button } from "@chakra-ui/react";
 import { Layout } from "~/components/layout";
 import type { Route } from "./+types/not-found";
 
-export function meta(_: Route.MetaArgs): ReturnType<Route.MetaFunction> {
+export function meta(): ReturnType<Route.MetaFunction> {
   return [{ title: "Page not found" }];
 }
 
-export async function loader(_: Route.LoaderArgs) {
+export async function loader() {
   throw data("Not Found", { status: 404 });
 }
 
@@ -19,7 +19,7 @@ export default function NotFoundRoute() {
   );
 }
 
-export function ErrorBoundary(_: Route.ErrorBoundaryProps) {
+export function ErrorBoundary() {
   return (
     <Layout>
       <NotFoundContent />

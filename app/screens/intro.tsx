@@ -10,10 +10,9 @@ import {
 } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
-import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
-export default function IntroScreen({ state }: ScreenProps) {
+export default function IntroScreen() {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post" style={{ width: "100%" }}>
@@ -97,13 +96,18 @@ export default function IntroScreen({ state }: ScreenProps) {
         </Box>
         <VStack width="100%" gap={4} marginBottom={4}>
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you have an existing ATprotocol Account (Bluesky/Blacksky/Eurosky/etc...)</Text>
+            <Text fontSize="sm" color="fg.muted">
+              If you have an existing ATprotocol Account
+              (Bluesky/Blacksky/Eurosky/etc...)
+            </Text>
             <Button width="100%" type="submit" name="migrate" value="migrate">
               Migrate your account
             </Button>
           </VStack>
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you've never made an account on Bluesky or ATprotocol:</Text>
+            <Text fontSize="sm" color="fg.muted">
+              If you've never made an account on Bluesky or ATprotocol:
+            </Text>
 
             <Button width="100%" type="submit" name="create" value="create">
               Create brand new account
@@ -111,15 +115,32 @@ export default function IntroScreen({ state }: ScreenProps) {
           </VStack>
 
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you previously started a migration and it failed:</Text>
-            <Button formNoValidate width="100%" type="submit" name="resume" value="resume">
+            <Text fontSize="sm" color="fg.muted">
+              If you previously started a migration and it failed:
+            </Text>
+            <Button
+              formNoValidate
+              width="100%"
+              type="submit"
+              name="resume"
+              value="resume"
+            >
               Resume interrupted migration
             </Button>
           </VStack>
 
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you migrated to Northsky successfully but there are missing blobs:</Text>
-            <Button formNoValidate width="100%" type="submit" name="missing-blobs" value="missing-blobs">
+            <Text fontSize="sm" color="fg.muted">
+              If you migrated to Northsky successfully but there are missing
+              blobs:
+            </Text>
+            <Button
+              formNoValidate
+              width="100%"
+              type="submit"
+              name="missing-blobs"
+              value="missing-blobs"
+            >
               Import missing blobs
             </Button>
           </VStack>

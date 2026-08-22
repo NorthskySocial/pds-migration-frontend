@@ -1,9 +1,8 @@
 import { Heading, Text, Button, VStack, Center } from "@chakra-ui/react";
-import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { useAttentionAlert } from "~/util/use-attention-alert";
 
-export default function MissingBlobsDoneScreen({ state }: ScreenProps) {
+export default function MissingBlobsDoneScreen() {
   const fetcher = useFetcher();
   useAttentionAlert();
   return (
