@@ -14,7 +14,11 @@ import {
   validatePlcToken,
   loginDest,
 } from "~/actions";
-import { type SessionData, type SessionFlashData } from "~/sessions.server";
+import {
+  INITIAL_SESSION_DATA,
+  type SessionData,
+  type SessionFlashData,
+} from "~/sessions.server";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { ComAtprotoServerCreateSession } from "@atproto/api";
@@ -169,43 +173,9 @@ export const processState = async (
   if (isCancelling || isResetResume) {
     log.info(`User is cancelling or resetting the flow. isCancelling: ${isCancelling}, isResetResume: ${isResetResume}`);
 
-    //Reset all session variables
-    session.set("do_journey", undefined);
-    session.set("handle_origin", undefined);
-    session.set("handle_dest", undefined);
-    session.set("pds_dest", undefined);
-    session.set("atp_dest_session", undefined);
-    session.set("pds_origin", undefined);
-    session.set("atp_origin_session", undefined);
-    session.set("did_exists_in_dest", undefined);
-    session.set("did_active_in_dest", undefined);
-    session.set("token_origin", undefined);
-    session.set("token_dest", undefined);
-    session.set("plc_hostname", undefined);
-    session.set("did", undefined);
-    session.set("inviteCode", undefined);
-    session.set("email", undefined);
-    session.set("user_recover_key", undefined);
-    session.set("password_origin", undefined);
-    session.set("password_dest", undefined);
-    session.set("export_repo_job_id", undefined);
-    session.set("export_repo_progress", undefined);
-    session.set("export_repo_job_failures", undefined);
-    session.set("last_export_repo_check", undefined);
-
-    // state flags
-    session.set("require_2fa_code", false);
-    session.set("hasBackup", false);
-    session.set("exportedRepo", false);
-    session.set("importedRepo", false);
-    session.set("exportedBlobs", false);
-    session.set("importedBlobs", false);
-    session.set("migratedPrefs", false);
-    session.set("requestedPlcToken", false);
-    session.set("originDeactivated", false);
-    session.set("destActivated", false);
-    session.set("migratedPlc", false);
-    session.set("had_invalid_blobs", false);
+    for (const [key, value] of Object.entries(INITIAL_SESSION_DATA)) {
+      session.set(key as keyof SessionData, value);
+    }
 
     if (isResetResume) {
       // Shotcut to the resume screen

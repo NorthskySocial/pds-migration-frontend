@@ -53,6 +53,7 @@ const startBackgroundJobIfNeeded = async (
   if (result?.job_id) {
     session.set(config.jobIdKey, result.job_id);
     state[config.jobIdKey] = result.job_id;
+    logger.withDid(state.did).info(`${config.jobKind} job started with job ID ${result.job_id}`);
   }
   return true;
 };
@@ -81,13 +82,15 @@ const checkBackgroundJobStatus = async (
   try {
     const res = await f(`${migratorBackend}/jobs/${jobId}`);
     if (!res.ok) {
-      log.warn("Response status from job status check: ", res.status);
+      log.warn(
+        `Response from ${config.jobKind} job status check failed for job ${jobId} with status ${res.status}`
+      );
       throw res;
     }
 
     const { progress, status } = (await res.json()) as JobStatusResponse;
     log.info(
-      `${config.jobKind} updated status: progress=${progress.successful_blobs}/${progress.total} ` +
+      `${config.jobKind} job ${jobId} updated status: progress=${progress.successful_blobs}/${progress.total} ` +
       `(invalid: ${progress.invalid_blobs}), status=${status}, status code=${res.status}`
     );
 
@@ -112,19 +115,26 @@ const checkBackgroundJobStatus = async (
   } catch (error) {
     const statusCode = error instanceof Response ? error.status : null;
     const isSyntaxError = error instanceof SyntaxError;
-    log.error(`Error checking ${config.jobKind} job status: `, error);
+    log.error(`Error checking ${config.jobKind} job ${jobId} status: `, error);
 
     if (statusCode === 404 || statusCode === 429 || isSyntaxError) {
+      const errorMessage =
+        error instanceof Response
+          ? (await error.text()) || error.statusText || "No response body"
+          : error instanceof Error
+            ? error.message
+            : String(error);
       const failureCount = (state[config.failuresKey] ?? 0) + 1;
       session.set(config.failuresKey, failureCount);
 
       log.warn(
-        `${config.jobKind} job check failed with status ${statusCode} and error ${error}. Failure count: ${failureCount}`
+        `${config.jobKind} job ${jobId} check failed with status ${statusCode} and error ${errorMessage}. Failure count: ${failureCount}`
       );
 
       if (failureCount >= 3) {
         throw new Error(
-          `${config.jobKind} job check failed with status ${statusCode} (error: ${error}) after ${failureCount} consecutive attempts`
+          `${config.jobKind} job ${jobId} check failed with status ${statusCode} (error: ${errorMessage}) after ${failureCount} consecutive attempts`,
+          { cause: error }
         );
       }
 

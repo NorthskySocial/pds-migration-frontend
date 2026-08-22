@@ -24,6 +24,7 @@ vi.mock("~/util/mock-fetch", () => ({
 import { processBackgroundJobStage, type BackgroundJobConfig } from "~/util/jobs";
 import type { SessionData, SessionFlashData } from "~/sessions.server";
 import type { Session } from "react-router";
+import { logger } from "~/util/logger";
 
 type AnySession = Session<SessionData, SessionFlashData>;
 
@@ -107,7 +108,7 @@ describe("processBackgroundJobStage", () => {
 
     await expect(
       processBackgroundJobStage(state, session, uploadConfig, BACKEND)
-    ).rejects.toThrow(/429/);
+    ).rejects.toThrow(/429.*Too Many Requests/);
 
     expect(session.get("import_job_failures")).toBe(3);
   });
@@ -158,6 +159,12 @@ describe("processBackgroundJobStage", () => {
     ).resolves.toBeUndefined();
 
     expect(session.get("import_job_failures")).toBe(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      "Response from UploadBlobs job status check failed for job job-123 with status 404"
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining("UploadBlobs job job-123 check failed")
+    );
   });
 
   it("rethrows non-retryable errors immediately", async () => {
