@@ -1,5 +1,5 @@
 import { XRPCError } from "@atproto/api";
-import { ResponseType } from '@atproto/xrpc'
+import { ResponseType } from "@atproto/xrpc";
 
 /**
  * Check if an XRPCError indicates an invalid or already-used invite code.

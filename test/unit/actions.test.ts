@@ -10,7 +10,12 @@ import { XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 vi.mock("~/util/logger", () => ({
   logger: {
-    withDid: () => ({ warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() }),
+    withDid: () => ({
+      warn: vi.fn(),
+      error: vi.fn(),
+      info: vi.fn(),
+      debug: vi.fn(),
+    }),
     warn: vi.fn(),
     error: vi.fn(),
     info: vi.fn(),
@@ -62,7 +67,7 @@ describe("checkIfDidExistsInDest", () => {
     expect(result).toEqual({ didExists: true, didActive: true });
     expect(mockFetch).toHaveBeenCalledWith(
       `${testPdsDest}/xrpc/com.atproto.sync.getRepoStatus?did=${testDid}`,
-      { method: "get", headers: { "Content-Type": "application/json" } }
+      { method: "get", headers: { "Content-Type": "application/json" } },
     );
   });
 
@@ -154,9 +159,7 @@ describe("verifyOriginPdsReachable", () => {
       },
     } as unknown as Response);
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
-    );
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
   });
 
   it("throws an Expected LoginError when the response body has no did", async () => {
@@ -179,9 +182,7 @@ describe("verifyOriginPdsReachable", () => {
       json: async () => ({ did: "" }),
     } as Response);
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
-    );
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
   });
 
   it("throws an Expected LoginError when the did is not a string", async () => {
@@ -191,16 +192,14 @@ describe("verifyOriginPdsReachable", () => {
       json: async () => ({ did: 123 }),
     } as Response);
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
-    );
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
   });
 
   it("throws an Expected LoginError when fetch rejects (network failure)", async () => {
     mockFetch.mockRejectedValueOnce(
       Object.assign(new Error("fetch failed"), {
         cause: { code: "ENOTFOUND" },
-      })
+      }),
     );
 
     await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toMatchObject({
@@ -212,9 +211,7 @@ describe("verifyOriginPdsReachable", () => {
   it("throws an Expected LoginError on an unexpected synchronous error", async () => {
     mockFetch.mockRejectedValueOnce(new Error("boom"));
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
-    );
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
   });
 });
 
@@ -251,7 +248,7 @@ describe("loginOrigin", () => {
       jsonResponse(401, {
         error: "AuthenticationRequired",
         message: "Invalid identifier or password",
-      })
+      }),
     );
 
     await expect(
@@ -259,11 +256,10 @@ describe("loginOrigin", () => {
         pds_origin: pdsOrigin,
         handle_origin: handleOrigin,
         password_origin: passwordOrigin,
-      })
+      }),
     ).rejects.toMatchObject({
       name: "LoginError",
-      message:
-        "Authentication error on your origin PDS: Invalid identifier or password",
+      message: "Authentication error on your origin PDS: Invalid identifier or password",
       errorType: "Expected",
     });
   });
@@ -273,7 +269,7 @@ describe("loginOrigin", () => {
       jsonResponse(401, {
         error: "AuthFactorTokenRequired",
         message: "A sign in code has been sent to your email address",
-      })
+      }),
     );
 
     await expect(
@@ -281,7 +277,7 @@ describe("loginOrigin", () => {
         pds_origin: pdsOrigin,
         handle_origin: handleOrigin,
         password_origin: passwordOrigin,
-      })
+      }),
     ).rejects.toMatchObject({
       error: "AuthFactorTokenRequired",
       status: 401,
@@ -300,7 +296,7 @@ describe("loginOrigin", () => {
         pds_origin: pdsOrigin,
         handle_origin: handleOrigin,
         password_origin: passwordOrigin,
-      })
+      }),
     ).rejects.toMatchObject({
       name: "LoginError",
       message: XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS,
@@ -323,7 +319,7 @@ describe("loginDest", () => {
       jsonResponse(401, {
         error: "AuthenticationRequired",
         message: "Invalid identifier or password",
-      })
+      }),
     );
 
     await expect(
@@ -332,11 +328,10 @@ describe("loginDest", () => {
         pds_dest: pdsDest,
         handle_dest: handleDest,
         password_dest: passwordDest,
-      })
+      }),
     ).rejects.toMatchObject({
       name: "LoginError",
-      message:
-        "Authentication error on the Northsky PDS: Invalid identifier or password",
+      message: "Authentication error on the Northsky PDS: Invalid identifier or password",
       errorType: "Expected",
     });
   });
@@ -346,7 +341,7 @@ describe("loginDest", () => {
       jsonResponse(500, {
         error: "InternalServerError",
         message: "boom",
-      })
+      }),
     );
 
     await expect(
@@ -355,7 +350,7 @@ describe("loginDest", () => {
         pds_dest: pdsDest,
         handle_dest: handleDest,
         password_dest: passwordDest,
-      })
+      }),
     ).rejects.toMatchObject({
       status: 500,
       error: "InternalServerError",
@@ -366,7 +361,7 @@ describe("loginDest", () => {
     mockFetch.mockRejectedValueOnce(
       Object.assign(new Error("fetch failed"), {
         cause: { code: "ECONNREFUSED" },
-      })
+      }),
     );
 
     await expect(
@@ -375,7 +370,7 @@ describe("loginDest", () => {
         pds_dest: pdsDest,
         handle_dest: handleDest,
         password_dest: passwordDest,
-      })
+      }),
     ).rejects.toMatchObject({
       name: "LoginError",
       message: XRPC_ERROR_MESSAGES.UNREACHABLE_DEST_PDS,

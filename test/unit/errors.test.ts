@@ -1,9 +1,4 @@
-import {
-  BaseAppError,
-  CreateAccountError,
-  MigrationError,
-  LoginError,
-} from "~/errors";
+import { BaseAppError, CreateAccountError, MigrationError, LoginError } from "~/errors";
 
 describe("error classes", () => {
   describe("BaseAppError", () => {

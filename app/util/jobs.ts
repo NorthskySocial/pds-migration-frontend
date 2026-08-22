@@ -17,16 +17,11 @@ const JOB_CHECK_INTERVAL_MS = 2000;
 export type BackgroundJobConfig = {
   jobIdKey: "export_job_id" | "import_job_id" | "export_repo_job_id";
   progressKey: "export_progress" | "upload_progress" | "export_repo_progress";
-  lastCheckKey:
-    "last_export_check" | "last_import_check" | "last_export_repo_check";
-  failuresKey:
-    "export_job_failures" | "import_job_failures" | "export_repo_job_failures";
+  lastCheckKey: "last_export_check" | "last_import_check" | "last_export_repo_check";
+  failuresKey: "export_job_failures" | "import_job_failures" | "export_repo_job_failures";
   completedKey: "exportedBlobs" | "importedBlobs" | "exportedRepo";
   jobKind: "ExportBlobs" | "UploadBlobs" | "ExportRepo";
-  startJob: (
-    state: SessionData,
-    backend: string,
-  ) => Promise<{ job_id?: string } | undefined>;
+  startJob: (state: SessionData, backend: string) => Promise<{ job_id?: string } | undefined>;
 };
 
 /**
@@ -154,12 +149,7 @@ export const processBackgroundJobStage = async (
   config: BackgroundJobConfig,
   migratorBackend: string,
 ): Promise<void> => {
-  const jobStarted = await startBackgroundJobIfNeeded(
-    state,
-    session,
-    config,
-    migratorBackend,
-  );
+  const jobStarted = await startBackgroundJobIfNeeded(state, session, config, migratorBackend);
   if (!jobStarted) {
     await checkBackgroundJobStatus(state, session, config, migratorBackend);
   }

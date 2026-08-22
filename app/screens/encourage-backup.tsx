@@ -1,13 +1,4 @@
-import {
-  Heading,
-  Highlight,
-  Text,
-  Button,
-  List,
-  Link,
-  VStack,
-  HStack,
-} from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, List, Link, VStack, HStack } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box } from "@chakra-ui/react";
 import { useFetcher } from "react-router";
@@ -22,9 +13,8 @@ export default function EncourageBackupScreen() {
         </Heading>
         <VStack align={"left"} mb="5">
           <Text fontSize="md" textAlign={"justify"} mb="4">
-            The migration process is non-destructive, but if you would like to
-            backup your account before migrating, we recommend using one of
-            these tools:
+            The migration process is non-destructive, but if you would like to backup your account
+            before migrating, we recommend using one of these tools:
           </Text>
           <List.Root ps="5">
             <List.Item>
@@ -66,8 +56,7 @@ export default function EncourageBackupScreen() {
               <List.Item>A folder with your media blobs inside it</List.Item>
             </List.Root>
             <br />
-            Once you have archived your data, press Continue to proceed with
-            Migration
+            Once you have archived your data, press Continue to proceed with Migration
           </Text>
         </VStack>
         <Box mb="10" background={"muted"} color="fg" p="4" borderRadius={"2xl"}>

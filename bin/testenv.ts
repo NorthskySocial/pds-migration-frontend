@@ -1,9 +1,5 @@
 import { EventEmitter } from "node:events";
-import {
-  TestNetworkNoAppView,
-  TestPds,
-  mockNetworkUtilities,
-} from "@atproto/dev-env";
+import { TestNetworkNoAppView, TestPds, mockNetworkUtilities } from "@atproto/dev-env";
 import Mail from "nodemailer/lib/mailer";
 import inquirer from "inquirer";
 import niceware from "niceware";
@@ -56,11 +52,7 @@ const getTokenFromMail = (mail: Mail.Options) =>
   mail.html?.toString().match(/>([a-z0-9]{5}-[a-z0-9]{5})</i)?.[1];
 
 mailCatcher.on("mail", (mail) =>
-  console.log(
-    "\n\n**NEW PLC TOKEN ARRIVED VIA EMAIL**: ",
-    getTokenFromMail(mail),
-    "\n\n"
-  )
+  console.log("\n\n**NEW PLC TOKEN ARRIVED VIA EMAIL**: ", getTokenFromMail(mail), "\n\n"),
 );
 
 async function main() {
@@ -83,7 +75,7 @@ async function main() {
         {
           encoding: "application/json",
           headers: destPds.adminAuthHeaders(),
-        }
+        },
       );
 
       const inviteCode = res.data.code;

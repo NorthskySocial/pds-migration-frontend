@@ -1,11 +1,4 @@
-import {
-  Heading,
-  Highlight,
-  Text,
-  Button,
-  VStack,
-  HStack,
-} from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, VStack, HStack } from "@chakra-ui/react";
 import { Field } from "@/components/ui/field";
 import { PasswordInput } from "@/components/ui/password-input";
 import plc_screenshot from "../assets/plc_update.png";
@@ -21,15 +14,11 @@ export default function ValidatePLCTokenScreen() {
           <Highlight query="to Bluesky">Check Your Email</Highlight>
         </Heading>
         <Text fontSize="md" textAlign={"left"}>
-          Bluesky should have just sent you an e-mail to your inbox. Input that
-          code below to continue migration. If you do not receive an e-mail
-          within a few minutes, please check your spam folder or click "Resend
-          Code".
+          Bluesky should have just sent you an e-mail to your inbox. Input that code below to
+          continue migration. If you do not receive an e-mail within a few minutes, please check
+          your spam folder or click "Resend Code".
         </Text>
-        <img
-          src={plc_screenshot}
-          style={{ maxWidth: "100%", height: "auto" }}
-        />
+        <img src={plc_screenshot} style={{ maxWidth: "100%", height: "auto" }} />
         <Field required label="PLC Token">
           <PasswordInput name="token_plc" />
         </Field>
@@ -44,12 +33,7 @@ export default function ValidatePLCTokenScreen() {
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            name="submit"
-            margin={"0 auto"}
-            disabled={isSubmitting}
-          >
+          <Button type="submit" name="submit" margin={"0 auto"} disabled={isSubmitting}>
             Continue
           </Button>
           <Button

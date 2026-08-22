@@ -14,12 +14,11 @@ export default function MissingBlobsDoneScreen() {
           </Heading>
         </Center>
         <Text fontSize="md" textAlign="center" mt="4">
-          Your missing blobs have been successfully recovered and imported to
-          your Northsky account.
+          Your missing blobs have been successfully recovered and imported to your Northsky account.
         </Text>
         <Text fontSize="md" textAlign="center" mt="2">
-          You can now continue using Northsky as normal. All your images and
-          media should be fully restored.
+          You can now continue using Northsky as normal. All your images and media should be fully
+          restored.
         </Text>
         <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
           Start Over

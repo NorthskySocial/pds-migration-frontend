@@ -1,18 +1,7 @@
 import type { Route } from "./+types";
 
-import {
-  createSearchParams,
-  data,
-  parsePath,
-  redirect,
-  useFetcher,
-} from "react-router";
-import {
-  getSession,
-  commitSession,
-  type SessionData,
-  type ErrorType,
-} from "../sessions.server";
+import { createSearchParams, data, parsePath, redirect, useFetcher } from "react-router";
+import { getSession, commitSession, type SessionData, type ErrorType } from "../sessions.server";
 import { Layout } from "~/components/layout";
 import { Suspense } from "react";
 import { getStage } from "~/util/get-stage";
@@ -35,18 +24,13 @@ export async function action({ request }: Route.ActionArgs) {
   const search = createSearchParams(path.search);
 
   if (!session.get("pds_dest")) {
-    session.set(
-      "pds_dest",
-      search.get("destination") ?? process?.env?.PDS_HOSTNAME,
-    );
+    session.set("pds_dest", search.get("destination") ?? process?.env?.PDS_HOSTNAME);
   }
 
   if (!session.get("plc_hostname")) {
     session.set(
       "plc_hostname",
-      search.get("plc") ??
-        process?.env?.PLC_HOSTNAME ??
-        "https://plc.directory",
+      search.get("plc") ?? process?.env?.PLC_HOSTNAME ?? "https://plc.directory",
     );
   }
 
@@ -101,8 +85,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   ) as Omit<SessionData, "pds_dest">;
   const supportFormUrl = process.env?.SUPPORT_FORM_URL;
 
-  const forceMaintenance =
-    new URL(request.url).searchParams.get("force_maintenance") === "true";
+  const forceMaintenance = new URL(request.url).searchParams.get("force_maintenance") === "true";
 
   const upstreamOutage = process.env?.UPSTREAM_OUTAGE === "true";
 

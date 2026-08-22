@@ -1,11 +1,4 @@
-import {
-  Heading,
-  Highlight,
-  Text,
-  Button,
-  VStack,
-  HStack,
-} from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, VStack, HStack } from "@chakra-ui/react";
 import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { OpenRotationKeyModal } from "~/components/rotation-key-modal";
@@ -21,13 +14,10 @@ export default function AddRotationKeyScreen({ state }: ScreenProps) {
   const [didKeyWizard, setDidKeyWizard] = useState(false);
   const modalClose = useCallback(
     async (keypair: Secp256k1Keypair) => {
-      await fetcher.submit(
-        { user_recover_key: keypair.did() },
-        { method: "post" }
-      );
+      await fetcher.submit({ user_recover_key: keypair.did() }, { method: "post" });
       setDidKeyWizard(true);
     },
-    [fetcher]
+    [fetcher],
   );
 
   const continueMigration = useCallback(async () => {
@@ -45,12 +35,10 @@ export default function AddRotationKeyScreen({ state }: ScreenProps) {
           <Highlight query="your Data">Add a rotation key</Highlight>
         </Heading>
         <Text fontSize="md" textAlign={"justify"} mb="4">
-          For peace of mind, add a <strong>rotation key</strong> that can be
-          used to restore access to your account in case anything catastrophic
-          ever happens to Northsky. Note,{" "}
-          <strong>you should treat this key like a password</strong> because if
-          someone gets access to it they can irrecoverably take over your
-          account.
+          For peace of mind, add a <strong>rotation key</strong> that can be used to restore access
+          to your account in case anything catastrophic ever happens to Northsky. Note,{" "}
+          <strong>you should treat this key like a password</strong> because if someone gets access
+          to it they can irrecoverably take over your account.
         </Text>
 
         <div>
@@ -72,12 +60,8 @@ export default function AddRotationKeyScreen({ state }: ScreenProps) {
               onClick={continueMigration}
               margin={"0 auto"}
             >
-              {didKeyWizard
-                ? "Continue"
-                : "Continue without generating rotation key"}
+              {didKeyWizard ? "Continue" : "Continue without generating rotation key"}
             </Button>
-
-
           </HStack>
         </div>
       </VStack>

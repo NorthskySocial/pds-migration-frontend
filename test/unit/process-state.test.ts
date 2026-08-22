@@ -149,16 +149,9 @@ describe("processState", () => {
       pds_dest: "https://northsky.social",
     });
 
-    await processState(
-      session,
-      buildLoginFormData(),
-      "https://migrator.example.com",
-    );
+    await processState(session, buildLoginFormData(), "https://migrator.example.com");
 
-    expect(checkIfDidExistsInDest).toHaveBeenCalledWith(
-      "did:plc:alice",
-      "https://northsky.social",
-    );
+    expect(checkIfDidExistsInDest).toHaveBeenCalledWith("did:plc:alice", "https://northsky.social");
     expect(loginDest).toHaveBeenCalledTimes(1);
     expect(loginDest).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -203,11 +196,7 @@ describe("processState", () => {
       pds_dest: "https://northsky.social",
     });
 
-    await processState(
-      session,
-      buildLoginFormData(),
-      "https://migrator.example.com",
-    );
+    await processState(session, buildLoginFormData(), "https://migrator.example.com");
 
     expect(checkIfDidExistsInDest).toHaveBeenCalledTimes(1);
     expect(loginDest).not.toHaveBeenCalled();
@@ -249,17 +238,11 @@ describe("processState", () => {
     const secondSession = buildPlcMigrationSession();
     const firstCall = createDeferred<{ ok: boolean }>();
 
-    vi.mocked(redisSetNxEx)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(false);
+    vi.mocked(redisSetNxEx).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
     vi.mocked(redisDelIfValueMatches).mockResolvedValue(true);
     vi.mocked(validatePlcToken).mockReturnValueOnce(firstCall.promise as never);
 
-    const firstRequest = processState(
-      firstSession,
-      new FormData(),
-      "https://migrator.example.com",
-    );
+    const firstRequest = processState(firstSession, new FormData(), "https://migrator.example.com");
     await Promise.resolve();
 
     const secondRequest = processState(

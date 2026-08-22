@@ -36,37 +36,27 @@ describe("stages utilities", () => {
     it("should have correct titles for key stages", () => {
       expect(stageInfo[STAGES.MAINTENANCE].stageTitle).toBe("Maintenance");
       expect(stageInfo[STAGES.CREATE_DEST_ACCOUNT].stageTitle).toBe(
-        "Creating destination account..."
+        "Creating destination account...",
       );
-      expect(stageInfo[STAGES.EXPORT_REPO_ORIGIN].stageTitle).toBe(
-        "Exporting repo..."
-      );
-      expect(stageInfo[STAGES.IMPORT_REPO_DEST].stageTitle).toBe(
-        "Importing repo..."
-      );
+      expect(stageInfo[STAGES.EXPORT_REPO_ORIGIN].stageTitle).toBe("Exporting repo...");
+      expect(stageInfo[STAGES.IMPORT_REPO_DEST].stageTitle).toBe("Importing repo...");
     });
 
     it("should have correct descriptions for key stages", () => {
       expect(stageInfo[STAGES.MAINTENANCE].stageDescription).toBe(
-        "The migration tool is temporarily unavailable"
+        "The migration tool is temporarily unavailable",
       );
       expect(stageInfo[STAGES.CREATE_DEST_ACCOUNT].stageDescription).toBe(
-        "Initialising a new account on the destination PDS"
+        "Initialising a new account on the destination PDS",
       );
-      expect(stageInfo[STAGES.REQUEST_PLC].stageDescription).toBe(
-        "Almost done! Check your email!"
-      );
+      expect(stageInfo[STAGES.REQUEST_PLC].stageDescription).toBe("Almost done! Check your email!");
     });
 
     it("should have missing blobs stage info", () => {
       expect(stageInfo[STAGES.MISSING_BLOBS_EXPORT].stageIdx).toBe(0);
       expect(stageInfo[STAGES.MISSING_BLOBS_IMPORT].stageIdx).toBe(1);
-      expect(stageInfo[STAGES.MISSING_BLOBS_EXPORT].stageTitle).toBe(
-        "Exporting missing blobs..."
-      );
-      expect(stageInfo[STAGES.MISSING_BLOBS_IMPORT].stageTitle).toBe(
-        "Importing blobs..."
-      );
+      expect(stageInfo[STAGES.MISSING_BLOBS_EXPORT].stageTitle).toBe("Exporting missing blobs...");
+      expect(stageInfo[STAGES.MISSING_BLOBS_IMPORT].stageTitle).toBe("Importing blobs...");
     });
 
     it("should have empty strings for non-progress stages", () => {
