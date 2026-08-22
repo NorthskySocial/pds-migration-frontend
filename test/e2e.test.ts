@@ -1,10 +1,5 @@
 import { EventEmitter } from "node:events";
-import {
-  SeedClient,
-  TestNetworkNoAppView,
-  TestPds,
-  mockNetworkUtilities,
-} from "@atproto/dev-env";
+import { SeedClient, TestNetworkNoAppView, TestPds, mockNetworkUtilities } from "@atproto/dev-env";
 import "jest-puppeteer";
 import "expect-puppeteer";
 
@@ -69,7 +64,7 @@ describe("account migration tool", () => {
       {
         encoding: "application/json",
         headers: destPds.adminAuthHeaders(),
-      }
+      },
     );
 
     inviteCode = res.data.code;
@@ -82,7 +77,7 @@ describe("account migration tool", () => {
 
   test("happy path", async () => {
     await page.goto(
-      `http://localhost:5173?destination=${destPds.url}&plc=${originNetwork.plc.url}`
+      `http://localhost:5173?destination=${destPds.url}&plc=${originNetwork.plc.url}`,
     );
     await page.waitForSelector('[name="invite-code"]');
     await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
@@ -96,9 +91,7 @@ describe("account migration tool", () => {
     await page.waitForSelector('input[name="bsky-handle"]');
     await page.$eval('input[name="has-pds"]', (e) => e.click());
     await page.waitForSelector('input[name="pds"]');
-    await page.$eval('input[name="pds"]', (el, [pds]) => (el.value = pds), [
-      originNetwork.pds.url,
-    ]);
+    await page.$eval('input[name="pds"]', (el, [pds]) => (el.value = pds), [originNetwork.pds.url]);
     await page.type('input[name="bsky-handle"]', "alice.test");
     await page.type('input[name="bsky-password"]', "alice");
     await page.click('button[type="submit"]');

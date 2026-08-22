@@ -169,10 +169,7 @@ function sessionKey(id: string) {
   return `sess:${id}`;
 }
 
-function computeTtlSeconds(
-  expires: Date | number | undefined,
-  fallbackSeconds: number
-): number {
+function computeTtlSeconds(expires: Date | number | undefined, fallbackSeconds: number): number {
   if (!expires) return fallbackSeconds;
 
   if (typeof expires === "number") return Math.max(1, Math.floor(expires / 1000));

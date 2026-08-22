@@ -1,19 +1,9 @@
-import {
-  Heading,
-  Highlight,
-  VStack,
-  Text,
-  Input,
-  Button,
-  Box,
-  Link,
-} from "@chakra-ui/react";
+import { Heading, Highlight, VStack, Text, Input, Button, Box, Link } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
-import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
-export default function IntroScreen({ state }: ScreenProps) {
+export default function IntroScreen() {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post" style={{ width: "100%" }}>
@@ -29,17 +19,16 @@ export default function IntroScreen({ state }: ScreenProps) {
         <br></br>
 
         <Text fontSize="md" textAlign={"justify"}>
-          Your data will be hosted securely on our servers and your experience
-          will be improved by our moderation team and new safety features we
-          develop.
+          Your data will be hosted securely on our servers and your experience will be improved by
+          our moderation team and new safety features we develop.
         </Text>
         <Text fontSize="md" textAlign={"justify"}>
-          If things don't work out, we'll happily migrate your data to another
-          PDS server. Even if you get banned, we won't hold your data hostage.
+          If things don't work out, we'll happily migrate your data to another PDS server. Even if
+          you get banned, we won't hold your data hostage.
         </Text>
         <Text fontSize="md" textAlign={"justify"}>
-          By entering your invite code, you accept these terms, and consent to
-          migrating your data to Northsky's servers.
+          By entering your invite code, you accept these terms, and consent to migrating your data
+          to Northsky's servers.
         </Text>
         <Box width="100%" maxWidth="560px" aspectRatio="16/9">
           <iframe
@@ -56,16 +45,8 @@ export default function IntroScreen({ state }: ScreenProps) {
       </VStack>
       <VStack width="100%">
         <Heading size="xl">Enter your invite code to get started</Heading>
-        <Field
-          invalid={fetcher?.data?.error}
-          errorText={fetcher?.data?.error}
-          mb="4"
-        >
-          <Input
-            required
-            name="invite-code"
-            placeholder="Enter your invite code"
-          />
+        <Field invalid={fetcher?.data?.error} errorText={fetcher?.data?.error} mb="4">
+          <Input required name="invite-code" placeholder="Enter your invite code" />
         </Field>
 
         <Box maxW={"md"} mb="4">
@@ -97,13 +78,17 @@ export default function IntroScreen({ state }: ScreenProps) {
         </Box>
         <VStack width="100%" gap={4} marginBottom={4}>
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you have an existing ATprotocol Account (Bluesky/Blacksky/Eurosky/etc...)</Text>
+            <Text fontSize="sm" color="fg.muted">
+              If you have an existing ATprotocol Account (Bluesky/Blacksky/Eurosky/etc...)
+            </Text>
             <Button width="100%" type="submit" name="migrate" value="migrate">
               Migrate your account
             </Button>
           </VStack>
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you've never made an account on Bluesky or ATprotocol:</Text>
+            <Text fontSize="sm" color="fg.muted">
+              If you've never made an account on Bluesky or ATprotocol:
+            </Text>
 
             <Button width="100%" type="submit" name="create" value="create">
               Create brand new account
@@ -111,15 +96,25 @@ export default function IntroScreen({ state }: ScreenProps) {
           </VStack>
 
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you previously started a migration and it failed:</Text>
+            <Text fontSize="sm" color="fg.muted">
+              If you previously started a migration and it failed:
+            </Text>
             <Button formNoValidate width="100%" type="submit" name="resume" value="resume">
               Resume interrupted migration
             </Button>
           </VStack>
 
           <VStack width="100%" gap={2}>
-            <Text fontSize="sm" color="fg.muted">If you migrated to Northsky successfully but there are missing blobs:</Text>
-            <Button formNoValidate width="100%" type="submit" name="missing-blobs" value="missing-blobs">
+            <Text fontSize="sm" color="fg.muted">
+              If you migrated to Northsky successfully but there are missing blobs:
+            </Text>
+            <Button
+              formNoValidate
+              width="100%"
+              type="submit"
+              name="missing-blobs"
+              value="missing-blobs"
+            >
               Import missing blobs
             </Button>
           </VStack>

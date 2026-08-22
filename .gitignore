@@ -31,3 +31,4 @@ build
 .env.*
 .npmrc
 coverage
+.eslintcache

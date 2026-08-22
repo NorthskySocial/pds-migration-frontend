@@ -1,7 +1,10 @@
-import {logger} from "./logger";
+import { logger } from "./logger";
 
-const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = async (input: URL | string, init?: RequestInit) => {
-  const {DEV} = import.meta.env;
+const f: (input: URL | string, init?: RequestInit) => Promise<Response> = async (
+  input: URL | string,
+  init?: RequestInit,
+) => {
+  const { DEV } = import.meta.env;
   if (DEV && import.meta.env.MODE !== "test") {
     logger.log(new URL(input));
     switch (new URL(input).host) {
@@ -42,19 +45,16 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
                 emailAuthFactor: true,
                 active: true,
               }),
-              {headers: {"Content-Type": "application/json"}}
+              { headers: { "Content-Type": "application/json" } },
             );
           }
           case "/xrpc/com.atproto.identity.resolveHandle":
-            return new Response(
-              JSON.stringify({message: "Unable to resolve handle"}),
-              {
-                headers: {"Content-Type": "application/json"},
-              }
-            );
+            return new Response(JSON.stringify({ message: "Unable to resolve handle" }), {
+              headers: { "Content-Type": "application/json" },
+            });
           default:
-            return new Response(JSON.stringify({ok: true}), {
-              headers: {"Content-Type": "application/json"},
+            return new Response(JSON.stringify({ ok: true }), {
+              headers: { "Content-Type": "application/json" },
             });
         }
       }
@@ -69,13 +69,13 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
                 did: "did:plc:123123123",
               }),
               {
-                headers: {"Content-Type": "application/json"},
-              }
+                headers: { "Content-Type": "application/json" },
+              },
             );
           }
           default:
-            return new Response(JSON.stringify({ok: true}), {
-              headers: {"Content-Type": "application/json"},
+            return new Response(JSON.stringify({ ok: true }), {
+              headers: { "Content-Type": "application/json" },
             });
         }
       }
@@ -84,13 +84,13 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
         switch (new URL(input).pathname) {
           case "/service-auth": {
             return new Response("{}", {
-              headers: {"Content-Type": "application/json"},
+              headers: { "Content-Type": "application/json" },
             });
           }
 
           default:
-            return new Response(JSON.stringify({ok: true}), {
-              headers: {"Content-Type": "application/json"},
+            return new Response(JSON.stringify({ ok: true }), {
+              headers: { "Content-Type": "application/json" },
             });
         }
       }
@@ -121,7 +121,7 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
                   },
                 ],
               }),
-              {headers: {"Content-Type": "application/json"}}
+              { headers: { "Content-Type": "application/json" } },
             );
         }
       }
@@ -162,7 +162,7 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
                 emailAuthFactor: true,
                 active: true,
               }),
-              {headers: {"Content-Type": "application/json"}}
+              { headers: { "Content-Type": "application/json" } },
             );
           }
         }
@@ -179,13 +179,13 @@ const f: (input: (URL | string), init?: RequestInit) => Promise<Response> = asyn
     try {
       const res = await fetch(input, {
         ...init,
-        signal: AbortSignal.timeout(timeoutMs)
+        signal: AbortSignal.timeout(timeoutMs),
       });
 
       const elapsedMs = Date.now() - startedAt;
       if (!res.ok) {
         logger.warn(
-          `HTTP ${method} ${url} responded ${res.status} ${res.statusText} after ${elapsedMs}ms`
+          `HTTP ${method} ${url} responded ${res.status} ${res.statusText} after ${elapsedMs}ms`,
         );
       } else {
         logger.debug(`HTTP ${method} ${url} ${res.status} in ${elapsedMs}ms`);

@@ -43,15 +43,8 @@ export function isPasswordTooShort(
  * @param confirmPassword - The confirmation password
  * @returns true if passwords don't match (and both have content), false otherwise
  */
-export function doPasswordsMismatch(
-  password: string,
-  confirmPassword: string,
-): boolean {
-  return (
-    password.length > 0 &&
-    confirmPassword.length > 0 &&
-    password !== confirmPassword
-  );
+export function doPasswordsMismatch(password: string, confirmPassword: string): boolean {
+  return password.length > 0 && confirmPassword.length > 0 && password !== confirmPassword;
 }
 
 /**
@@ -87,10 +80,7 @@ export function normalizeHandle(
  * @param pds_origin - The origin PDS URL the user is logging into
  * @returns Possibly autocompleted handle
  */
-export function maybeAutocompleteBskyHandle(
-  handle: string,
-  pds_origin: string,
-): string {
+export function maybeAutocompleteBskyHandle(handle: string, pds_origin: string): string {
   if (!handle) return handle;
   const normalizedHandle = handle.replace(/^@+/, "").toLowerCase();
 
@@ -105,8 +95,6 @@ export function maybeAutocompleteBskyHandle(
  * @param items - Values to check for truthiness
  * @returns true if all items are truthy, false otherwise
  */
-export function all(
-  ...items: (string | boolean | undefined | null)[]
-): boolean {
+export function all(...items: (string | boolean | undefined | null)[]): boolean {
   return items.every((i) => i);
 }

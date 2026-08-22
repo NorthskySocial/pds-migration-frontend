@@ -68,13 +68,14 @@ const exportRepoConfig: BackgroundJobConfig = {
 
 const BACKEND = "https://migrator.example";
 
-const buildState = (overrides: Partial<SessionData> = {}): SessionData => ({
-  did: "did:plc:test",
-  import_job_id: "job-123",
-  last_import_check: 0,
-  importedBlobs: false,
-  ...overrides,
-}) as SessionData;
+const buildState = (overrides: Partial<SessionData> = {}): SessionData =>
+  ({
+    did: "did:plc:test",
+    import_job_id: "job-123",
+    last_import_check: 0,
+    importedBlobs: false,
+    ...overrides,
+  }) as SessionData;
 
 describe("processBackgroundJobStage", () => {
   beforeEach(() => {
@@ -82,15 +83,13 @@ describe("processBackgroundJobStage", () => {
   });
 
   it("increments failure counter and returns when receiving 429, without crashing on undefined progress", async () => {
-    fetchMock.mockResolvedValue(
-      new Response("Too Many Requests", { status: 429 })
-    );
+    fetchMock.mockResolvedValue(new Response("Too Many Requests", { status: 429 }));
 
     const state = buildState();
     const session = buildSession(state);
 
     await expect(
-      processBackgroundJobStage(state, session, uploadConfig, BACKEND)
+      processBackgroundJobStage(state, session, uploadConfig, BACKEND),
     ).resolves.toBeUndefined();
 
     expect(session.get("import_job_failures")).toBe(1);
@@ -99,16 +98,14 @@ describe("processBackgroundJobStage", () => {
   });
 
   it("throws after 3 consecutive 429 failures", async () => {
-    fetchMock.mockResolvedValue(
-      new Response("Too Many Requests", { status: 429 })
-    );
+    fetchMock.mockResolvedValue(new Response("Too Many Requests", { status: 429 }));
 
     const state = buildState({ import_job_failures: 2 });
     const session = buildSession(state);
 
-    await expect(
-      processBackgroundJobStage(state, session, uploadConfig, BACKEND)
-    ).rejects.toThrow(/429.*Too Many Requests/);
+    await expect(processBackgroundJobStage(state, session, uploadConfig, BACKEND)).rejects.toThrow(
+      /429.*Too Many Requests/,
+    );
 
     expect(session.get("import_job_failures")).toBe(3);
   });
@@ -129,8 +126,8 @@ describe("processBackgroundJobStage", () => {
           started_at: 0,
           status: "running",
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const state = buildState({ import_job_failures: 2 });
@@ -147,36 +144,32 @@ describe("processBackgroundJobStage", () => {
   });
 
   it("handles 404 the same way as 429 (counts as failure, returns)", async () => {
-    fetchMock.mockResolvedValue(
-      new Response("Not Found", { status: 404 })
-    );
+    fetchMock.mockResolvedValue(new Response("Not Found", { status: 404 }));
 
     const state = buildState();
     const session = buildSession(state);
 
     await expect(
-      processBackgroundJobStage(state, session, uploadConfig, BACKEND)
+      processBackgroundJobStage(state, session, uploadConfig, BACKEND),
     ).resolves.toBeUndefined();
 
     expect(session.get("import_job_failures")).toBe(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      "Response from UploadBlobs job status check failed for job job-123 with status 404"
+      "Response from UploadBlobs job status check failed for job job-123 with status 404",
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("UploadBlobs job job-123 check failed")
+      expect.stringContaining("UploadBlobs job job-123 check failed"),
     );
   });
 
   it("rethrows non-retryable errors immediately", async () => {
-    fetchMock.mockResolvedValue(
-      new Response("Server Error", { status: 500 })
-    );
+    fetchMock.mockResolvedValue(new Response("Server Error", { status: 500 }));
 
     const state = buildState();
     const session = buildSession(state);
 
     await expect(
-      processBackgroundJobStage(state, session, uploadConfig, BACKEND)
+      processBackgroundJobStage(state, session, uploadConfig, BACKEND),
     ).rejects.toBeDefined();
 
     expect(session.get("import_job_failures")).toBeUndefined();
@@ -198,8 +191,8 @@ describe("processBackgroundJobStage", () => {
           started_at: 0,
           status: "success",
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const state = buildState();
@@ -211,7 +204,9 @@ describe("processBackgroundJobStage", () => {
   });
 
   it("starts export-repo job and stores job id when none exists", async () => {
-    vi.mocked(exportRepoConfig.startJob).mockResolvedValueOnce({ job_id: "repo-job-1" });
+    vi.mocked(exportRepoConfig.startJob).mockResolvedValueOnce({
+      job_id: "repo-job-1",
+    });
 
     const state = buildState({
       import_job_id: undefined,
@@ -241,8 +236,8 @@ describe("processBackgroundJobStage", () => {
           started_at: 0,
           status: "success",
         }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      )
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
     );
 
     const state = buildState({

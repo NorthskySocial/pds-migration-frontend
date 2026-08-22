@@ -14,7 +14,7 @@ async function handleRequestNode(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  routerContext: EntryContext
+  routerContext: EntryContext,
   // If you have middleware enabled:
   // loadContext: RouterContextProvider
 ) {
@@ -26,15 +26,13 @@ async function handleRequestNode(
     // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
     // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
     const readyOption: keyof RenderToPipeableStreamOptions =
-      (userAgent && isbot(userAgent)) || routerContext.isSpaMode
-        ? "onAllReady"
-        : "onShellReady";
+      (userAgent && isbot(userAgent)) || routerContext.isSpaMode ? "onAllReady" : "onShellReady";
 
     // Abort the rendering stream after the `streamTimeout` so it has time to
     // flush down the rejected boundaries
     let timeoutId: ReturnType<typeof setTimeout> | undefined = setTimeout(
       () => abort(),
-      streamTimeout + 1000
+      streamTimeout + 1000,
     );
 
     const { pipe, abort } = renderToPipeableStream(
@@ -60,7 +58,7 @@ async function handleRequestNode(
             new Response(stream, {
               headers: responseHeaders,
               status: responseStatusCode,
-            })
+            }),
           );
         },
         onShellError(error: unknown) {
@@ -75,7 +73,7 @@ async function handleRequestNode(
             logger.error(error);
           }
         },
-      }
+      },
     );
   });
 }

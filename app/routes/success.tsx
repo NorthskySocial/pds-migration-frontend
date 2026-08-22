@@ -2,7 +2,7 @@ import { data } from "react-router";
 import { getSession, commitSession } from "../sessions.server";
 import type { Route } from "./+types";
 
-export function meta(_: Route.MetaArgs): ReturnType<Route.MetaFunction> {
+export function meta(): ReturnType<Route.MetaFunction> {
   return [{ title: "Migration complete!" }];
 }
 
@@ -14,10 +14,10 @@ export async function loader({ request }: Route.LoaderArgs) {
       headers: {
         "Set-Cookie": await commitSession(session),
       },
-    }
+    },
   );
 }
 
-export async function action({ request, context }: Route.ActionArgs) {}
+export async function action() {}
 
-export default function SuccessRoute({ loaderData }: Route.ComponentProps) {}
+export default function SuccessRoute() {}

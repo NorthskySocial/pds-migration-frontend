@@ -12,11 +12,7 @@ import {
 describe("xrpc-errors", () => {
   describe("isInvalidInviteCodeError", () => {
     it("returns true for XRPCError with 'invite code not available' message", () => {
-      const error = new XRPCError(
-        400,
-        "InvalidInviteCode",
-        "Provided invite code not available"
-      );
+      const error = new XRPCError(400, "InvalidInviteCode", "Provided invite code not available");
       expect(isInvalidInviteCodeError(error)).toBe(true);
     });
 
@@ -24,7 +20,7 @@ describe("xrpc-errors", () => {
       const error = new XRPCError(
         400,
         "InvalidInviteCode",
-        "Error: invite code not available for this user"
+        "Error: invite code not available for this user",
       );
       expect(isInvalidInviteCodeError(error)).toBe(true);
     });
@@ -52,20 +48,12 @@ describe("xrpc-errors", () => {
 
   describe("isInvalidCredentialsError", () => {
     it("returns true for XRPCError with status 401 and error name 'AuthenticationRequired'", () => {
-      const error = new XRPCError(
-        401,
-        "AuthenticationRequired",
-        "Invalid identifier or password"
-      );
+      const error = new XRPCError(401, "AuthenticationRequired", "Invalid identifier or password");
       expect(isInvalidCredentialsError(error)).toBe(true);
     });
 
     it("returns false for XRPCError 'AuthenticationRequired' with non-401 status", () => {
-      const error = new XRPCError(
-        400,
-        "AuthenticationRequired",
-        "Invalid identifier or password"
-      );
+      const error = new XRPCError(400, "AuthenticationRequired", "Invalid identifier or password");
       expect(isInvalidCredentialsError(error)).toBe(false);
     });
 
@@ -73,7 +61,7 @@ describe("xrpc-errors", () => {
       const error = new XRPCError(
         401,
         "AuthFactorTokenRequired",
-        "A second authentication factor is required"
+        "A second authentication factor is required",
       );
       expect(isInvalidCredentialsError(error)).toBe(false);
     });
@@ -208,9 +196,7 @@ describe("xrpc-errors", () => {
 
     it("returns true when AggregateError-like errors array contains a match", () => {
       const error = new Error("aggregate");
-      (error as Error & { errors: unknown[] }).errors = [
-        { message: "fetch failed" },
-      ];
+      (error as Error & { errors: unknown[] }).errors = [{ message: "fetch failed" }];
       expect(isUnreachableHostError(error)).toBe(true);
     });
 
@@ -256,9 +242,7 @@ describe("xrpc-errors", () => {
         json: () => Promise.resolve({ message: "invite code not available" }),
       });
 
-      await expect(formatBackendErrorMessage(res)).resolves.toBe(
-        "invite code not available"
-      );
+      await expect(formatBackendErrorMessage(res)).resolves.toBe("invite code not available");
     });
 
     it("falls back to truncated text body when JSON parsing fails (non-5xx)", async () => {
@@ -284,9 +268,7 @@ describe("xrpc-errors", () => {
         text: () => Promise.reject(new Error("body already used")),
       });
 
-      await expect(formatBackendErrorMessage(res)).resolves.toBe(
-        "HTTP 418: I'm a teapot"
-      );
+      await expect(formatBackendErrorMessage(res)).resolves.toBe("HTTP 418: I'm a teapot");
     });
 
     it("wraps 5xx responses with the support-pointing prefix and includes the detail", async () => {
@@ -332,9 +314,7 @@ describe("xrpc-errors", () => {
         json: () => Promise.resolve({ code: "NotFound" }),
       });
 
-      await expect(formatBackendErrorMessage(res)).resolves.toBe(
-        "HTTP 404: Not Found"
-      );
+      await expect(formatBackendErrorMessage(res)).resolves.toBe("HTTP 404: Not Found");
     });
   });
 });
