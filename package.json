@@ -11,7 +11,7 @@
     "format": "prettier --write \"**/*.{js,ts,jsx,tsx}\"",
     "format:check": "prettier --check \"**/*.{js,ts,jsx,tsx}\"",
     "lint": "eslint .",
-    "prepare": "test ! -e .git || husky && husky install",
+    "prepare": "test ! -e .git || husky",
     "test:env": "tsx bin/testenv.ts",
     "test:jest": "NODE_OPTIONS=--experimental-vm-modules jest --maxWorkers=1",
     "test:unit": "vitest run",
