@@ -20,7 +20,7 @@ export default function ValidatePLCTokenScreen() {
         </Text>
         <img src={plc_screenshot} style={{ maxWidth: "100%", height: "auto" }} />
         <Field required label="PLC Token">
-          <PasswordInput name="token_plc" />
+          <PasswordInput autocomplete="off" name="token_plc" />
         </Field>
 
         <HStack>
