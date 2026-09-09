@@ -116,6 +116,7 @@ export const INITIAL_SESSION_DATA = {
 export type ErrorType = "Expected" | "Unexpected";
 
 export type SessionFlashData = {
+  title?: string;
   error?: string;
   errorType?: ErrorType;
 };

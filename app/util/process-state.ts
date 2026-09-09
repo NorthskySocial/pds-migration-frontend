@@ -119,6 +119,7 @@ const handleOriginLoginWith2FA = async (
           `password_dest present=${Boolean(session.get("password_dest"))}`,
       );
       session.set("require_2fa_code", true);
+      session.flash("title", "Two Factor Authentication");
       session.flash("error", "Please check your email for your login code and enter it below");
       session.flash("errorType", "Expected");
       return null;
