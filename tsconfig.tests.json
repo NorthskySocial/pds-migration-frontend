@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "rootDir": ".",
+    "rootDirs": [".", "./.react-router/types"],
     "noUnusedLocals": false,
     "types": ["node", "jest", "vite/client"],
     "lib": ["ES2023", "DOM", "DOM.Iterable", "ScriptHost"],
