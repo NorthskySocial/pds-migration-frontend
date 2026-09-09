@@ -92,6 +92,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   if (forceMaintenance || upstreamOutage || !(await checkPdsHealth())) {
     return data(
       {
+        title: undefined,
         error: undefined,
         errorType: undefined,
         stage: STAGES.MAINTENANCE,
@@ -111,6 +112,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   try {
     return data(
       {
+        title: session.get("title"),
         error: session.get("error"),
         errorType: session.get("errorType"),
         stage: getStage(state),
@@ -128,6 +130,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     log.error("Error loading data:", e, state);
     return data(
       {
+        title: undefined,
         error: (e as Error).message,
         errorType: "Unexpected" as ErrorType,
         stage: STAGES.FAILED,
@@ -146,6 +149,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Index({ loaderData }: Route.ComponentProps) {
   const {
+    title,
     error,
     errorType,
     state,
@@ -160,7 +164,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   return (
     <Layout>
       {error && (
-        <ErrorMessage errorType={errorType} supportFormUrl={supportFormUrl}>
+        <ErrorMessage title={title} errorType={errorType} supportFormUrl={supportFormUrl}>
           {error}
         </ErrorMessage>
       )}
