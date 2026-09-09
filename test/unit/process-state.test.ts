@@ -15,7 +15,8 @@ vi.mock("~/util/logger", () => {
   };
 });
 
-vi.mock("~/util/discord", () => ({
+vi.mock("~/util/discord", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("~/util/discord")>()),
   sendDiscordMessage: vi.fn().mockResolvedValue(undefined),
 }));
 
