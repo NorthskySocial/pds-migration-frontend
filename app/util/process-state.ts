@@ -18,7 +18,7 @@ import { INITIAL_SESSION_DATA, type SessionData, type SessionFlashData } from "~
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { ComAtprotoServerCreateSession } from "@atproto/api";
-import { sendDiscordMessage } from "./discord";
+import { getProfileUrl, sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
 import { LoginError, MigrationError } from "~/errors";
@@ -482,11 +482,11 @@ export const processState = async (
 
         if (isMissingBlobsJourney) {
           await sendDiscordMessage(
-            `Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`,
+            `Missing blobs recovery started for account [**${handle_dest}**](<${getProfileUrl(did)}>) (${did})`,
           );
         } else {
           await sendDiscordMessage(
-            `Migration resumed for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) (migration in progress)`,
+            `Migration resumed for account [**${handle_dest}**](<${getProfileUrl(did)}>) (${did}) (migration in progress)`,
           );
         }
 

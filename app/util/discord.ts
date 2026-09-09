@@ -1,5 +1,11 @@
 import { logger } from "./logger";
 
+export const DEFAULT_APP_URL = "https://northsky.app";
+
+export function getProfileUrl(did: string): string {
+  return new URL(`/profile/${did}`, process.env.APP_URL || DEFAULT_APP_URL).toString();
+}
+
 /**
  * Sends a message to a Discord webhook.
  * Catches and ignores any failures silently.

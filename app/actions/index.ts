@@ -2,7 +2,7 @@
 
 import { AtpAgent, XRPCError } from "@atproto/api";
 
-import { sendDiscordMessage } from "~/util/discord";
+import { getProfileUrl, sendDiscordMessage } from "~/util/discord";
 import { type SessionData } from "~/sessions.server";
 import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { normalizeHandle, doPasswordsMismatch, isPasswordTooShort } from "~/util/validators";
@@ -458,7 +458,7 @@ export async function createDestAccount(
         `New dest account created successfully with invite code: ${inviteCode}, DID: ${newAccountDid}`,
       );
       await sendDiscordMessage(
-        `New account [**${handle_dest}**](<https://bsky.app/profile/${newAccountDid}>) (${newAccountDid}) created successfully with invite code: ${inviteCode}`,
+        `New account [**${handle_dest}**](<${getProfileUrl(newAccountDid)}>) (${newAccountDid}) created successfully with invite code: ${inviteCode}`,
       );
     }
 
@@ -563,7 +563,7 @@ export async function createDestAccount(
     }
     log.info(`Migrating dest account created successfully with invite code: ${inviteCode}`);
     await sendDiscordMessage(
-      `Migrating account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) created successfully with invite code: ${inviteCode} (migration in progress)`,
+      `Migrating account [**${handle_dest}**](<${getProfileUrl(did)}>) (${did}) created successfully with invite code: ${inviteCode} (migration in progress)`,
     );
 
     // Get new user token
@@ -1034,7 +1034,7 @@ export async function validatePlcToken(
       ? ` (with ${upload_progress?.invalid_blobs ?? "some"} invalid blob(s) during migration)`
       : "";
     await sendDiscordMessage(
-      `Migrated account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) successfully migrated PLC and deactivated old account (migration complete)${invalidBlobsNote}`,
+      `Migrated account [**${handle_dest}**](<${getProfileUrl(did)}>) (${did}) successfully migrated PLC and deactivated old account (migration complete)${invalidBlobsNote}`,
     );
 
     return { ok: true };
