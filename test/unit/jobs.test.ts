@@ -155,7 +155,7 @@ describe("processBackgroundJobStage", () => {
     expect(session.get("import_job_failures")).toBeUndefined();
   });
 
-  it("marks job as completed on success status", async () => {
+  it.each([0, 2])("completes an upload with %s invalid blobs", async (invalidBlobs) => {
     fetchMock.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -164,8 +164,8 @@ describe("processBackgroundJobStage", () => {
           id: "job-123",
           kind: "UploadBlobs",
           progress: {
-            invalid_blobs: 0,
-            successful_blobs: 10,
+            invalid_blobs: invalidBlobs,
+            successful_blobs: 10 - invalidBlobs,
             total: 10,
           },
           started_at: 0,
@@ -181,6 +181,12 @@ describe("processBackgroundJobStage", () => {
     await processBackgroundJobStage(state, session, uploadConfig, BACKEND);
 
     expect(session.get("importedBlobs")).toBe(true);
+    expect(session.get("had_invalid_blobs")).toBe(invalidBlobs > 0 ? true : undefined);
+    expect(session.get("upload_progress")).toEqual({
+      invalid_blobs: invalidBlobs,
+      successful_blobs: 10 - invalidBlobs,
+      total: 10,
+    });
   });
 
   it("starts export-repo job and stores job id when none exists", async () => {

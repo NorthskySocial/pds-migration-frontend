@@ -30,9 +30,9 @@ const HEALTH_CHECK_FAILURE_TTL_SECONDS = 90;
 /**
  * Check if the destination PDS is reachable and healthy.
  * Results are cached in Redis for 10 seconds to avoid excessive requests.
- * Only returns false (unhealthy) after 5 consecutive failures to avoid
+ * Only returns false (unhealthy) after 4 consecutive failures to avoid
  * transient errors causing false negatives.
- * @returns true if PDS is healthy or fewer than 5 consecutive failures, false otherwise
+ * @returns true if PDS is healthy or fewer than 4 consecutive failures, false otherwise
  */
 export async function checkPdsHealth(): Promise<boolean> {
   const pdsHostname = process?.env?.PDS_HOSTNAME;
