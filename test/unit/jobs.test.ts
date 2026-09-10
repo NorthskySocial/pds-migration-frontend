@@ -22,29 +22,9 @@ vi.mock("~/util/mock-fetch", () => ({
 }));
 
 import { processBackgroundJobStage, type BackgroundJobConfig } from "~/util/jobs";
-import type { SessionData, SessionFlashData } from "~/sessions.server";
-import type { Session } from "react-router";
+import type { SessionData } from "~/sessions.server";
 import { logger } from "~/util/logger";
-
-type AnySession = Session<SessionData, SessionFlashData>;
-
-const buildSession = (initial: Partial<SessionData>): AnySession => {
-  const data: Record<string, unknown> = { ...initial };
-  const session = {
-    data,
-    get: (key: string) => data[key],
-    set: (key: string, value: unknown) => {
-      data[key] = value;
-    },
-    unset: (key: string) => {
-      delete data[key];
-    },
-    has: (key: string) => key in data,
-    flash: vi.fn(),
-    id: "test-session",
-  };
-  return session as unknown as AnySession;
-};
+import { buildSession } from "../utils/session";
 
 const uploadConfig: BackgroundJobConfig = {
   jobIdKey: "import_job_id",
