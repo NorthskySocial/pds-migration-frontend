@@ -21,10 +21,6 @@ vi.mock("~/util/redis", () => ({
 vi.mock("~/actions", () => ({ checkPdsHealth: vi.fn().mockResolvedValue(true) }));
 vi.mock("~/util/jobs", () => ({ processBackgroundJobStage: vi.fn() }));
 vi.mock("~/util/discord", () => ({ sendDiscordMessage: vi.fn() }));
-vi.mock("~/util/logger", () => {
-  const log = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
-  return { logger: { ...log, withDid: () => log } };
-});
 vi.mock("~/components/layout", () => ({ Layout: () => null }));
 vi.mock("~/components/loading", () => ({ Loading: () => null }));
 vi.mock("~/components/error-message", () => ({ ErrorMessage: () => null }));

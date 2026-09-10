@@ -8,21 +8,6 @@ import {
 import { LoginError } from "~/errors";
 import { XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
-vi.mock("~/util/logger", () => ({
-  logger: {
-    withDid: () => ({
-      warn: vi.fn(),
-      error: vi.fn(),
-      info: vi.fn(),
-      debug: vi.fn(),
-    }),
-    warn: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    debug: vi.fn(),
-  },
-}));
-
 const mockFetch = vi.fn<typeof fetch>();
 global.fetch = mockFetch;
 

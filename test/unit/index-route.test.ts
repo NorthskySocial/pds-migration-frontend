@@ -27,9 +27,6 @@ vi.mock("~/sessions.server", () => ({
 vi.mock("~/actions", () => ({ checkPdsHealth: vi.fn() }));
 vi.mock("~/util/get-stage", () => ({ getStage: vi.fn() }));
 vi.mock("~/util/process-state", () => ({ processState: vi.fn() }));
-vi.mock("~/util/logger", () => ({
-  logger: { withDid: () => ({ error: vi.fn() }) },
-}));
 vi.mock("~/components/layout", () => ({
   Layout: ({ children }: { children: ReactNode }) => children,
 }));

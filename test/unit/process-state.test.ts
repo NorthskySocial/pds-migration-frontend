@@ -1,20 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("~/util/logger", () => {
-  const log = {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  };
-  return {
-    logger: {
-      ...log,
-      withDid: () => log,
-    },
-  };
-});
-
 vi.mock("~/util/discord", async (importOriginal) => ({
   ...(await importOriginal<typeof import("~/util/discord")>()),
   sendDiscordMessage: vi.fn().mockResolvedValue(undefined),
