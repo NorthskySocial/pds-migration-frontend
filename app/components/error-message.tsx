@@ -1,5 +1,5 @@
 import { Alert, Button, Flex } from "@chakra-ui/react";
-import type { ErrorType } from "~/sessions.server";
+import type { ErrorType } from "~/session-data";
 
 export const ErrorMessage = ({
   title = "Oh no!",

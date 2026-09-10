@@ -1,6 +1,6 @@
 "use server";
 
-import { type SessionData } from "~/sessions.server";
+import { type SessionData } from "~/session-data";
 import { STAGES } from "./stages";
 import { all } from "./validators";
 

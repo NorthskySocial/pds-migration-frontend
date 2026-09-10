@@ -13,6 +13,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    env: {
+      VITE_LOG_LEVEL: "silent",
+    },
     include: ["test/unit/**/*.test.ts"],
   },
 });

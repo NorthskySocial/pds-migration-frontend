@@ -22,29 +22,9 @@ vi.mock("~/util/mock-fetch", () => ({
 }));
 
 import { processBackgroundJobStage, type BackgroundJobConfig } from "~/util/jobs";
-import type { SessionData, SessionFlashData } from "~/sessions.server";
-import type { Session } from "react-router";
+import type { SessionData } from "~/session-data";
 import { logger } from "~/util/logger";
-
-type AnySession = Session<SessionData, SessionFlashData>;
-
-const buildSession = (initial: Partial<SessionData>): AnySession => {
-  const data: Record<string, unknown> = { ...initial };
-  const session = {
-    data,
-    get: (key: string) => data[key],
-    set: (key: string, value: unknown) => {
-      data[key] = value;
-    },
-    unset: (key: string) => {
-      delete data[key];
-    },
-    has: (key: string) => key in data,
-    flash: vi.fn(),
-    id: "test-session",
-  };
-  return session as unknown as AnySession;
-};
+import { buildSession } from "../utils/session";
 
 const uploadConfig: BackgroundJobConfig = {
   jobIdKey: "import_job_id",
@@ -175,7 +155,7 @@ describe("processBackgroundJobStage", () => {
     expect(session.get("import_job_failures")).toBeUndefined();
   });
 
-  it("marks job as completed on success status", async () => {
+  it.each([0, 2])("completes an upload with %s invalid blobs", async (invalidBlobs) => {
     fetchMock.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -184,8 +164,8 @@ describe("processBackgroundJobStage", () => {
           id: "job-123",
           kind: "UploadBlobs",
           progress: {
-            invalid_blobs: 0,
-            successful_blobs: 10,
+            invalid_blobs: invalidBlobs,
+            successful_blobs: 10 - invalidBlobs,
             total: 10,
           },
           started_at: 0,
@@ -201,6 +181,12 @@ describe("processBackgroundJobStage", () => {
     await processBackgroundJobStage(state, session, uploadConfig, BACKEND);
 
     expect(session.get("importedBlobs")).toBe(true);
+    expect(session.get("had_invalid_blobs")).toBe(invalidBlobs > 0 ? true : undefined);
+    expect(session.get("upload_progress")).toEqual({
+      invalid_blobs: invalidBlobs,
+      successful_blobs: 10 - invalidBlobs,
+      total: 10,
+    });
   });
 
   it("starts export-repo job and stores job id when none exists", async () => {

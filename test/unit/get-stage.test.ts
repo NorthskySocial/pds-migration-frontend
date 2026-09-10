@@ -1,24 +1,13 @@
 import { getStage } from "~/util/get-stage";
 import { STAGES } from "~/util/stages";
-import type { SessionData } from "~/sessions.server";
+import { INITIAL_SESSION_DATA, type SessionData } from "~/session-data";
 
 /**
  * Creates a base session with all boolean defaults set to false
  */
 function createBaseSession(overrides: Partial<SessionData> = {}): SessionData {
   return {
-    hasBackup: false,
-    exportedRepo: false,
-    importedRepo: false,
-    exportedBlobs: false,
-    importedBlobs: false,
-    migratedPrefs: false,
-    requestedPlcToken: false,
-    originDeactivated: false,
-    destActivated: false,
-    migratedPlc: false,
-    require_2fa_code: false,
-    had_invalid_blobs: false,
+    ...INITIAL_SESSION_DATA,
     ...overrides,
   };
 }
@@ -98,6 +87,28 @@ describe("getStage", () => {
   });
 
   describe("migrate journey", () => {
+    it.each([
+      [true, true, STAGES.ALREADY_MIGRATED],
+      [true, false, STAGES.CREATE_DEST_ACCOUNT],
+      [false, true, STAGES.CREATE_DEST_ACCOUNT],
+    ])(
+      "checks destination account status (exists=%s, active=%s)",
+      (exists, active, expectedStage) => {
+        const session = createBaseSession({
+          inviteCode: "invite123",
+          do_journey: "migrate",
+          hasBackup: true,
+          token_origin: "origin-token",
+          did: "did:plc:abc123",
+          pds_origin: "https://bsky.social",
+          did_exists_in_dest: exists,
+          did_active_in_dest: active,
+        });
+
+        expect(getStage(session)).toBe(expectedStage);
+      },
+    );
+
     it("should return BACKUP_NOTICE when starting migrate journey without backup", () => {
       const session = createBaseSession({
         inviteCode: "invite123",
@@ -350,6 +361,34 @@ describe("getStage", () => {
   });
 
   describe("resume journey", () => {
+    it.each([
+      [false, false, false, STAGES.ACTIVATE_DEST],
+      [true, false, false, STAGES.DEACTIVATE_ORIGIN],
+      [true, true, false, STAGES.MIGRATE_PLC],
+      [true, true, true, STAGES.DONE],
+    ])(
+      "returns %s/%s/%s completion stage %s",
+      (destActivated, originDeactivated, migratedPlc, expectedStage) => {
+        const session = createBaseSession({
+          do_journey: "resume",
+          token_origin: "origin-token",
+          token_dest: "dest-token",
+          exportedRepo: true,
+          importedRepo: true,
+          exportedBlobs: true,
+          importedBlobs: true,
+          migratedPrefs: true,
+          user_recover_key: null,
+          requestedPlcToken: true,
+          destActivated,
+          originDeactivated,
+          migratedPlc,
+        });
+
+        expect(getStage(session)).toBe(expectedStage);
+      },
+    );
+
     it("should return ALREADY_MIGRATED when destination DID exists and is active", () => {
       const session = createBaseSession({
         do_journey: "resume",

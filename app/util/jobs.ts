@@ -5,7 +5,7 @@ import {
   type SessionData,
   type SessionFlashData,
   type BackgroundJobProgress,
-} from "~/sessions.server";
+} from "~/session-data";
 import f from "./mock-fetch";
 import { logger } from "./logger";
 

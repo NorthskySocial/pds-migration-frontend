@@ -1,20 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("~/util/logger", () => {
-  const log = {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  };
-  return {
-    logger: {
-      ...log,
-      withDid: () => log,
-    },
-  };
-});
-
 vi.mock("~/util/discord", async (importOriginal) => ({
   ...(await importOriginal<typeof import("~/util/discord")>()),
   sendDiscordMessage: vi.fn().mockResolvedValue(undefined),
@@ -53,28 +38,7 @@ import {
 import { processBackgroundJobStage } from "~/util/jobs";
 import { redisDelIfValueMatches, redisSetNxEx } from "~/util/redis";
 import { processState } from "~/util/process-state";
-import type { SessionData, SessionFlashData } from "~/sessions.server";
-import type { Session } from "react-router";
-
-type AnySession = Session<SessionData, SessionFlashData>;
-
-const buildSession = (initial: Partial<SessionData>): AnySession => {
-  const data: Record<string, unknown> = { ...initial };
-  const session = {
-    data,
-    get: (key: string) => data[key],
-    set: (key: string, value: unknown) => {
-      data[key] = value;
-    },
-    unset: (key: string) => {
-      delete data[key];
-    },
-    has: (key: string) => key in data,
-    flash: vi.fn(),
-    id: "test-session",
-  };
-  return session as unknown as AnySession;
-};
+import { buildSession } from "../utils/session";
 
 const buildLoginFormData = (): FormData => {
   const fd = new FormData();
@@ -85,7 +49,7 @@ const buildLoginFormData = (): FormData => {
   return fd;
 };
 
-const buildPlcMigrationSession = (): AnySession =>
+const buildPlcMigrationSession = () =>
   buildSession({
     do_journey: "migrate",
     inviteCode: "invite123",
