@@ -1,7 +1,8 @@
 import type { Route } from "./+types";
 
 import { createSearchParams, data, parsePath, redirect, useFetcher } from "react-router";
-import { getSession, commitSession, type SessionData, type ErrorType } from "../sessions.server";
+import { getSession, commitSession } from "../sessions.server";
+import type { SessionData, ErrorType } from "~/session-data";
 import { Layout } from "~/components/layout";
 import { Suspense } from "react";
 import { getStage } from "~/util/get-stage";

@@ -1,5 +1,5 @@
 import { createSession } from "react-router";
-import type { SessionData, SessionFlashData } from "~/sessions.server";
+import type { SessionData, SessionFlashData } from "~/session-data";
 
 export const buildSession = (initial: Partial<SessionData>) =>
   createSession<Partial<SessionData>, SessionFlashData>(initial, "test-session");

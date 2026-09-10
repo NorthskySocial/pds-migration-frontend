@@ -4,12 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { createSession } from "react-router";
 import Index, { loader } from "~/routes/index";
-import {
-  commitSession,
-  getSession,
-  type SessionData,
-  type SessionFlashData,
-} from "~/sessions.server";
+import { commitSession, getSession } from "~/sessions.server";
+import type { SessionData, SessionFlashData } from "~/session-data";
 import { checkPdsHealth } from "~/actions";
 import { getStage } from "~/util/get-stage";
 import { STAGES } from "~/util/stages";

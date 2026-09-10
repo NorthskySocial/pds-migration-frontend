@@ -1,24 +1,13 @@
 import { getStage } from "~/util/get-stage";
 import { STAGES } from "~/util/stages";
-import type { SessionData } from "~/sessions.server";
+import { INITIAL_SESSION_DATA, type SessionData } from "~/session-data";
 
 /**
  * Creates a base session with all boolean defaults set to false
  */
 function createBaseSession(overrides: Partial<SessionData> = {}): SessionData {
   return {
-    hasBackup: false,
-    exportedRepo: false,
-    importedRepo: false,
-    exportedBlobs: false,
-    importedBlobs: false,
-    migratedPrefs: false,
-    requestedPlcToken: false,
-    originDeactivated: false,
-    destActivated: false,
-    migratedPlc: false,
-    require_2fa_code: false,
-    had_invalid_blobs: false,
+    ...INITIAL_SESSION_DATA,
     ...overrides,
   };
 }

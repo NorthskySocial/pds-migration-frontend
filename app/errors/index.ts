@@ -1,4 +1,4 @@
-import type { ErrorType } from "~/sessions.server";
+import type { ErrorType } from "~/session-data";
 
 export class BaseAppError extends Error {
   errorType: ErrorType;

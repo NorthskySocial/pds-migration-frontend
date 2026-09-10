@@ -3,7 +3,7 @@
 import { AtpAgent, XRPCError } from "@atproto/api";
 
 import { getProfileUrl, sendDiscordMessage } from "~/util/discord";
-import { type SessionData } from "~/sessions.server";
+import { type SessionData } from "~/session-data";
 import { CreateAccountError, LoginError, MigrationError } from "~/errors";
 import { normalizeHandle, doPasswordsMismatch, isPasswordTooShort } from "~/util/validators";
 import { logger } from "~/util/logger";

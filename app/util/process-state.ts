@@ -14,7 +14,7 @@ import {
   validatePlcToken,
   loginDest,
 } from "~/actions";
-import { INITIAL_SESSION_DATA, type SessionData, type SessionFlashData } from "~/sessions.server";
+import { INITIAL_SESSION_DATA, type SessionData, type SessionFlashData } from "~/session-data";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
 import { ComAtprotoServerCreateSession } from "@atproto/api";

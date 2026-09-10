@@ -22,7 +22,7 @@ vi.mock("~/util/mock-fetch", () => ({
 }));
 
 import { processBackgroundJobStage, type BackgroundJobConfig } from "~/util/jobs";
-import type { SessionData } from "~/sessions.server";
+import type { SessionData } from "~/session-data";
 import { logger } from "~/util/logger";
 import { buildSession } from "../utils/session";
 
