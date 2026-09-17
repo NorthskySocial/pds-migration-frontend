@@ -57,7 +57,7 @@ export default function IntroScreen() {
                 color={"emphasized"}
                 variant="underline"
                 target="_blank"
-                href="https://northskysocial.com/posts/terms-of-service"
+                href="https://northskysocial.ca/terms-of-service/"
               >
                 Northsky Terms of Service
               </Link>
@@ -69,7 +69,7 @@ export default function IntroScreen() {
                 color={"emphasized"}
                 variant="underline"
                 target="_blank"
-                href="https://northskysocial.com/posts/privacy-policy"
+                href="https://northskysocial.ca/privacy-policy/"
               >
                 Northsky Privacy Policy
               </Link>
