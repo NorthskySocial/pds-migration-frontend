@@ -27,8 +27,8 @@ export default function IntroScreen() {
           you get banned, we won't hold your data hostage.
         </Text>
         <Text fontSize="md" textAlign={"justify"}>
-          By entering your invite code, you accept these terms, and consent to apply to migrate your
-          data to Northsky's servers.
+          By entering your invite code, you accept these terms, and consent to migrate your data to
+          Northsky's servers.
         </Text>
         <Box width="100%" maxWidth="560px" aspectRatio="16/9">
           <iframe
