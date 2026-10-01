@@ -104,6 +104,10 @@ describe("validators", () => {
       expect(normalizeHandle("@example.northsky.social", false)).toBe("example.northsky.social");
     });
 
+    it("should trim whitespace from handles", () => {
+      expect(normalizeHandle("  myhandle  ", true)).toBe("myhandle.northsky.social");
+    });
+
     it("should use custom default domain when provided", () => {
       expect(normalizeHandle("myhandle", true, ".example.com")).toBe("myhandle.example.com");
     });
@@ -163,6 +167,12 @@ describe("validators", () => {
     it("removes a leading at-sign from dotted handles", () => {
       expect(maybeAutocompleteBskyHandle("@example.northsky.social", BSKY_PDS_URL)).toBe(
         "example.northsky.social",
+      );
+    });
+
+    it("trims whitespace from handles", () => {
+      expect(maybeAutocompleteBskyHandle("  myhandle  ", BSKY_PDS_URL)).toBe(
+        "myhandle.bsky.social",
       );
     });
 
