@@ -9,7 +9,7 @@ export default function IntroScreen() {
     <fetcher.Form method="post" style={{ width: "100%" }}>
       <VStack mb="5" width="100%">
         <Heading size="3xl" letterSpacing="tight" textAlign={"center"}>
-          <Highlight query="to Northsky">Sign Up to Northsky</Highlight>
+          <Highlight query="to Northsky">Migrate to Northsky</Highlight>
         </Heading>
         <br></br>
 
@@ -27,8 +27,8 @@ export default function IntroScreen() {
           you get banned, we won't hold your data hostage.
         </Text>
         <Text fontSize="md" textAlign={"justify"}>
-          By entering your invite code, you accept these terms, and consent to migrating your data
-          to Northsky's servers.
+          By entering your invite code, you accept these terms, and consent to migrate your data to
+          Northsky's servers.
         </Text>
         <Box width="100%" maxWidth="560px" aspectRatio="16/9">
           <iframe
@@ -48,6 +48,18 @@ export default function IntroScreen() {
         <Field invalid={fetcher?.data?.error} errorText={fetcher?.data?.error} mb="4">
           <Input required name="invite-code" placeholder="Enter your invite code" />
         </Field>
+
+        <Text fontSize="md" textAlign={"justify"}>
+          Don't have an invite code?
+          <Link
+            color={"emphasized"}
+            variant="underline"
+            target="_blank"
+            href="https://northskysocial.ca/apply/"
+          >
+            Apply for one
+          </Link>
+        </Text>
 
         <Box maxW={"md"} mb="4">
           <VStack alignItems={"left"}>
