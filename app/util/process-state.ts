@@ -47,7 +47,7 @@ const handleOriginLoginWith2FA = async (
   log.info(`User attempting 2FA login for ${context}? ${is2faAttempt}`);
 
   let pds_origin = (data.get("pds") as string) ?? BSKY_PDS_URL;
-  let handle_origin = data.get("bsky-handle") as string;
+  let handle_origin = ((data.get("bsky-handle") as string) ?? "").trim();
   let password_origin = (data.get("bsky-password") as string) ?? "";
 
   // If the user is logging into the default Bluesky PDS (i.e. did not

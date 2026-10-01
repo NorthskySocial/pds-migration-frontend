@@ -24,14 +24,20 @@ function jsonResponse(status: number, body: unknown): Response {
 const DESCRIBE_SERVER_OK = (host = "pds.example.com") =>
   jsonResponse(200, { did: `did:web:${host}` });
 
-const CREATE_SESSION_OK = jsonResponse(200, {
-  accessJwt: "access",
-  refreshJwt: "refresh",
-  handle: "user.test",
-  did: "did:plc:test123",
-  email: "user@example.com",
-  active: true,
-});
+const CREATE_SESSION_OK = () =>
+  jsonResponse(200, {
+    accessJwt: "access",
+    refreshJwt: "refresh",
+    handle: "user.test",
+    did: "did:plc:test123",
+    email: "user@example.com",
+    active: true,
+  });
+
+function parseJsonBody(body: BodyInit | null | undefined): unknown {
+  const json = typeof body === "string" ? body : new TextDecoder().decode(body as Uint8Array);
+  return JSON.parse(json);
+}
 
 describe("checkIfDidExistsInDest", () => {
   const testDid = "did:plc:test123";
@@ -287,6 +293,23 @@ describe("loginOrigin", () => {
       message: XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS,
     });
   });
+
+  it("trims whitespace from the handle sent to the origin PDS", async () => {
+    setupFetchRouter(CREATE_SESSION_OK);
+
+    await loginOrigin({
+      pds_origin: pdsOrigin,
+      handle_origin: `  ${handleOrigin}  `,
+      password_origin: passwordOrigin,
+    });
+
+    const createSessionCall = mockFetch.mock.calls.find(([input]) =>
+      input.toString().includes("com.atproto.server.createSession"),
+    );
+    expect(parseJsonBody(createSessionCall?.[1]?.body)).toMatchObject({
+      identifier: handleOrigin,
+    });
+  });
 });
 
 describe("loginDest", () => {
@@ -363,7 +386,7 @@ describe("loginDest", () => {
   });
 
   it("returns a session on a successful login", async () => {
-    mockFetch.mockResolvedValueOnce(CREATE_SESSION_OK);
+    mockFetch.mockResolvedValueOnce(CREATE_SESSION_OK());
 
     const result = await loginDest({
       did,
@@ -376,6 +399,21 @@ describe("loginDest", () => {
     expect(result.atp_dest_session).toMatchObject({
       handle: "user.test",
       did: "did:plc:test123",
+    });
+  });
+
+  it("trims whitespace from the handle sent to the destination PDS", async () => {
+    mockFetch.mockResolvedValueOnce(CREATE_SESSION_OK());
+
+    await loginDest({
+      did,
+      pds_dest: pdsDest,
+      handle_dest: `  ${handleDest}  `,
+      password_dest: passwordDest,
+    });
+
+    expect(parseJsonBody(mockFetch.mock.calls[0]?.[1]?.body)).toMatchObject({
+      identifier: handleDest,
     });
   });
 });

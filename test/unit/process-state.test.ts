@@ -155,6 +155,28 @@ describe("processState", () => {
     expect(session.get("handle_dest")).toBe("example.northsky.social");
   });
 
+  it("trims whitespace from origin and destination login handles", async () => {
+    const session = buildSession({
+      do_journey: "missing-blobs",
+      pds_dest: "https://northsky.social",
+    });
+    const data = buildLoginFormData();
+    data.set("pds", "https://pds.example.com");
+    data.set("bsky-handle", "  alice.bsky.social  ");
+    data.set("northsky-handle", "  alice.northsky.social  ");
+
+    await processState(session, data, "https://migrator.example.com");
+
+    expect(loginOrigin).toHaveBeenCalledWith(
+      expect.objectContaining({ handle_origin: "alice.bsky.social" }),
+    );
+    expect(loginDest).toHaveBeenCalledWith(
+      expect.objectContaining({ handle_dest: "alice.northsky.social" }),
+    );
+    expect(session.get("handle_origin")).toBe("alice.bsky.social");
+    expect(session.get("handle_dest")).toBe("alice.northsky.social");
+  });
+
   it("resume journey does NOT call loginDest when dest account is already active", async () => {
     const session = buildSession({
       do_journey: "resume",

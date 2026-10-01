@@ -61,7 +61,7 @@ export function normalizeHandle(
   isCreationFlow: boolean,
   defaultDomain: string = DEFAULT_HANDLE_DOMAIN,
 ): string {
-  const normalizedHandle = handle.replace(/^@+/, "").toLowerCase();
+  const normalizedHandle = handle.trim().replace(/^@+/, "").toLowerCase();
 
   // In creation flow, always use the default domain
   // In migration flow, only append if no custom domain is present
@@ -82,7 +82,7 @@ export function normalizeHandle(
  */
 export function maybeAutocompleteBskyHandle(handle: string, pds_origin: string): string {
   if (!handle) return handle;
-  const normalizedHandle = handle.replace(/^@+/, "").toLowerCase();
+  const normalizedHandle = handle.trim().replace(/^@+/, "").toLowerCase();
 
   if (pds_origin !== BSKY_PDS_URL) return normalizedHandle;
   if (normalizedHandle.includes(".")) return normalizedHandle;

@@ -248,6 +248,7 @@ export async function loginOrigin({
   password_origin?: string;
   authFactorToken?: string;
 }) {
+  handle_origin = handle_origin?.trim();
   const origin_agent = new AtpAgent({
     service: pds_origin,
     fetch: f as typeof fetch,
@@ -886,6 +887,7 @@ export async function loginDest({
   handle_dest?: string;
   password_dest?: string;
 }) {
+  handle_dest = handle_dest?.trim();
   const log = logger.withDid(did);
   const dest_agent = new AtpAgent({
     service: pds_dest,
