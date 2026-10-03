@@ -1,5 +1,5 @@
 import { Alert, Button, Flex } from "@chakra-ui/react";
-import type { ErrorType } from "~/sessions.server";
+import type { ErrorType } from "~/session-data";
 
 export const ErrorMessage = ({
   title = "Oh no!",
@@ -26,9 +26,7 @@ export const ErrorMessage = ({
         <Alert.Description>{children}</Alert.Description>
         {errorType === "Unexpected" && supportFormUrl && (
           <Flex justifyContent="center" mt={4}>
-            <Button onClick={handleSupportClick}>
-              Contact Support
-            </Button>
+            <Button onClick={handleSupportClick}>Contact Support</Button>
           </Flex>
         )}
       </Alert.Content>

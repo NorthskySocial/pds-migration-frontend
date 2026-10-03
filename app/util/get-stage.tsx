@@ -1,6 +1,6 @@
 "use server";
 
-import { type SessionData } from "~/sessions.server";
+import { type SessionData } from "~/session-data";
 import { STAGES } from "./stages";
 import { all } from "./validators";
 
@@ -10,19 +10,23 @@ import { all } from "./validators";
  * @returns STAGES
  */
 export function getStage(session: SessionData): STAGES {
-  if (!(session.inviteCode || session.do_journey === "resume" || session.do_journey === "missing-blobs")) {
+  if (!(
+    session.inviteCode ||
+    session.do_journey === "resume" ||
+    session.do_journey === "missing-blobs"
+  )) {
     return STAGES.INVITE_CODE;
   }
 
   //Resume path
   if (session.do_journey === "resume") {
-    if (!session.token_dest || !session.token_origin) {
-      return STAGES.RESUME_MIGRATION;
-    }
-
-    // If we logged in a user, and the DID already exists (as active) in Northsky, nothing left to do!
+    // If we identified an active destination account for this DID, do not resume migration. Nothing left to do!
     if (session.did_exists_in_dest === true && session.did_active_in_dest === true) {
       return STAGES.ALREADY_MIGRATED;
+    }
+
+    if (!session.token_dest || !session.token_origin) {
+      return STAGES.RESUME_MIGRATION;
     }
 
     if (!session.exportedRepo) {

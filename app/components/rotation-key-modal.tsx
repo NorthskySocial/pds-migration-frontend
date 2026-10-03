@@ -1,24 +1,7 @@
-import {
-  Button,
-  CloseButton,
-  Dialog,
-  Portal,
-  Box,
-  VStack,
-  Float,
-} from "@chakra-ui/react";
-import {
-  useCallback,
-  useEffect,
-  useState,
-  type MouseEventHandler,
-} from "react";
+import { Button, CloseButton, Dialog, Portal, Box, VStack, Float } from "@chakra-ui/react";
+import { useCallback, useEffect, useState, type MouseEventHandler } from "react";
 import { Secp256k1Keypair } from "@atproto/crypto";
-import {
-  type AutofillType,
-  encodeOPSaveRequest,
-  activateOPButton,
-} from "@1password/save-button";
+import { type AutofillType, encodeOPSaveRequest, activateOPButton } from "@1password/save-button";
 import * as bip39 from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
 
@@ -90,25 +73,17 @@ export const SuccessText = ({
       </Button>
 
       <p>
-        Please be extremely careful with this file because you can be
-        impersonated if it falls into the wrong hands.{" "}
+        Please be extremely careful with this file because you can be impersonated if it falls into
+        the wrong hands.{" "}
         <strong>
-          We don't hold a copy of this anywhere. It has been generated entirely
-          on this device.
+          We don't hold a copy of this anywhere. It has been generated entirely on this device.
         </strong>{" "}
-        If you lose the passphrase but still have access to Northsky, you can
-        always generate a new one! But if you lose access to Northsky as well as
-        this key, you may not be able to recover your account.
+        If you lose the passphrase but still have access to Northsky, you can always generate a new
+        one! But if you lose access to Northsky as well as this key, you may not be able to recover
+        your account.
       </p>
 
-      <Box
-        mb="3"
-        background={"purple.300"}
-        maxW="sm"
-        color="fg"
-        p="2"
-        borderRadius={"2xl"}
-      >
+      <Box mb="3" background={"purple.300"} maxW="sm" color="fg" p="2" borderRadius={"2xl"}>
         <VStack align={"center"}>
           {/* @ts-expect-error Custom Element */}
           <onepassword-save-button
@@ -137,32 +112,22 @@ export const SuccessText = ({
 
       <p>
         <strong>
-          If you lose this key, you won't lose access to your account, but if it
-          falls into the wrong hands your account can be taken over.{" "}
+          If you lose this key, you won't lose access to your account, but if it falls into the
+          wrong hands your account can be taken over.{" "}
           <u>
-            Be careful. Once you've put it somewhere secure, make sure to delete
-            any insecure copies on your harddrive or on your phone's SD card.
+            Be careful. Once you've put it somewhere secure, make sure to delete any insecure copies
+            on your harddrive or on your phone's SD card.
           </u>
         </strong>
       </p>
 
       {downloaded && (
-        <Button
-          variant="solid"
-          colorPalette={"purple"}
-          size="lg"
-          onClick={exit}
-        >
+        <Button variant="solid" colorPalette={"purple"} size="lg" onClick={exit}>
           Continue
         </Button>
       )}
       <Float>
-        <CloseButton
-          variant="solid"
-          colorPalette={"purple"}
-          size="lg"
-          onClick={exit}
-        ></CloseButton>
+        <CloseButton variant="solid" colorPalette={"purple"} size="lg" onClick={exit}></CloseButton>
       </Float>
     </>
   ) : (
@@ -186,11 +151,7 @@ export const OpenRotationKeyModal = ({
 
   const exit = useCallback(() => key && onClose(key), [key, onClose]);
   return (
-    <Dialog.Root
-      size="cover"
-      motionPreset="slide-in-bottom"
-      onExitComplete={exit}
-    >
+    <Dialog.Root size="cover" motionPreset="slide-in-bottom" onExitComplete={exit}>
       <Dialog.Trigger asChild>
         <Button size="lg">Open rotation key tool</Button>
       </Dialog.Trigger>
@@ -202,14 +163,7 @@ export const OpenRotationKeyModal = ({
               <Dialog.Title>Add rotation key</Dialog.Title>
             </Dialog.Header>
             <Dialog.Body>
-              {key ? (
-                <SuccessText
-                  exit={exit}
-                  did={did}
-                  handle={handle}
-                  keypair={key}
-                />
-              ) : null}
+              {key ? <SuccessText exit={exit} did={did} handle={handle} keypair={key} /> : null}
             </Dialog.Body>
             <Dialog.Footer>
               {/* <Dialog.CloseTrigger asChild>

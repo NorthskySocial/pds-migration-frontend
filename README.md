@@ -20,7 +20,7 @@ Key entry points and configs:
 - Docker Compose for front-end connected to Production services: `docker-compose.prod.yaml`
 
 ## Requirements
-- Node.js 20 (see `.nvmrc`: `v20.19.0`)
+- Node.js 22 (see `.nvmrc`: `v22.23.2`)
 - npm 10+
 - Optional (for integration and e2e tests):
   - Docker (for running the migrator image and optional services)
@@ -52,6 +52,7 @@ Rename `.npmrc.example` to `.npmrc`.
 - `DEBUG` – Debug namespace for logging (default: `migration-fe`)
 - `HOSTNAME` – Public hostname for this app (used in staging/prod)
 - `SESSION_SECRET` – Secret key for signing session cookies (required in production)
+- `APP_URL` – Base URL of the social app used for profile links (default: `https://northsky.app`).
 
 Notes:
 - The end-to-end test passes `destination` and `plc` as URL parameters when opening the app during the flow. You can do the same to point to custom PDS/PLC endpoints for manual testing.
@@ -63,6 +64,7 @@ Defined in `package.json`:
 - `npm run dev:test` – Start dev server in test mode
 - `npm run build` – Build app (SSR + client)
 - `npm start` – Serve the built app with `react-router-serve ./build/server/index.js`
+- `npm run lint` – Run ESLint
 - `npm run typecheck` – Generate React Router types (`react-router typegen`), and run `tsc`
 - `npm run test` – Full E2E test flow: concurrently runs test env bootstrap, dev server (test mode), and backend via Docker
 - `npm run test:arm64` – Same as above, but runs the backend via Cargo (ARM64-friendly)
@@ -70,6 +72,18 @@ Defined in `package.json`:
 - `npm run test:jest` – Run Jest test runner directly
 - `npm run test:backend` – Pull and run the migrator backend Docker image
 - `npm run test:backend-arm64` – Run the migrator backend from the local `pds-migration` Cargo workspace
+
+## Git Hooks
+
+Husky installs the repo hooks during `npm install` through the `prepare` script.
+
+The pre-push hook runs these checks before Git pushes changes:
+
+- `npm run format`
+- `npm run lint`
+- `npm run typecheck`
+
+Prettier writes formatting changes to the working tree. If that changes any files, the hook blocks the push so you can review the changes, add them, commit them, and push again.
 
 ## Running with Docker
 There are two Docker entry points:

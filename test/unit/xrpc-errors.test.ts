@@ -1,5 +1,8 @@
 import { XRPCError } from "@atproto/api";
 import {
+  formatBackendErrorMessage,
+  BACKEND_SERVER_ERROR_PREFIX,
+  isInvalidCredentialsError,
   isInvalidInviteCodeError,
   isRetryableServerError,
   isUnreachableHostError,
@@ -9,11 +12,7 @@ import {
 describe("xrpc-errors", () => {
   describe("isInvalidInviteCodeError", () => {
     it("returns true for XRPCError with 'invite code not available' message", () => {
-      const error = new XRPCError(
-        400,
-        "InvalidInviteCode",
-        "Provided invite code not available"
-      );
+      const error = new XRPCError(400, "InvalidInviteCode", "Provided invite code not available");
       expect(isInvalidInviteCodeError(error)).toBe(true);
     });
 
@@ -21,7 +20,7 @@ describe("xrpc-errors", () => {
       const error = new XRPCError(
         400,
         "InvalidInviteCode",
-        "Error: invite code not available for this user"
+        "Error: invite code not available for this user",
       );
       expect(isInvalidInviteCodeError(error)).toBe(true);
     });
@@ -44,6 +43,47 @@ describe("xrpc-errors", () => {
     it("returns false for plain objects", () => {
       const error = { message: "invite code not available", status: 400 };
       expect(isInvalidInviteCodeError(error)).toBe(false);
+    });
+  });
+
+  describe("isInvalidCredentialsError", () => {
+    it("returns true for XRPCError with status 401 and error name 'AuthenticationRequired'", () => {
+      const error = new XRPCError(401, "AuthenticationRequired", "Invalid identifier or password");
+      expect(isInvalidCredentialsError(error)).toBe(true);
+    });
+
+    it("returns false for XRPCError 'AuthenticationRequired' with non-401 status", () => {
+      const error = new XRPCError(400, "AuthenticationRequired", "Invalid identifier or password");
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for XRPCError with 'AuthFactorTokenRequired' (2FA flow)", () => {
+      const error = new XRPCError(
+        401,
+        "AuthFactorTokenRequired",
+        "A second authentication factor is required",
+      );
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for XRPCError with 'AccountTakedown'", () => {
+      const error = new XRPCError(401, "AccountTakedown", "Account has been taken down");
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for unrelated XRPCError 401", () => {
+      const error = new XRPCError(401, "Unauthorized", "Some other auth failure");
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for non-XRPCError", () => {
+      const error = new Error("Invalid identifier or password");
+      expect(isInvalidCredentialsError(error)).toBe(false);
+    });
+
+    it("returns false for null/undefined", () => {
+      expect(isInvalidCredentialsError(null)).toBe(false);
+      expect(isInvalidCredentialsError(undefined)).toBe(false);
     });
   });
 
@@ -156,9 +196,7 @@ describe("xrpc-errors", () => {
 
     it("returns true when AggregateError-like errors array contains a match", () => {
       const error = new Error("aggregate");
-      (error as Error & { errors: unknown[] }).errors = [
-        { message: "fetch failed" },
-      ];
+      (error as Error & { errors: unknown[] }).errors = [{ message: "fetch failed" }];
       expect(isUnreachableHostError(error)).toBe(true);
     });
 
@@ -176,6 +214,107 @@ describe("xrpc-errors", () => {
       const error = new Error("oops");
       (error as Error & { cause: unknown }).cause = { code: "ESOMETHING" };
       expect(isUnreachableHostError(error)).toBe(false);
+    });
+  });
+
+  describe("formatBackendErrorMessage", () => {
+    const buildResponse = ({
+      status,
+      statusText = "",
+      json,
+      text,
+    }: {
+      status: number;
+      statusText?: string;
+      json?: () => Promise<unknown>;
+      text?: () => Promise<string>;
+    }): Response =>
+      ({
+        status,
+        statusText,
+        json: json ?? (() => Promise.reject(new SyntaxError("invalid json"))),
+        text: text ?? (() => Promise.resolve("")),
+      }) as unknown as Response;
+
+    it("returns the JSON body's `message` field for non-5xx responses", async () => {
+      const res = buildResponse({
+        status: 400,
+        json: () => Promise.resolve({ message: "invite code not available" }),
+      });
+
+      await expect(formatBackendErrorMessage(res)).resolves.toBe("invite code not available");
+    });
+
+    it("falls back to truncated text body when JSON parsing fails (non-5xx)", async () => {
+      const longText = "x".repeat(300);
+      const res = buildResponse({
+        status: 400,
+        statusText: "Bad Request",
+        text: () => Promise.resolve(longText),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith("Server error: ")).toBe(true);
+      expect(result.endsWith("...")).toBe(true);
+      // 200-char truncation of the text body
+      expect(result).toContain("x".repeat(200));
+      expect(result).not.toContain("x".repeat(201));
+    });
+
+    it("falls back to HTTP status when both JSON and text fail", async () => {
+      const res = buildResponse({
+        status: 418,
+        statusText: "I'm a teapot",
+        text: () => Promise.reject(new Error("body already used")),
+      });
+
+      await expect(formatBackendErrorMessage(res)).resolves.toBe("HTTP 418: I'm a teapot");
+    });
+
+    it("wraps 5xx responses with the support-pointing prefix and includes the detail", async () => {
+      const res = buildResponse({
+        status: 500,
+        statusText: "Internal Server Error",
+        json: () => Promise.resolve({ code: "Runtime", message: "IO error" }),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith(BACKEND_SERVER_ERROR_PREFIX)).toBe(true);
+      expect(result).toContain("(details: IO error)");
+    });
+
+    it("wraps 5xx responses with prefix even when detail comes from text fallback", async () => {
+      const res = buildResponse({
+        status: 503,
+        statusText: "Service Unavailable",
+        text: () => Promise.resolve("upstream timeout"),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith(BACKEND_SERVER_ERROR_PREFIX)).toBe(true);
+      expect(result).toContain("(details: Server error: upstream timeout...)");
+    });
+
+    it("wraps 5xx responses with prefix when both JSON and text fail", async () => {
+      const res = buildResponse({
+        status: 502,
+        statusText: "Bad Gateway",
+        text: () => Promise.reject(new Error("body already used")),
+      });
+
+      const result = await formatBackendErrorMessage(res);
+      expect(result.startsWith(BACKEND_SERVER_ERROR_PREFIX)).toBe(true);
+      expect(result).toContain("(details: HTTP 502: Bad Gateway)");
+    });
+
+    it("uses status fallback when JSON body has no `message` field (non-5xx)", async () => {
+      const res = buildResponse({
+        status: 404,
+        statusText: "Not Found",
+        json: () => Promise.resolve({ code: "NotFound" }),
+      });
+
+      await expect(formatBackendErrorMessage(res)).resolves.toBe("HTTP 404: Not Found");
     });
   });
 });

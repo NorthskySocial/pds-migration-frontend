@@ -61,9 +61,7 @@ export function useAttentionAlert(): void {
 
     return () => {
       if (added) {
-        safe(() =>
-          document.removeEventListener("visibilitychange", onVisibilityChange)
-        );
+        safe(() => document.removeEventListener("visibilitychange", onVisibilityChange));
       }
       clearFlag();
     };

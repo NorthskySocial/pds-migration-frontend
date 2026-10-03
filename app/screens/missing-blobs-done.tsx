@@ -1,9 +1,8 @@
 import { Heading, Text, Button, VStack, Center } from "@chakra-ui/react";
-import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 import { useAttentionAlert } from "~/util/use-attention-alert";
 
-export default function MissingBlobsDoneScreen({ state }: ScreenProps) {
+export default function MissingBlobsDoneScreen() {
   const fetcher = useFetcher();
   useAttentionAlert();
   return (
@@ -15,12 +14,11 @@ export default function MissingBlobsDoneScreen({ state }: ScreenProps) {
           </Heading>
         </Center>
         <Text fontSize="md" textAlign="center" mt="4">
-          Your missing blobs have been successfully recovered and imported to
-          your Northsky account.
+          Your missing blobs have been successfully recovered and imported to your Northsky account.
         </Text>
         <Text fontSize="md" textAlign="center" mt="2">
-          You can now continue using Northsky as normal. All your images and
-          media should be fully restored.
+          You can now continue using Northsky as normal. All your images and media should be fully
+          restored.
         </Text>
         <Button name="cancel" type="submit" value={"cancel"} formNoValidate>
           Start Over

@@ -1,4 +1,15 @@
-import { Heading, Text, Button, VStack, Image, List, Link, Center, Grid, GridItem } from "@chakra-ui/react";
+import {
+  Heading,
+  Text,
+  Button,
+  VStack,
+  Image,
+  List,
+  Link,
+  Center,
+  Grid,
+  GridItem,
+} from "@chakra-ui/react";
 import nsChooseProvider from "../assets/nsChooseProvider.png";
 import nsSignIn from "../assets/nsSignIn.png";
 import nsSignIn2 from "../assets/nsSignIn2.png";
@@ -25,12 +36,11 @@ export default function AlreadyMigratedScreen({ state }: ScreenProps) {
           <GridItem>
             <VStack mb="5" alignItems="flex-start">
               <Text fontSize="md" textAlign={"justify"}>
-                Great news! Your account has already been migrated to Northsky
-                and is active.
+                Great news! Your account has already been migrated to Northsky and is active.
               </Text>
               <Text fontSize="md" textAlign={"justify"}>
-                You can start using your Northsky account right away by
-                following the steps below to log in via the Bluesky app.
+                You can start using your Northsky account right away by following the steps below to
+                log in via the Bluesky app.
               </Text>
 
               <Text fontSize="lg" fontWeight="bold" mt="4">
@@ -53,29 +63,34 @@ export default function AlreadyMigratedScreen({ state }: ScreenProps) {
                 <List.Item>Select "Add Another Account"</List.Item>
                 <List.Item>Select "Sign In"</List.Item>
                 <List.Item>Select "Other Account"</List.Item>
+                <List.Item>On the Sign In dialog, select "Hosting Provider"</List.Item>
                 <List.Item>
-                  On the Sign In dialog, select "Hosting Provider"
-                </List.Item>
-                <List.Item>
-                  Select "Custom", and then fill in https://northsky.social as
-                  your server address
+                  Select "Custom", and then fill in https://northsky.social as your server address
                 </List.Item>
                 <List.Item>Select "Done"</List.Item>
-                <List.Item>
-                  Fill in your Northsky account handle and password
-                </List.Item>
+                <List.Item>Fill in your Northsky account handle and password</List.Item>
                 <List.Item>Select "Next" to finish logging in</List.Item>
               </List.Root>
             </VStack>
           </GridItem>
-                    <GridItem>
+          <GridItem>
             <VStack>
               <Image src={nsNewAccount} alt="Adding a new account" maxWidth="100%" height="auto" />
               <Image src={nsSignIn2} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
-                                          <Image src={nsOtherAccount} alt="Choose other account" maxWidth="100%" height="auto" />
+              <Image
+                src={nsOtherAccount}
+                alt="Choose other account"
+                maxWidth="100%"
+                height="auto"
+              />
 
               <Image src={nsSignIn} alt="Bluesky sign in dialog" maxWidth="100%" height="auto" />
-              <Image src={nsChooseProvider} alt="Choose your Provder" maxWidth="100%" height="auto" />
+              <Image
+                src={nsChooseProvider}
+                alt="Choose your Provder"
+                maxWidth="100%"
+                height="auto"
+              />
             </VStack>
           </GridItem>
         </Grid>

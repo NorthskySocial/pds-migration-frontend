@@ -13,6 +13,16 @@ export const MIN_PASSWORD_LENGTH = 8;
 export const DEFAULT_HANDLE_DOMAIN = ".northsky.social";
 
 /**
+ * Default domain to append to Bluesky (origin PDS) handles without a domain
+ */
+export const BSKY_HANDLE_DOMAIN = ".bsky.social";
+
+/**
+ * Default Bluesky origin PDS URL
+ */
+export const BSKY_PDS_URL = "https://bsky.social";
+
+/**
  * Checks if a password meets the minimum length requirement.
  * Only validates if the password has been entered (length > 0).
  * @param password - The password to validate
@@ -21,7 +31,7 @@ export const DEFAULT_HANDLE_DOMAIN = ".northsky.social";
  */
 export function isPasswordTooShort(
   password: string,
-  minLength: number = MIN_PASSWORD_LENGTH
+  minLength: number = MIN_PASSWORD_LENGTH,
 ): boolean {
   return password.length > 0 && password.length < minLength;
 }
@@ -33,15 +43,8 @@ export function isPasswordTooShort(
  * @param confirmPassword - The confirmation password
  * @returns true if passwords don't match (and both have content), false otherwise
  */
-export function doPasswordsMismatch(
-  password: string,
-  confirmPassword: string
-): boolean {
-  return (
-    password.length > 0 &&
-    confirmPassword.length > 0 &&
-    password !== confirmPassword
-  );
+export function doPasswordsMismatch(password: string, confirmPassword: string): boolean {
+  return password.length > 0 && confirmPassword.length > 0 && password !== confirmPassword;
 }
 
 /**
@@ -56,9 +59,9 @@ export function doPasswordsMismatch(
 export function normalizeHandle(
   handle: string,
   isCreationFlow: boolean,
-  defaultDomain: string = DEFAULT_HANDLE_DOMAIN
+  defaultDomain: string = DEFAULT_HANDLE_DOMAIN,
 ): string {
-  const normalizedHandle = handle.toLowerCase();
+  const normalizedHandle = handle.trim().replace(/^@+/, "").toLowerCase();
 
   // In creation flow, always use the default domain
   // In migration flow, only append if no custom domain is present
@@ -70,12 +73,28 @@ export function normalizeHandle(
 }
 
 /**
+ * Autocompletes a Bluesky (origin PDS) handle when the user is logging into
+ * the default Bluesky PDS and entered a handle without a domain.
+ *
+ * @param handle - The raw handle input from the user
+ * @param pds_origin - The origin PDS URL the user is logging into
+ * @returns Possibly autocompleted handle
+ */
+export function maybeAutocompleteBskyHandle(handle: string, pds_origin: string): string {
+  if (!handle) return handle;
+  const normalizedHandle = handle.trim().replace(/^@+/, "").toLowerCase();
+
+  if (pds_origin !== BSKY_PDS_URL) return normalizedHandle;
+  if (normalizedHandle.includes(".")) return normalizedHandle;
+
+  return normalizeHandle(normalizedHandle, false, BSKY_HANDLE_DOMAIN);
+}
+
+/**
  * Returns true if all arguments are truthy.
  * @param items - Values to check for truthiness
  * @returns true if all items are truthy, false otherwise
  */
-export function all(
-  ...items: (string | boolean | undefined | null)[]
-): boolean {
+export function all(...items: (string | boolean | undefined | null)[]): boolean {
   return items.every((i) => i);
 }

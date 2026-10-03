@@ -1,7 +1,11 @@
 "use server";
 
 import { type Session } from "react-router";
-import { type SessionData, type SessionFlashData, type BackgroundJobProgress } from "~/sessions.server";
+import {
+  type SessionData,
+  type SessionFlashData,
+  type BackgroundJobProgress,
+} from "~/session-data";
 import f from "./mock-fetch";
 import { logger } from "./logger";
 
@@ -11,12 +15,12 @@ const JOB_CHECK_INTERVAL_MS = 2000;
  * Configuration for a background job (export or import)
  */
 export type BackgroundJobConfig = {
-  jobIdKey: "export_job_id" | "import_job_id";
-  progressKey: "export_progress" | "upload_progress";
-  lastCheckKey: "last_export_check" | "last_import_check";
-  failuresKey: "export_job_failures" | "import_job_failures";
-  completedKey: "exportedBlobs" | "importedBlobs";
-  jobKind: "ExportBlobs" | "UploadBlobs";
+  jobIdKey: "export_job_id" | "import_job_id" | "export_repo_job_id";
+  progressKey: "export_progress" | "upload_progress" | "export_repo_progress";
+  lastCheckKey: "last_export_check" | "last_import_check" | "last_export_repo_check";
+  failuresKey: "export_job_failures" | "import_job_failures" | "export_repo_job_failures";
+  completedKey: "exportedBlobs" | "importedBlobs" | "exportedRepo";
+  jobKind: "ExportBlobs" | "UploadBlobs" | "ExportRepo";
   startJob: (state: SessionData, backend: string) => Promise<{ job_id?: string } | undefined>;
 };
 
@@ -29,10 +33,8 @@ type JobStatusResponse = {
   id: string;
   kind: string;
   progress: {
-    invalid_blob_ids: string[];
     invalid_blobs: number;
     successful_blobs: number;
-    successful_blobs_ids: string[];
     total: number;
   };
   started_at: number;
@@ -46,7 +48,7 @@ const startBackgroundJobIfNeeded = async (
   state: SessionData,
   session: Session<SessionData, SessionFlashData>,
   config: BackgroundJobConfig,
-  migratorBackend: string
+  migratorBackend: string,
 ): Promise<boolean> => {
   const existingJobId = state[config.jobIdKey];
   if (existingJobId) return false;
@@ -55,6 +57,7 @@ const startBackgroundJobIfNeeded = async (
   if (result?.job_id) {
     session.set(config.jobIdKey, result.job_id);
     state[config.jobIdKey] = result.job_id;
+    logger.withDid(state.did).info(`${config.jobKind} job started with job ID ${result.job_id}`);
   }
   return true;
 };
@@ -66,7 +69,7 @@ const checkBackgroundJobStatus = async (
   state: SessionData,
   session: Session<SessionData, SessionFlashData>,
   config: BackgroundJobConfig,
-  migratorBackend: string
+  migratorBackend: string,
 ): Promise<void> => {
   const jobId = state[config.jobIdKey];
   const isCompleted = state[config.completedKey];
@@ -80,23 +83,19 @@ const checkBackgroundJobStatus = async (
   // Only check job status if enough time has passed
   if (now - lastCheck < JOB_CHECK_INTERVAL_MS) return;
 
-  log.info(
-    `Checking ${config.jobKind} job status (last attempt, now): `,
-    lastCheck,
-    now
-  );
-
   try {
     const res = await f(`${migratorBackend}/jobs/${jobId}`);
-    log.info("Response status from job status check: ", res.status);
+    if (!res.ok) {
+      log.warn(
+        `Response from ${config.jobKind} job status check failed for job ${jobId} with status ${res.status}`,
+      );
+      throw res;
+    }
 
     const { progress, status } = (await res.json()) as JobStatusResponse;
-
     log.info(
-      `${config.jobKind} (progress, status, status code): `,
-      `${progress.successful_blobs}/${progress.total} (invalid: ${progress.invalid_blobs})`,
-      status,
-      res.status
+      `${config.jobKind} job ${jobId} updated status: progress=${progress.successful_blobs}/${progress.total} ` +
+        `(invalid: ${progress.invalid_blobs}), status=${status}, status code=${res.status}`,
     );
 
     const progressData: BackgroundJobProgress = {
@@ -120,19 +119,26 @@ const checkBackgroundJobStatus = async (
   } catch (error) {
     const statusCode = error instanceof Response ? error.status : null;
     const isSyntaxError = error instanceof SyntaxError;
-    log.error(`Error checking ${config.jobKind} job status: `, error);
+    log.error(`Error checking ${config.jobKind} job ${jobId} status: `, error);
 
     if (statusCode === 404 || statusCode === 429 || isSyntaxError) {
+      const errorMessage =
+        error instanceof Response
+          ? (await error.text()) || error.statusText || "No response body"
+          : error instanceof Error
+            ? error.message
+            : String(error);
       const failureCount = (state[config.failuresKey] ?? 0) + 1;
       session.set(config.failuresKey, failureCount);
 
       log.warn(
-        `${config.jobKind} job check failed with status ${statusCode} and error ${error}. Failure count: ${failureCount}`
+        `${config.jobKind} job ${jobId} check failed with status ${statusCode} and error ${errorMessage}. Failure count: ${failureCount}`,
       );
 
       if (failureCount >= 3) {
         throw new Error(
-          `${config.jobKind} job check failed with status ${statusCode} (error: ${error}) after ${failureCount} consecutive attempts`
+          `${config.jobKind} job ${jobId} check failed with status ${statusCode} (error: ${errorMessage}) after ${failureCount} consecutive attempts`,
+          { cause: error },
         );
       }
 
@@ -150,7 +156,7 @@ export const processBackgroundJobStage = async (
   state: SessionData,
   session: Session<SessionData, SessionFlashData>,
   config: BackgroundJobConfig,
-  migratorBackend: string
+  migratorBackend: string,
 ): Promise<void> => {
   const jobStarted = await startBackgroundJobIfNeeded(state, session, config, migratorBackend);
   if (!jobStarted) {

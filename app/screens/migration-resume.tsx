@@ -38,21 +38,13 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
         ) : (
           <>
             <Text fontSize="md" textAlign={"justify"}>
-              {
-                isMissingBlobsJourney
-                  ?
-                  "Please provide us with the following information so we can recover any missing blobs from your previous PDS."
-                  : "Please provide us with the following information so we can resume migrating your data."
-              }
-
+              {isMissingBlobsJourney
+                ? "Please provide us with the following information so we can recover any missing blobs from your previous PDS."
+                : "Please provide us with the following information so we can resume migrating your data."}
             </Text>
             <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap="6" width="100%">
               <VStack>
-                <Switch
-                  name="has-pds"
-                  checked={altPds}
-                  onCheckedChange={() => setAltPds(!altPds)}
-                >
+                <Switch name="has-pds" checked={altPds} onCheckedChange={() => setAltPds(!altPds)}>
                   Non-Bluesky PDS?
                 </Switch>
                 {altPds && (
@@ -73,7 +65,10 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
                 <Field required label="Bluesky password">
                   <PasswordInput autoComplete="password" name="bsky-password" />
                 </Field>
-                <Text>⚠️ Do not use an app password. An app password usually looks like this: xxxx-xxxx-xxxx-xxxx.</Text>
+                <Text>
+                  ⚠️ Do not use an app password. An app password usually looks like this:
+                  xxxx-xxxx-xxxx-xxxx.
+                </Text>
               </VStack>
               <VStack>
                 <Field required label="Northsky login">
@@ -84,10 +79,7 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
                   />
                 </Field>
                 <Field required label="Northsky password">
-                  <PasswordInput
-                    autoComplete="password"
-                    name="northsky-password"
-                  />
+                  <PasswordInput autoComplete="password" name="northsky-password" />
                 </Field>
               </VStack>
             </Grid>
@@ -105,7 +97,6 @@ export default function OriginLoginScreen({ state }: ScreenProps) {
           >
             Continue
           </Button>
-
         </HStack>
       </VStack>
     </fetcher.Form>

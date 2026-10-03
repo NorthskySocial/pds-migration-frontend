@@ -1,19 +1,9 @@
-import {
-  Heading,
-  Highlight,
-  Text,
-  Button,
-  List,
-  Link,
-  VStack,
-  HStack,
-} from "@chakra-ui/react";
+import { Heading, Highlight, Text, Button, List, Link, VStack, HStack } from "@chakra-ui/react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Box } from "@chakra-ui/react";
-import type { ScreenProps } from "~/util/stages";
 import { useFetcher } from "react-router";
 
-export default function EncourageBackupScreen({ state }: ScreenProps) {
+export default function EncourageBackupScreen() {
   const fetcher = useFetcher();
   return (
     <fetcher.Form method="post" style={{ width: "100%" }}>
@@ -23,27 +13,10 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
         </Heading>
         <VStack align={"left"} mb="5">
           <Text fontSize="md" textAlign={"justify"} mb="4">
-            We recommend you generate and download a backup of your data before
-            you migrate from Bluesky's PDS to ours. We recommend using one of
-            these tools:
+            The migration process is non-destructive, but if you would like to backup your account
+            before migrating, we recommend using one of these tools:
           </Text>
           <List.Root ps="5">
-            <List.Item>
-              <Link
-                color={"emphasized"}
-                variant="underline"
-                target="_blank"
-                href="https://github.com/NorthskySocial/pds-migration/"
-              >
-                Northsky Migration Tool
-              </Link>
-            </List.Item>
-
-            <List.Root ps="5">
-              <List.Item>Downloadable for Windows + Linux</List.Item>
-              <List.Item>Free local backups to your computer</List.Item>
-            </List.Root>
-
             <List.Item>
               <Link
                 color={"emphasized"}
@@ -59,24 +32,21 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
               <List.Item>Downloadable or Mac + Windows</List.Item>
               <List.Item>Free local backups to your computer</List.Item>
             </List.Root>
+
             <List.Item>
               <Link
                 color={"emphasized"}
                 variant="underline"
                 target="_blank"
-                href="https://bsky.storage/"
+                href="https://github.com/NorthskySocial/pds-migration/"
               >
-                Storacha
+                Northsky Migration Tool
               </Link>
             </List.Item>
+
             <List.Root ps="5">
-              <List.Item>Web-based, cloud backup</List.Item>
-              <List.Item>
-                Free up to 5gb, but requires Credit Card to sign up.
-              </List.Item>
-              <List.Item>
-                Not affiliated with Northsky (Use at your own risk!)
-              </List.Item>
+              <List.Item>Downloadable for Windows + Linux</List.Item>
+              <List.Item>Free local backups to your computer</List.Item>
             </List.Root>
           </List.Root>
           <Text fontSize="md" textAlign={"justify"} mb="4">
@@ -86,8 +56,7 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
               <List.Item>A folder with your media blobs inside it</List.Item>
             </List.Root>
             <br />
-            Once you have archived your data, press Continue to proceed with
-            Migration
+            Once you have archived your data, press Continue to proceed with Migration
           </Text>
         </VStack>
         <Box mb="10" background={"muted"} color="fg" p="4" borderRadius={"2xl"}>
@@ -102,7 +71,6 @@ export default function EncourageBackupScreen({ state }: ScreenProps) {
           <Button type="submit" name="submit">
             Continue
           </Button>
-
         </HStack>
       </VStack>
     </fetcher.Form>

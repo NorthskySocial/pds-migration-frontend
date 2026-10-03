@@ -1,4 +1,5 @@
 import { XRPCError } from "@atproto/api";
+import { ResponseType } from "@atproto/xrpc";
 
 /**
  * Check if an XRPCError indicates an invalid or already-used invite code.
@@ -8,7 +9,30 @@ export function isInvalidInviteCodeError(error: unknown): boolean {
     return false;
   }
 
-  return error.message.includes("invite code not available");
+  return isInvalidInviteCodeErrorMessage(error.message);
+}
+
+/**
+ * Check if an error message indicates an invalid or already-used invite code.
+ */
+export function isInvalidInviteCodeErrorMessage(message: string): boolean {
+  return message.includes("invite code not available");
+}
+
+/**
+ * Check if an XRPCError indicates the user provided invalid login
+ * credentials (wrong identifier/handle or password).
+ */
+export function isInvalidCredentialsError(error: unknown): boolean {
+  if (!(error instanceof XRPCError)) {
+    return false;
+  }
+
+  if (error.status !== ResponseType.AuthenticationRequired) {
+    return false;
+  }
+
+  return error.error === "AuthenticationRequired";
 }
 
 /**
@@ -20,7 +44,7 @@ export function isRetryableServerError(error: unknown): boolean {
     return false;
   }
 
-  return error.status >= 500;
+  return error.status >= ResponseType.InternalServerError;
 }
 
 /**
@@ -78,6 +102,40 @@ const UNREACHABLE_HOST_ERROR_CODES = new Set([
   "UND_ERR_SOCKET",
   "CERT_HAS_EXPIRED",
 ]);
+
+/**
+ * Generic prefix used for 5xx backend responses.
+ */
+export const BACKEND_SERVER_ERROR_PREFIX =
+  "We hit a server error during your migration. \
+Please try again in a few minutes, or contact Support if the problem persists.";
+
+/**
+ * Builds a user-friendly error message from a non-OK backend Response.
+ */
+export async function formatBackendErrorMessage(res: Response): Promise<string> {
+  let errorMessage: string;
+
+  try {
+    const errorData = (await res.json()) as { message?: string };
+    errorMessage = errorData?.message ?? `HTTP ${res.status}: ${res.statusText}`;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_jsonError) {
+    try {
+      const textContent = await res.text();
+      errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_textError) {
+      errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+    }
+  }
+
+  if (res.status >= 500) {
+    return `${BACKEND_SERVER_ERROR_PREFIX} (details: ${errorMessage})`;
+  }
+
+  return errorMessage;
+}
 
 /**
  * User-friendly error messages for XRPC errors during account creation.

@@ -1,17 +1,43 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { checkIfDidExistsInDest, verifyOriginPdsReachable } from "~/actions";
+import {
+  checkIfDidExistsInDest,
+  loginDest,
+  loginOrigin,
+  verifyOriginPdsReachable,
+} from "~/actions";
 import { LoginError } from "~/errors";
 import { XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
-vi.mock("~/util/logger", () => ({
-  logger: {
-    withDid: () => ({ warn: vi.fn() }),
-    warn: vi.fn(),
-  },
-}));
-
 const mockFetch = vi.fn<typeof fetch>();
 global.fetch = mockFetch;
+
+/**
+ * Build a `Response` shaped like an XRPC JSON reply.
+ */
+function jsonResponse(status: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+const DESCRIBE_SERVER_OK = (host = "pds.example.com") =>
+  jsonResponse(200, { did: `did:web:${host}` });
+
+const CREATE_SESSION_OK = () =>
+  jsonResponse(200, {
+    accessJwt: "access",
+    refreshJwt: "refresh",
+    handle: "user.test",
+    did: "did:plc:test123",
+    email: "user@example.com",
+    active: true,
+  });
+
+function parseJsonBody(body: BodyInit | null | undefined): unknown {
+  const json = typeof body === "string" ? body : new TextDecoder().decode(body as Uint8Array);
+  return JSON.parse(json);
+}
 
 describe("checkIfDidExistsInDest", () => {
   const testDid = "did:plc:test123";
@@ -32,7 +58,7 @@ describe("checkIfDidExistsInDest", () => {
     expect(result).toEqual({ didExists: true, didActive: true });
     expect(mockFetch).toHaveBeenCalledWith(
       `${testPdsDest}/xrpc/com.atproto.sync.getRepoStatus?did=${testDid}`,
-      { method: "get", headers: { "Content-Type": "application/json" } }
+      { method: "get", headers: { "Content-Type": "application/json" } },
     );
   });
 
@@ -124,9 +150,7 @@ describe("verifyOriginPdsReachable", () => {
       },
     } as unknown as Response);
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
-    );
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
   });
 
   it("throws an Expected LoginError when the response body has no did", async () => {
@@ -149,9 +173,7 @@ describe("verifyOriginPdsReachable", () => {
       json: async () => ({ did: "" }),
     } as Response);
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
-    );
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
   });
 
   it("throws an Expected LoginError when the did is not a string", async () => {
@@ -161,16 +183,14 @@ describe("verifyOriginPdsReachable", () => {
       json: async () => ({ did: 123 }),
     } as Response);
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
-    );
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
   });
 
   it("throws an Expected LoginError when fetch rejects (network failure)", async () => {
     mockFetch.mockRejectedValueOnce(
       Object.assign(new Error("fetch failed"), {
         cause: { code: "ENOTFOUND" },
-      })
+      }),
     );
 
     await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toMatchObject({
@@ -182,8 +202,218 @@ describe("verifyOriginPdsReachable", () => {
   it("throws an Expected LoginError on an unexpected synchronous error", async () => {
     mockFetch.mockRejectedValueOnce(new Error("boom"));
 
-    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(
-      LoginError
+    await expect(verifyOriginPdsReachable(pdsOrigin)).rejects.toBeInstanceOf(LoginError);
+  });
+});
+
+describe("loginOrigin", () => {
+  const pdsOrigin = "https://pds.example.com";
+  const handleOrigin = "user.test";
+  const passwordOrigin = "hunter2";
+
+  beforeEach(() => {
+    mockFetch.mockReset();
+  });
+
+  /**
+   * Route fetches by pathname: describeServer is reachable by default,
+   * createSession is driven by `sessionResponder`.
+   */
+  function setupFetchRouter(sessionResponder: () => Response) {
+    mockFetch.mockImplementation(async (input) => {
+      const pathname = new URL(input.toString()).pathname;
+      if (pathname.endsWith("com.atproto.server.describeServer")) {
+        return DESCRIBE_SERVER_OK("pds.example.com");
+      }
+
+      if (pathname.endsWith("com.atproto.server.createSession")) {
+        return sessionResponder();
+      }
+
+      throw new Error(`Unexpected fetch in test: ${input}`);
+    });
+  }
+
+  it("prefixes invalid-credentials XRPCError messages with 'origin PDS'", async () => {
+    setupFetchRouter(() =>
+      jsonResponse(401, {
+        error: "AuthenticationRequired",
+        message: "Invalid identifier or password",
+      }),
     );
+
+    await expect(
+      loginOrigin({
+        pds_origin: pdsOrigin,
+        handle_origin: handleOrigin,
+        password_origin: passwordOrigin,
+      }),
+    ).rejects.toMatchObject({
+      name: "LoginError",
+      message: "Authentication error on your origin PDS: Invalid identifier or password",
+      errorType: "Expected",
+    });
+  });
+
+  it("re-throws non-credential XRPCErrors (e.g. AuthFactorTokenRequired) without prefixing", async () => {
+    setupFetchRouter(() =>
+      jsonResponse(401, {
+        error: "AuthFactorTokenRequired",
+        message: "A sign in code has been sent to your email address",
+      }),
+    );
+
+    await expect(
+      loginOrigin({
+        pds_origin: pdsOrigin,
+        handle_origin: handleOrigin,
+        password_origin: passwordOrigin,
+      }),
+    ).rejects.toMatchObject({
+      error: "AuthFactorTokenRequired",
+      status: 401,
+    });
+  });
+
+  it("throws UNREACHABLE_ORIGIN_PDS LoginError when login fails with a network error", async () => {
+    setupFetchRouter(() => {
+      throw Object.assign(new Error("fetch failed"), {
+        cause: { code: "ENOTFOUND" },
+      });
+    });
+
+    await expect(
+      loginOrigin({
+        pds_origin: pdsOrigin,
+        handle_origin: handleOrigin,
+        password_origin: passwordOrigin,
+      }),
+    ).rejects.toMatchObject({
+      name: "LoginError",
+      message: XRPC_ERROR_MESSAGES.UNREACHABLE_ORIGIN_PDS,
+    });
+  });
+
+  it("trims whitespace from the handle sent to the origin PDS", async () => {
+    setupFetchRouter(CREATE_SESSION_OK);
+
+    await loginOrigin({
+      pds_origin: pdsOrigin,
+      handle_origin: `  ${handleOrigin}  `,
+      password_origin: passwordOrigin,
+    });
+
+    const createSessionCall = mockFetch.mock.calls.find(([input]) =>
+      input.toString().includes("com.atproto.server.createSession"),
+    );
+    expect(parseJsonBody(createSessionCall?.[1]?.body)).toMatchObject({
+      identifier: handleOrigin,
+    });
+  });
+});
+
+describe("loginDest", () => {
+  const did = "did:plc:test123";
+  const pdsDest = "https://northsky.example";
+  const handleDest = "user.northsky";
+  const passwordDest = "hunter2";
+
+  beforeEach(() => {
+    mockFetch.mockReset();
+  });
+
+  it("prefixes invalid-credentials XRPCError messages with 'Northsky PDS'", async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(401, {
+        error: "AuthenticationRequired",
+        message: "Invalid identifier or password",
+      }),
+    );
+
+    await expect(
+      loginDest({
+        did,
+        pds_dest: pdsDest,
+        handle_dest: handleDest,
+        password_dest: passwordDest,
+      }),
+    ).rejects.toMatchObject({
+      name: "LoginError",
+      message: "Authentication error on the Northsky PDS: Invalid identifier or password",
+      errorType: "Expected",
+    });
+  });
+
+  it("re-throws non-credential XRPCErrors unchanged", async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(500, {
+        error: "InternalServerError",
+        message: "boom",
+      }),
+    );
+
+    await expect(
+      loginDest({
+        did,
+        pds_dest: pdsDest,
+        handle_dest: handleDest,
+        password_dest: passwordDest,
+      }),
+    ).rejects.toMatchObject({
+      status: 500,
+      error: "InternalServerError",
+    });
+  });
+
+  it("throws UNREACHABLE_DEST_PDS LoginError when login fails with a network error", async () => {
+    mockFetch.mockRejectedValueOnce(
+      Object.assign(new Error("fetch failed"), {
+        cause: { code: "ECONNREFUSED" },
+      }),
+    );
+
+    await expect(
+      loginDest({
+        did,
+        pds_dest: pdsDest,
+        handle_dest: handleDest,
+        password_dest: passwordDest,
+      }),
+    ).rejects.toMatchObject({
+      name: "LoginError",
+      message: XRPC_ERROR_MESSAGES.UNREACHABLE_DEST_PDS,
+    });
+  });
+
+  it("returns a session on a successful login", async () => {
+    mockFetch.mockResolvedValueOnce(CREATE_SESSION_OK());
+
+    const result = await loginDest({
+      did,
+      pds_dest: pdsDest,
+      handle_dest: handleDest,
+      password_dest: passwordDest,
+    });
+
+    expect(result.token_dest).toBe("access");
+    expect(result.atp_dest_session).toMatchObject({
+      handle: "user.test",
+      did: "did:plc:test123",
+    });
+  });
+
+  it("trims whitespace from the handle sent to the destination PDS", async () => {
+    mockFetch.mockResolvedValueOnce(CREATE_SESSION_OK());
+
+    await loginDest({
+      did,
+      pds_dest: pdsDest,
+      handle_dest: `  ${handleDest}  `,
+      password_dest: passwordDest,
+    });
+
+    expect(parseJsonBody(mockFetch.mock.calls[0]?.[1]?.body)).toMatchObject({
+      identifier: handleDest,
+    });
   });
 });

@@ -14,13 +14,16 @@ import {
   validatePlcToken,
   loginDest,
 } from "~/actions";
-import { type SessionData, type SessionFlashData } from "~/sessions.server";
+import { INITIAL_SESSION_DATA, type SessionData, type SessionFlashData } from "~/session-data";
 import { getStage } from "./get-stage";
 import { STAGES } from "./stages";
-import { AuthFactorTokenRequiredError } from "@atproto/api/dist/client/types/com/atproto/server/createSession";
-import { sendDiscordMessage } from "./discord";
+import { ComAtprotoServerCreateSession } from "@atproto/api";
+import { getProfileUrl, sendDiscordMessage } from "./discord";
 import { processBackgroundJobStage } from "./jobs";
 import { logger } from "./logger";
+import { LoginError, MigrationError } from "~/errors";
+import { BSKY_PDS_URL, maybeAutocompleteBskyHandle, normalizeHandle } from "./validators";
+import { redisDelIfValueMatches, redisSetNxEx } from "./redis";
 
 /**
  * Handles origin PDS login with 2FA support.
@@ -32,7 +35,7 @@ import { logger } from "./logger";
 const handleOriginLoginWith2FA = async (
   session: Session<SessionData, SessionFlashData>,
   data: FormData,
-  context: string
+  context: string,
 ): Promise<{
   token_origin: string;
   email: string | undefined;
@@ -43,9 +46,21 @@ const handleOriginLoginWith2FA = async (
   const log = logger.withDid(session.get("did"));
   log.info(`User attempting 2FA login for ${context}? ${is2faAttempt}`);
 
-  let pds_origin = (data.get("pds") as string) ?? "https://bsky.social";
-  let handle_origin = data.get("bsky-handle") as string;
+  let pds_origin = (data.get("pds") as string) ?? BSKY_PDS_URL;
+  let handle_origin = ((data.get("bsky-handle") as string) ?? "").trim();
   let password_origin = (data.get("bsky-password") as string) ?? "";
+
+  // If the user is logging into the default Bluesky PDS (i.e. did not
+  // select a custom PDS) and entered a handle without a domain, assume
+  // it's a bsky.social handle and autocomplete accordingly.
+  const customPdsSelected = pds_origin !== BSKY_PDS_URL;
+  if (!customPdsSelected && handle_origin) {
+    const original = handle_origin;
+    handle_origin = maybeAutocompleteBskyHandle(handle_origin, pds_origin);
+    if (handle_origin !== original) {
+      log.info(`[${context}] Autocompleted bsky.social handle: ${original} -> ${handle_origin}`);
+    }
+  }
 
   if (is2faAttempt) {
     pds_origin = session.get("pds_origin") ?? pds_origin;
@@ -54,12 +69,12 @@ const handleOriginLoginWith2FA = async (
 
     log.info(
       `[${context}] 2FA retry: using session origin creds. ` +
-      `pds=${pds_origin}, handle=${handle_origin}, password present=${Boolean(password_origin)}`
+        `pds=${pds_origin}, handle=${handle_origin}, password present=${Boolean(password_origin)}`,
     );
   } else {
     log.info(
       `[${context}] First attempt: persisting origin creds to session. ` +
-      `prev_handle=${session.get("handle_origin")} -> new_handle=${handle_origin}`
+        `prev_handle=${session.get("handle_origin")} -> new_handle=${handle_origin}`,
     );
 
     session.set("pds_origin", pds_origin);
@@ -69,11 +84,15 @@ const handleOriginLoginWith2FA = async (
 
   try {
     log.info(`Attempting to log in user to origin for ${context}. Handle: `, handle_origin);
+    const twoFaCode = data.get("2fa_code") as string;
+    log.info(
+      `Calling loginOrigin for ${context}. 2FA code present=${Boolean(twoFaCode)}, length=${twoFaCode?.length ?? 0}`,
+    );
     const result = await loginOrigin({
       pds_origin,
       handle_origin,
       password_origin,
-      authFactorToken: (data.get("2fa_code") as string) ?? undefined,
+      authFactorToken: twoFaCode ?? undefined,
     });
 
     session.set("email", result.email);
@@ -87,21 +106,21 @@ const handleOriginLoginWith2FA = async (
 
     return result;
   } catch (e) {
+    const twoFaCode = data.get("2fa_code") as string;
     log.error(`Error during origin login for ${context}: `, e);
 
-    if (e instanceof AuthFactorTokenRequiredError) {
+    if (e instanceof ComAtprotoServerCreateSession.AuthFactorTokenRequiredError) {
       log.info(
         `[${context}] 2FA code required by origin PDS. ` +
-        `Persisted in session: handle_origin=${session.get("handle_origin")}, ` +
-        `password_origin present=${Boolean(session.get("password_origin"))}, ` +
-        `handle_dest=${session.get("handle_dest")}, ` +
-        `password_dest present=${Boolean(session.get("password_dest"))}`
+          `Attempted 2FA code present=${Boolean(twoFaCode)}, length=${twoFaCode?.length ?? 0}. ` +
+          `Persisted in session: handle_origin=${session.get("handle_origin")}, ` +
+          `password_origin present=${Boolean(session.get("password_origin"))}, ` +
+          `handle_dest=${session.get("handle_dest")}, ` +
+          `password_dest present=${Boolean(session.get("password_dest"))}`,
       );
       session.set("require_2fa_code", true);
-      session.flash(
-        "error",
-        "Please check your email for your login code and enter it below"
-      );
+      session.flash("title", "Two Factor Authentication");
+      session.flash("error", "Please check your email for your login code and enter it below");
       session.flash("errorType", "Expected");
       return null;
     }
@@ -120,7 +139,7 @@ const handleOriginLoginWith2FA = async (
 export const processState = async (
   session: Session<SessionData, SessionFlashData>,
   data: FormData,
-  migratorBackend: string
+  migratorBackend: string,
 ) => {
   const state = session.data as SessionData;
   const stage = getStage(state);
@@ -130,48 +149,25 @@ export const processState = async (
   const isResetResume = data.get("reset-resume");
 
   let log = logger.withDid(state.did);
-  log.info(`On processState with journey: ${state.do_journey} | stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`);
+  log.info(
+    `Processing state with journey: ${state.do_journey} | stage: ${stage} | isCancelling: ${isCancelling} | isResetResume: ${isResetResume} | isResendingPlcToken: ${isResendingPlcToken}`,
+  );
 
   if (isResendingPlcToken) {
+    log.info("Resending PLC token as requested by user");
     session.set("requestedPlcToken", false);
     return state;
   }
 
   const inviteCode = state.inviteCode;
   if (isCancelling || isResetResume) {
-    //Reset all session variables
-    session.set("do_journey", undefined);
-    session.set("handle_origin", undefined);
-    session.set("handle_dest", undefined);
-    session.set("pds_dest", undefined);
-    session.set("atp_dest_session", undefined);
-    session.set("pds_origin", undefined);
-    session.set("atp_origin_session", undefined);
-    session.set("did_exists_in_dest", undefined);
-    session.set("did_active_in_dest", undefined);
-    session.set("token_origin", undefined);
-    session.set("token_dest", undefined);
-    session.set("plc_hostname", undefined);
-    session.set("did", undefined);
-    session.set("inviteCode", undefined);
-    session.set("email", undefined);
-    session.set("user_recover_key", undefined);
-    session.set("password_origin", undefined);
-    session.set("password_dest", undefined);
+    log.info(
+      `User is cancelling or resetting the flow. isCancelling: ${isCancelling}, isResetResume: ${isResetResume}`,
+    );
 
-    // state flags
-    session.set("require_2fa_code", false);
-    session.set("hasBackup", false);
-    session.set("exportedRepo", false);
-    session.set("importedRepo", false);
-    session.set("exportedBlobs", false);
-    session.set("importedBlobs", false);
-    session.set("migratedPrefs", false);
-    session.set("requestedPlcToken", false);
-    session.set("originDeactivated", false);
-    session.set("destActivated", false);
-    session.set("migratedPlc", false);
-    session.set("had_invalid_blobs", false);
+    for (const [key, value] of Object.entries(INITIAL_SESSION_DATA)) {
+      session.set(key as keyof SessionData, value);
+    }
 
     if (isResetResume) {
       // Shotcut to the resume screen
@@ -181,8 +177,6 @@ export const processState = async (
 
     return state;
   } else {
-    log.info("Processing stage: " + stage);
-
     switch (stage) {
       case STAGES.INVITE_CODE: {
         const invite = data.get("invite-code") as string;
@@ -202,7 +196,7 @@ export const processState = async (
         session.set("require_2fa_code", false);
 
         //initialize the origin PDS to bluesky
-        session.set("pds_origin", "https://bsky.social");
+        session.set("pds_origin", BSKY_PDS_URL);
 
         if (state.do_journey === "resume") {
           //Reset tokens
@@ -236,7 +230,11 @@ export const processState = async (
         session.set("did_exists_in_dest", didExists);
         session.set("did_active_in_dest", didActive);
 
-        logger.withDid(did).info(`Origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
+        logger
+          .withDid(did)
+          .info(
+            `Origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`,
+          );
         break;
       }
 
@@ -255,12 +253,7 @@ export const processState = async (
           passwordTooShort,
           passwordMismatch,
           atp_dest_session,
-        } = await createDestAccount(
-          state,
-          data,
-          migratorBackend,
-          is_creation_flow
-        );
+        } = await createDestAccount(state, data, migratorBackend, is_creation_flow);
 
         session.set("handle_not_available", handle_not_available);
         session.set("handle_dest", handle_dest);
@@ -273,10 +266,20 @@ export const processState = async (
       }
 
       case STAGES.EXPORT_REPO_ORIGIN: {
-        const { ok } = await exportRepo(state, migratorBackend);
-        if (ok) {
-          session.set("exportedRepo", ok);
-        }
+        await processBackgroundJobStage(
+          state,
+          session,
+          {
+            jobIdKey: "export_repo_job_id",
+            progressKey: "export_repo_progress",
+            lastCheckKey: "last_export_repo_check",
+            failuresKey: "export_repo_job_failures",
+            completedKey: "exportedRepo",
+            jobKind: "ExportRepo",
+            startJob: exportRepo,
+          },
+          migratorBackend,
+        );
         break;
       }
 
@@ -289,28 +292,38 @@ export const processState = async (
       }
       case STAGES.MISSING_BLOBS_EXPORT:
       case STAGES.EXPORT_BLOBS_ORIGIN: {
-        await processBackgroundJobStage(state, session, {
-          jobIdKey: "export_job_id",
-          progressKey: "export_progress",
-          lastCheckKey: "last_export_check",
-          failuresKey: "export_job_failures",
-          completedKey: "exportedBlobs",
-          jobKind: "ExportBlobs",
-          startJob: exportBlobs,
-        }, migratorBackend);
+        await processBackgroundJobStage(
+          state,
+          session,
+          {
+            jobIdKey: "export_job_id",
+            progressKey: "export_progress",
+            lastCheckKey: "last_export_check",
+            failuresKey: "export_job_failures",
+            completedKey: "exportedBlobs",
+            jobKind: "ExportBlobs",
+            startJob: exportBlobs,
+          },
+          migratorBackend,
+        );
         break;
       }
       case STAGES.MISSING_BLOBS_IMPORT:
       case STAGES.IMPORT_BLOBS_DEST: {
-        await processBackgroundJobStage(state, session, {
-          jobIdKey: "import_job_id",
-          progressKey: "upload_progress",
-          lastCheckKey: "last_import_check",
-          failuresKey: "import_job_failures",
-          completedKey: "importedBlobs",
-          jobKind: "UploadBlobs",
-          startJob: uploadBlobs,
-        }, migratorBackend);
+        await processBackgroundJobStage(
+          state,
+          session,
+          {
+            jobIdKey: "import_job_id",
+            progressKey: "upload_progress",
+            lastCheckKey: "last_import_check",
+            failuresKey: "import_job_failures",
+            completedKey: "importedBlobs",
+            jobKind: "UploadBlobs",
+            startJob: uploadBlobs,
+          },
+          migratorBackend,
+        );
         break;
       }
       case STAGES.MIGRATE_PREFERENCES: {
@@ -321,10 +334,7 @@ export const processState = async (
         break;
       }
       case STAGES.GENERATE_RECOVERY_KEY: {
-        session.set(
-          "user_recover_key",
-          data.get("user_recover_key") as string | null
-        );
+        session.set("user_recover_key", data.get("user_recover_key") as string | null);
         break;
       }
 
@@ -339,11 +349,29 @@ export const processState = async (
       case STAGES.ACTIVATE_DEST:
       case STAGES.DEACTIVATE_ORIGIN:
       case STAGES.MIGRATE_PLC: {
-        const { ok } = await validatePlcToken(state, data, migratorBackend);
-        if (ok) {
-          session.set("destActivated", ok);
-          session.set("originDeactivated", ok);
-          session.set("migratedPlc", ok);
+        const did = state.did;
+        if (!did) {
+          throw new MigrationError("Missing DID for PLC migration");
+        }
+
+        const plcMigrationLockKey = `plc:migration:${did}`;
+        const plcMigrationLockOwner = crypto.randomUUID();
+        const acquiredLock = await redisSetNxEx(plcMigrationLockKey, 300, plcMigrationLockOwner);
+        if (!acquiredLock) {
+          log.warn("Rejecting duplicate PLC migration submission while another request is active");
+          break;
+        }
+
+        log.info("Starting PLC migration process");
+        try {
+          const { ok } = await validatePlcToken(state, data, migratorBackend);
+          if (ok) {
+            session.set("destActivated", ok);
+            session.set("originDeactivated", ok);
+            session.set("migratedPlc", ok);
+          }
+        } finally {
+          await redisDelIfValueMatches(plcMigrationLockKey, plcMigrationLockOwner);
         }
         break;
       }
@@ -351,32 +379,34 @@ export const processState = async (
       case STAGES.MISSING_BLOBS_LOGIN:
       case STAGES.RESUME_MIGRATION: {
         const isMissingBlobsJourney = state.do_journey === "missing-blobs";
-        const journeyContext = isMissingBlobsJourney ? "missing blobs recovery" : "migration resume";
+        const journeyContext = isMissingBlobsJourney
+          ? "missing blobs recovery"
+          : "migration resume";
 
         // Persist dest credentials before attempting origin login, so they
         // survive the 2FA retry where the form only submits the 2FA code.
         const is2faAttempt = session.get("require_2fa_code") ?? false;
         log.info(
           `[${journeyContext}] Entering login stage. is2faAttempt=${is2faAttempt}. ` +
-          `Form dest creds: handle=${data.get("northsky-handle")}, ` +
-          `password present=${Boolean(data.get("northsky-password"))}. ` +
-          `Session dest creds: handle=${session.get("handle_dest")}, ` +
-          `password present=${Boolean(session.get("password_dest"))}`
+            `Form dest creds: handle=${data.get("northsky-handle")}, ` +
+            `password present=${Boolean(data.get("northsky-password"))}. ` +
+            `Session dest creds: handle=${session.get("handle_dest")}, ` +
+            `password present=${Boolean(session.get("password_dest"))}`,
         );
 
         if (!is2faAttempt) {
-          session.set("handle_dest", data.get("northsky-handle") as string);
+          session.set("handle_dest", normalizeHandle(data.get("northsky-handle") as string, false));
           session.set("password_dest", (data.get("northsky-password") as string) ?? "");
           log.info(
             `[${journeyContext}] First attempt: persisted dest creds to session. ` +
-            `handle_dest=${session.get("handle_dest")}, ` +
-            `password_dest present=${Boolean(session.get("password_dest"))}`
+              `handle_dest=${session.get("handle_dest")}, ` +
+              `password_dest present=${Boolean(session.get("password_dest"))}`,
           );
         } else {
           log.info(
             `[${journeyContext}] 2FA retry: keeping previously-persisted dest creds. ` +
-            `handle_dest=${session.get("handle_dest")}, ` +
-            `password_dest present=${Boolean(session.get("password_dest"))}`
+              `handle_dest=${session.get("handle_dest")}, ` +
+              `password_dest present=${Boolean(session.get("password_dest"))}`,
           );
         }
 
@@ -397,9 +427,28 @@ export const processState = async (
         session.set("did_exists_in_dest", didExists);
         session.set("did_active_in_dest", didActive);
 
+        if (didExists && didActive && !isMissingBlobsJourney) {
+          log.info(
+            `[${journeyContext}] Destination account for DID is already active; preventing resume flow.`,
+          );
+          break;
+        }
+
+        if (!didExists) {
+          log.warn(
+            `[${journeyContext}] Destination account does not exist yet; skipping dest login and warning user. ` +
+              `handle_dest=${session.get("handle_dest")}`,
+          );
+          throw new LoginError(
+            "We couldn't find a Northsky account associated with your account's DID! Please go back to the home screen and click on 'Migrate existing account' to start your migration.",
+          );
+        }
+
         // Refreshing DID on logs after login
         log = logger.withDid(did);
-        log.info(`Resume flow origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`);
+        log.info(
+          `Resume flow origin login successful! DID ${did}, exists in destination PDS: ${didExists}, active: ${didActive}`,
+        );
 
         // Read dest handle and password from session
         const handle_dest = session.get("handle_dest") as string;
@@ -407,16 +456,16 @@ export const processState = async (
 
         log.info(
           `[${journeyContext}] Calling loginDest: ` +
-          `handle_dest=${handle_dest}, ` +
-          `password_dest present=${Boolean(password_dest)}`
+            `handle_dest=${handle_dest}, ` +
+            `password_dest present=${Boolean(password_dest)}`,
         );
 
         if (!handle_dest || handle_dest.length === 0) {
           log.error(
             `[${journeyContext}] handle_dest is empty before loginDest! ` +
-            `is2faAttempt=${is2faAttempt}, ` +
-            `form handle=${data.get("northsky-handle")}, ` +
-            `session handle=${session.get("handle_dest")}`
+              `is2faAttempt=${is2faAttempt}, ` +
+              `form handle=${data.get("northsky-handle")}, ` +
+              `session handle=${session.get("handle_dest")}`,
           );
         }
         const { token_dest, atp_dest_session } = await loginDest({
@@ -433,9 +482,13 @@ export const processState = async (
         session.set("password_dest", undefined);
 
         if (isMissingBlobsJourney) {
-          await sendDiscordMessage(`Missing blobs recovery started for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did})`);
+          await sendDiscordMessage(
+            `Missing blobs recovery started for account [**${handle_dest}**](<${getProfileUrl(did)}>) (${did})`,
+          );
         } else {
-          await sendDiscordMessage(`Migration resumed for account [**${handle_dest}**](<https://bsky.app/profile/${did}>) (${did}) (migration in progress)`);
+          await sendDiscordMessage(
+            `Migration resumed for account [**${handle_dest}**](<${getProfileUrl(did)}>) (${did}) (migration in progress)`,
+          );
         }
 
         break;

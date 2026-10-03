@@ -1,4 +1,4 @@
-import type { SessionData } from "~/sessions.server";
+import type { SessionData } from "~/session-data";
 
 /**
  * enum of all migrator stages
