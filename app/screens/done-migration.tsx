@@ -81,7 +81,7 @@ export default function MigrationDoneScreen({ state }: ScreenProps) {
               <iframe
                 width="560"
                 height="315"
-                src="https://www.youtube.com/embed/oOnQ6lt0iCE?si=KTmuuwFsZXcS4kLy"
+                src="https://www.youtube-nocookie.com/embed/oOnQ6lt0iCE"
                 title="YouTube video player"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
