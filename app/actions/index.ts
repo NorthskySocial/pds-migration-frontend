@@ -707,7 +707,6 @@ export async function exportBlobs(
     atp_origin_session,
   );
 
-  const isMissingBlobsJourney = do_journey === "missing-blobs";
   try {
     log.info("Starting ExportBlobs job request");
     const res = await f(`${MIGRATOR_BACKEND}/jobs/export-blobs`, {
@@ -718,7 +717,7 @@ export async function exportBlobs(
         destination_token: destResumeAgent?.session?.accessJwt,
         origin: pds_origin,
         origin_token: originResumeAgent?.session?.accessJwt,
-        is_missing_blob_request: isMissingBlobsJourney,
+        is_missing_blob_request: do_journey === "missing-blobs",
       }),
       headers: { "Content-Type": "application/json" },
     });
@@ -739,7 +738,7 @@ export async function exportBlobs(
 }
 
 export async function uploadBlobs(
-  { pds_dest, did, atp_dest_session, atp_origin_session, pds_origin }: SessionData,
+  { do_journey, pds_dest, did, atp_dest_session, atp_origin_session, pds_origin }: SessionData,
   MIGRATOR_BACKEND: string,
 ) {
   const log = logger.withDid(did);
@@ -770,6 +769,7 @@ export async function uploadBlobs(
         pds_host: pds_dest,
         did,
         token: destResumeAgent?.session?.accessJwt,
+        is_missing_blob_request: do_journey === "missing-blobs",
       }),
       headers: { "Content-Type": "application/json" },
     });
