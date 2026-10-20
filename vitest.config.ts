@@ -16,6 +16,6 @@ export default defineConfig({
     env: {
       VITE_LOG_LEVEL: "silent",
     },
-    include: ["test/unit/**/*.test.ts"],
+    include: ["test/**/*.test.ts"],
   },
 });

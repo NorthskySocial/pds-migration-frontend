@@ -3,7 +3,7 @@
     "rootDir": ".",
     "rootDirs": [".", "./.react-router/types"],
     "noUnusedLocals": false,
-    "types": ["node", "jest", "vite/client"],
+    "types": ["node", "vitest/globals", "vite/client"],
     "lib": ["ES2023", "DOM", "DOM.Iterable", "ScriptHost"],
     "noEmit": true,
     "checkJs": true,
