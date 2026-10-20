@@ -29,7 +29,7 @@
     "@chakra-ui/react": "^3.34.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@fontsource-variable/museomoderno": "^5.2.9",
-    "@NorthskySocial/northwoods-ui": "^1.0.2",
+    "@NorthskySocial/northwoods-ui": "^0.1.2",
     "@react-router/node": "^8.5.0",
     "@react-router/serve": "^8.5.0",
     "@scure/bip39": "^2.0.1",
