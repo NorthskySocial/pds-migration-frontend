@@ -119,13 +119,11 @@ export async function formatBackendErrorMessage(res: Response): Promise<string> 
   try {
     const errorData = (await res.json()) as { message?: string };
     errorMessage = errorData?.message ?? `HTTP ${res.status}: ${res.statusText}`;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_jsonError) {
+  } catch {
     try {
       const textContent = await res.text();
       errorMessage = `Server error: ${textContent.substring(0, 200)}...`;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_textError) {
+    } catch {
       errorMessage = `HTTP ${res.status}: ${res.statusText}`;
     }
   }

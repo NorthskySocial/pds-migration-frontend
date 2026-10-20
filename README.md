@@ -25,7 +25,7 @@ Key entry points and configs:
 - Optional (for integration and e2e tests):
   - Docker (for running the migrator image and optional services)
   - Rust toolchain if you want to run the ARM64 backend locally via Cargo (see scripts)
-  - A modern Chromium/Chrome installation for Puppeteer tests (Jest + Puppeteer)
+  - Puppeteer downloads Chromium when you install dev dependencies
 
 Rename `.npmrc.example` to `.npmrc`.
 
@@ -64,12 +64,12 @@ Defined in `package.json`:
 - `npm run dev:test` – Start dev server in test mode
 - `npm run build` – Build app (SSR + client)
 - `npm start` – Serve the built app with `react-router-serve ./build/server/index.js`
-- `npm run lint` – Run ESLint
+- `npm run lint` – Run Oxlint
 - `npm run typecheck` – Generate React Router types (`react-router typegen`), and run `tsc`
-- `npm run test` – Full E2E test flow: concurrently runs test env bootstrap, dev server (test mode), and backend via Docker
-- `npm run test:arm64` – Same as above, but runs the backend via Cargo (ARM64-friendly)
+- `npm run test` – Start the test environment, test-mode dev server, and backend via Docker
+- `npm run test:arm64` – Start the same services with the backend via Cargo (ARM64-friendly)
 - `npm run test:env` – Bootstrap the test environment via `tsx bin/testenv.ts`
-- `npm run test:jest` – Run Jest test runner directly
+- `npm run test:e2e` – Run the E2E test with Vitest (requires the app and backend)
 - `npm run test:backend` – Pull and run the migrator backend Docker image
 - `npm run test:backend-arm64` – Run the migrator backend from the local `pds-migration` Cargo workspace
 
@@ -122,7 +122,7 @@ There are two Docker entry points:
   - Front-end is exposed via port 3000
 
 ## Tests
-- Test framework: Jest + Puppeteer (`jest-puppeteer` preset)
+- Test framework: Vitest + Puppeteer
 - E2E tests live in `test/` (see `test/e2e.test.ts`). The tests:
   - Spin up an in-process ATProto dev network (origin PDS, PLC)
   - Start the dev server on `http://localhost:5173` in test mode
@@ -130,31 +130,31 @@ There are two Docker entry points:
 
 Run tests:
 ```bash
-# Default (Docker-based backend)
+# Start services (Docker-based backend)
 npm test
 
-# On ARM64 machines (use Cargo-based backend)
+# Start services on ARM64 machines (use Cargo-based backend)
 npm run test:arm64
 
-# Jest only (helpful for debugging if your env is already running)
-npm run test:jest
+# Run the E2E test in another terminal after the app and backend are running
+npm run test:e2e
 ```
 
 Note:
-- `jest-puppeteer.config.js` currently has `headless: false`. For headless CI runs, you may need to override this or set Puppeteer flags via env. TODO: Add docs for CI configuration.
+- Puppeteer launches a visible browser for the E2E test. Set `headless: true` in `test/e2e.test.ts` for headless runs.
 
 ## Project Structure
 - `app/` – React Router routes, screens, and app code (SSR by default)
 - `public/` – Static assets served by the client
-- `test/` – End-to-end tests (Jest + Puppeteer)
+- `test/` – Unit and end-to-end tests (Vitest + Puppeteer)
 - `pds-migration/` – Migration backend (Docker/Cargo workspace)
 - `bin/` – Helper scripts (e.g., `bin/testenv.ts`) used in tests
 - Config files:
   - `vite.config.ts` – Vite build/dev configuration
   - `react-router.config.ts` – React Router SSR and feature flags
-  - `jest.config.js` / `jest-puppeteer.config.js` – Testing configuration
+  - `vitest.config.ts` – Testing configuration
   - `tsconfig*.json` – TypeScript configurations
-  - `eslint.config.js` – ESLint configuration
+  - `.oxlintrc.json` – Oxlint configuration
   - `docker-compose.yaml` / `Dockerfile` – Containerization for dev and integration
 
 ## Deployment

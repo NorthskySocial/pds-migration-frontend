@@ -1,11 +1,13 @@
 import { EventEmitter } from "node:events";
 import { SeedClient, TestNetworkNoAppView, TestPds, mockNetworkUtilities } from "@atproto/dev-env";
-import "jest-puppeteer";
-import "expect-puppeteer";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import puppeteer, { type Browser, type Page } from "puppeteer";
 
 describe("account migration tool", () => {
   let originNetwork: TestNetworkNoAppView;
   let destPds: TestPds;
+  let browser: Browser | undefined;
+  let page: Page;
 
   let sc: SeedClient;
   let inviteCode: string;
@@ -14,6 +16,9 @@ describe("account migration tool", () => {
   let _origSendMail;
 
   beforeAll(async () => {
+    browser = await puppeteer.launch({ headless: false });
+    page = await browser.newPage();
+
     originNetwork = await TestNetworkNoAppView.create({
       dbPostgresSchema: "account_migration",
       pds: {
@@ -33,13 +38,6 @@ describe("account migration tool", () => {
     mockNetworkUtilities(destPds);
 
     sc = originNetwork.getSeedClient();
-
-    process.on("SIGINT", async function () {
-      await destPds.close();
-      await originNetwork.close();
-      await browser.close();
-      process.exit();
-    });
 
     await originNetwork.processAll();
 
@@ -68,30 +66,31 @@ describe("account migration tool", () => {
     );
 
     inviteCode = res.data.code;
-  });
+  }, 120_000);
 
   afterAll(async () => {
+    await browser?.close();
     await destPds?.close();
     await originNetwork?.close();
-  });
+  }, 120_000);
 
-  test("happy path", async () => {
+  it("happy path", async () => {
     await page.goto(
       `http://localhost:5173?destination=${destPds.url}&plc=${originNetwork.plc.url}`,
     );
     await page.waitForSelector('[name="invite-code"]');
-    await page.$eval('input[name="agree-to-tos"]', (e) => e.click());
+    await page.locator('input[name="agree-to-tos"]').click();
     await page.type('[name="invite-code"]', inviteCode);
     await page.click('button[name="migrate"]');
 
     await page.waitForSelector('input[name="confirm"]');
-    await page.$eval('input[name="confirm"]', (e) => e.click());
+    await page.locator('input[name="confirm"]').click();
     await page.click('button[type="submit"]');
 
     await page.waitForSelector('input[name="bsky-handle"]');
-    await page.$eval('input[name="has-pds"]', (e) => e.click());
+    await page.locator('input[name="has-pds"]').click();
     await page.waitForSelector('input[name="pds"]');
-    await page.$eval('input[name="pds"]', (el, [pds]) => (el.value = pds), [originNetwork.pds.url]);
+    await page.locator('input[name="pds"]').fill(originNetwork.pds.url);
     await page.type('input[name="bsky-handle"]', "alice.test");
     await page.type('input[name="bsky-password"]', "alice");
     await page.click('button[type="submit"]');
@@ -122,6 +121,8 @@ describe("account migration tool", () => {
 
     await page.waitForSelector('button[name="login-to-northsky"]');
 
-    expect(page).toMatchTextContent(/Your data has been migrated successfully/);
+    expect(await page.$eval("body", (body) => body.textContent)).toMatch(
+      /Your data has been migrated successfully/,
+    );
   }, 120000);
 });
