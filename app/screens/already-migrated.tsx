@@ -19,7 +19,7 @@ import type { ScreenProps } from "~/util/stages";
 
 import { useFetcher } from "react-router";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// oxlint-disable-next-line @typescript-eslint/no-unused-vars
 export default function AlreadyMigratedScreen({ state }: ScreenProps) {
   const fetcher = useFetcher();
   return (

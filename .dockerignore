@@ -41,7 +41,7 @@ bin
 jest.config.js
 jest-puppeteer.config.js
 vitest.config.ts
-eslint.config.js
+.oxlintrc.json
 
 # Docker and docs
 Dockerfile

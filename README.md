@@ -64,7 +64,7 @@ Defined in `package.json`:
 - `npm run dev:test` – Start dev server in test mode
 - `npm run build` – Build app (SSR + client)
 - `npm start` – Serve the built app with `react-router-serve ./build/server/index.js`
-- `npm run lint` – Run ESLint
+- `npm run lint` – Run Oxlint
 - `npm run typecheck` – Generate React Router types (`react-router typegen`), and run `tsc`
 - `npm run test` – Start the test environment, test-mode dev server, and backend via Docker
 - `npm run test:arm64` – Start the same services with the backend via Cargo (ARM64-friendly)
@@ -154,7 +154,7 @@ Note:
   - `react-router.config.ts` – React Router SSR and feature flags
   - `vitest.config.ts` – Testing configuration
   - `tsconfig*.json` – TypeScript configurations
-  - `eslint.config.js` – ESLint configuration
+  - `.oxlintrc.json` – Oxlint configuration
   - `docker-compose.yaml` / `Dockerfile` – Containerization for dev and integration
 
 ## Deployment

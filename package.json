@@ -10,7 +10,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "format": "prettier --write \"**/*.{js,ts,jsx,tsx}\"",
     "format:check": "prettier --check \"**/*.{js,ts,jsx,tsx}\"",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "prepare": "test ! -e .git || husky",
     "test:env": "tsx bin/testenv.ts",
     "test:e2e": "vitest run test/e2e.test.ts",
@@ -46,31 +46,27 @@
   },
   "devDependencies": {
     "@atproto/dev-env": "^0.6.24",
-    "@eslint/js": "^10.0.1",
     "@react-router/dev": "^8.5.0",
     "@types/debug": "^4.1.13",
     "@types/node": "^26.6.5",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitest/coverage-v8": "^5.0.5",
-    "eslint": "^10.13.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
     "husky": "9.1.7",
     "inquirer": "^14.2.4",
     "lint-staged": "^17.6.0",
     "niceware": "^4.0.0",
     "nodemailer": "^10.1.7",
+    "oxlint": "1.89.0",
     "prettier": "^3.9.10",
     "puppeteer": "^25.15.0",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.72.0",
+    "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
   },
   "lint-staged": {
-    "*.js": "eslint --cache --fix",
+    "*.js": "oxlint --cache --fix",
     "*.{js,ts,jsx,tsx}": "prettier --write"
   }
 }

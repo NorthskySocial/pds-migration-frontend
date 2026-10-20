@@ -17,6 +17,7 @@ export const SuccessText = ({
   handle: string;
 }) => {
   const [downloaded, setDownloaded] = useState(false);
+  const [generatedAt] = useState(() => new Date().toISOString());
   const [result, setResult] = useState<{
     paper: string;
     multipart: Uint8Array<ArrayBuffer>;
@@ -103,7 +104,7 @@ export const SuccessText = ({
                   value: result.paper,
                 },
               ],
-              notes: `Generated ${new Date().toISOString()} by Northsky Migrator}`,
+              notes: `Generated ${generatedAt} by Northsky Migrator`,
             })}
             lang="en"
           />
