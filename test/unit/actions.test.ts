@@ -1,8 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+const { mockResolveHandle, mockResolveAtprotoData } = vi.hoisted(() => ({
+  mockResolveHandle: vi.fn(),
+  mockResolveAtprotoData: vi.fn(),
+}));
+
+vi.mock("@atproto/identity", () => ({
+  HandleResolver: class {
+    resolve = mockResolveHandle;
+  },
+  DidResolver: class {
+    resolveAtprotoData = mockResolveAtprotoData;
+  },
+}));
+
 import {
   checkIfDidExistsInDest,
   loginDest,
   loginOrigin,
+  resolveOriginPds,
   verifyOriginPdsReachable,
 } from "~/actions";
 import { LoginError } from "~/errors";
@@ -33,6 +48,50 @@ const CREATE_SESSION_OK = () =>
     email: "user@example.com",
     active: true,
   });
+
+describe("resolveOriginPds", () => {
+  beforeEach(() => {
+    mockResolveHandle.mockReset();
+    mockResolveAtprotoData.mockReset();
+  });
+
+  it("resolves and normalizes a bare Bluesky handle", async () => {
+    mockResolveHandle.mockResolvedValue("did:plc:test123");
+    mockResolveAtprotoData.mockResolvedValue({
+      handle: "alice.bsky.social",
+      pds: "https://pds.example.com",
+    });
+
+    await expect(resolveOriginPds(" @Alice ")).resolves.toEqual({
+      handle: "alice.bsky.social",
+      pds_origin: "https://pds.example.com",
+    });
+    expect(mockResolveHandle).toHaveBeenCalledWith("alice.bsky.social");
+    expect(mockResolveAtprotoData).toHaveBeenCalledWith("did:plc:test123");
+  });
+
+  it("rejects when the handle cannot be resolved", async () => {
+    mockResolveHandle.mockResolvedValue(undefined);
+
+    await expect(resolveOriginPds("missing.example")).rejects.toMatchObject({
+      name: "LoginError",
+      errorType: "Expected",
+    });
+  });
+
+  it("rejects when the DID document does not match the handle or has no PDS", async () => {
+    mockResolveHandle.mockResolvedValue("did:plc:test123");
+    mockResolveAtprotoData.mockResolvedValue({
+      handle: "another.example",
+      pds: "",
+    });
+
+    await expect(resolveOriginPds("alice.example")).rejects.toMatchObject({
+      name: "LoginError",
+      errorType: "Expected",
+    });
+  });
+});
 
 function parseJsonBody(body: BodyInit | null | undefined): unknown {
   const json = typeof body === "string" ? body : new TextDecoder().decode(body as Uint8Array);

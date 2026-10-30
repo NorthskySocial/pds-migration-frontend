@@ -1,11 +1,18 @@
 "use server";
 
 import { AtpAgent, XRPCError } from "@atproto/api";
+import { DidResolver, HandleResolver } from "@atproto/identity";
 
 import { getProfileUrl, sendDiscordMessage } from "~/util/discord";
 import { type SessionData } from "~/session-data";
 import { CreateAccountError, LoginError, MigrationError } from "~/errors";
-import { normalizeHandle, doPasswordsMismatch, isPasswordTooShort } from "~/util/validators";
+import {
+  BSKY_PDS_URL,
+  maybeAutocompleteBskyHandle,
+  normalizeHandle,
+  doPasswordsMismatch,
+  isPasswordTooShort,
+} from "~/util/validators";
 import { logger } from "~/util/logger";
 import f from "~/util/mock-fetch";
 import type { AtpSessionData } from "@atproto/api";
@@ -202,6 +209,32 @@ async function refreshAgents(
  * @param pds_origin The URL of the origin PDS to check
  * @throws LoginError if the PDS is unreachable or does not respond as expected
  */
+export async function resolveOriginPds(
+  handle: string,
+): Promise<{ handle: string; pds_origin: string }> {
+  const normalizedHandle = maybeAutocompleteBskyHandle(handle, BSKY_PDS_URL);
+
+  if (!normalizedHandle) {
+    throw new LoginError("Enter your handle to continue.");
+  }
+
+  try {
+    const did = await new HandleResolver({}).resolve(normalizedHandle);
+    if (!did) throw new Error("Handle did not resolve");
+
+    const identity = await new DidResolver({}).resolveAtprotoData(did);
+    if (identity.handle !== normalizedHandle || !identity.pds) {
+      throw new Error("DID document does not match the handle or include a PDS");
+    }
+
+    return { handle: normalizedHandle, pds_origin: identity.pds };
+  } catch {
+    throw new LoginError(
+      "We could not determine a PDS for this handle. Check the handle and try again.",
+    );
+  }
+}
+
 export async function verifyOriginPdsReachable(pds_origin: string): Promise<void> {
   let describeRes: Response;
   try {
