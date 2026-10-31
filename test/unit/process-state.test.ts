@@ -21,6 +21,7 @@ vi.mock("~/actions", () => ({
   exportRepo: vi.fn(),
   importRepo: vi.fn(),
   loginOrigin: vi.fn(),
+  resolveOriginPds: vi.fn(),
   migratePreferences: vi.fn(),
   requestPlcToken: vi.fn(),
   uploadBlobs: vi.fn(),
@@ -33,6 +34,7 @@ import {
   exportRepo,
   loginOrigin,
   loginDest,
+  resolveOriginPds,
   validatePlcToken,
 } from "~/actions";
 import { processBackgroundJobStage } from "~/util/jobs";
@@ -83,6 +85,7 @@ const createDeferred = <T>() => {
 describe("processState", () => {
   beforeEach(() => {
     vi.mocked(loginOrigin).mockReset();
+    vi.mocked(resolveOriginPds).mockReset();
     vi.mocked(loginDest).mockReset();
     vi.mocked(validatePlcToken).mockReset();
     vi.mocked(checkIfDidExistsInDest).mockReset();
@@ -94,6 +97,10 @@ describe("processState", () => {
       did: "did:plc:alice",
       atp_origin_session: { foo: "bar" },
     } as never);
+    vi.mocked(resolveOriginPds).mockResolvedValue({
+      handle: "alice.bsky.social",
+      pds_origin: "https://bsky.social",
+    });
     vi.mocked(loginDest).mockResolvedValue({
       token_dest: "tok-dest",
       atp_dest_session: { baz: "qux" },
@@ -112,6 +119,8 @@ describe("processState", () => {
     const session = buildSession({
       do_journey: "missing-blobs",
       pds_dest: "https://northsky.social",
+      handle_origin: "alice.bsky.social",
+      pds_origin: "https://bsky.social",
     });
 
     await processState(session, buildLoginFormData(), "https://migrator.example.com");
@@ -138,7 +147,18 @@ describe("processState", () => {
     const data = buildLoginFormData();
     data.set("bsky-handle", "@example.northsky.social");
     data.set("northsky-handle", "@example.northsky.social");
+    data.set("submit", "find-pds");
+    vi.mocked(resolveOriginPds).mockResolvedValueOnce({
+      handle: "example.northsky.social",
+      pds_origin: "https://example.test",
+    });
 
+    await processState(session, data, "https://migrator.example.com");
+    expect(resolveOriginPds).toHaveBeenCalledWith("@example.northsky.social");
+    expect(loginOrigin).not.toHaveBeenCalled();
+    expect(session.get("handle_origin")).toBe("example.northsky.social");
+    expect(session.get("pds_origin")).toBe("https://example.test");
+    data.set("submit", "resume-migration-login");
     await processState(session, data, "https://migrator.example.com");
 
     expect(loginOrigin).toHaveBeenCalledWith(
@@ -161,10 +181,14 @@ describe("processState", () => {
       pds_dest: "https://northsky.social",
     });
     const data = buildLoginFormData();
-    data.set("pds", "https://pds.example.com");
     data.set("bsky-handle", "  alice.bsky.social  ");
     data.set("northsky-handle", "  alice.northsky.social  ");
+    data.set("submit", "find-pds");
 
+    await processState(session, data, "https://migrator.example.com");
+    expect(resolveOriginPds).toHaveBeenCalledWith("  alice.bsky.social  ");
+    expect(loginOrigin).not.toHaveBeenCalled();
+    data.set("submit", "resume-migration-login");
     await processState(session, data, "https://migrator.example.com");
 
     expect(loginOrigin).toHaveBeenCalledWith(
@@ -181,6 +205,8 @@ describe("processState", () => {
     const session = buildSession({
       do_journey: "resume",
       pds_dest: "https://northsky.social",
+      handle_origin: "alice.bsky.social",
+      pds_origin: "https://bsky.social",
     });
 
     await processState(session, buildLoginFormData(), "https://migrator.example.com");

@@ -88,12 +88,13 @@ describe("account migration tool", () => {
     await page.click('button[type="submit"]');
 
     await page.waitForSelector('input[name="bsky-handle"]');
-    await page.locator('input[name="has-pds"]').click();
-    await page.waitForSelector('input[name="pds"]');
-    await page.locator('input[name="pds"]').fill(originNetwork.pds.url);
     await page.type('input[name="bsky-handle"]', "alice.test");
+    await page.click('button[name="submit"][value="find-pds"]');
+
+    await page.waitForSelector('input[name="bsky-password"]');
+    expect(await page.$eval("body", (body) => body.textContent)).toContain(originNetwork.pds.url);
     await page.type('input[name="bsky-password"]', "alice");
-    await page.click('button[type="submit"]');
+    await page.click('button[name="submit"]');
 
     await page.waitForSelector('input[name="handle"]');
     await page.type('input[name="handle"]', "new-alice");

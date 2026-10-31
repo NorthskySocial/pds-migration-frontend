@@ -409,14 +409,14 @@ describe("getStage", () => {
       expect(getStage(session)).toBe(STAGES.EXPORT_REPO_ORIGIN);
     });
 
-    it("should return RESUME_MIGRATION when starting resume without tokens", () => {
+    it("should return RESUME_MIGRATION when starting resume without origin identity", () => {
       const session = createBaseSession({
         do_journey: "resume",
       });
       expect(getStage(session)).toBe(STAGES.RESUME_MIGRATION);
     });
 
-    it("should return RESUME_MIGRATION when only origin token present", () => {
+    it("should return RESUME_MIGRATION when only origin token is present", () => {
       const session = createBaseSession({
         do_journey: "resume",
         token_origin: "origin-token",
@@ -510,14 +510,14 @@ describe("getStage", () => {
   });
 
   describe("missing-blobs journey", () => {
-    it("should return MISSING_BLOBS_LOGIN when starting without tokens", () => {
+    it("should return MISSING_BLOBS_LOGIN when starting without origin identity", () => {
       const session = createBaseSession({
         do_journey: "missing-blobs",
       });
       expect(getStage(session)).toBe(STAGES.MISSING_BLOBS_LOGIN);
     });
 
-    it("should return MISSING_BLOBS_LOGIN when only one token present", () => {
+    it("should return MISSING_BLOBS_LOGIN when only one token is present", () => {
       const session = createBaseSession({
         do_journey: "missing-blobs",
         token_dest: "dest-token",
