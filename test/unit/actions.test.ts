@@ -15,12 +15,13 @@ vi.mock("@atproto/identity", () => ({
 
 import {
   checkIfDidExistsInDest,
+  createDestAccount,
   loginDest,
   loginOrigin,
   resolveOriginPds,
   verifyOriginPdsReachable,
 } from "~/actions";
-import { LoginError } from "~/errors";
+import { CreateAccountError, LoginError } from "~/errors";
 import { XRPC_ERROR_MESSAGES } from "~/util/xrpc-errors";
 
 const mockFetch = vi.fn<typeof fetch>();
@@ -160,6 +161,74 @@ describe("checkIfDidExistsInDest", () => {
     const result = await checkIfDidExistsInDest(testDid, testPdsDest);
 
     expect(result).toEqual({ didExists: false, didActive: false });
+  });
+});
+
+describe("createDestAccount", () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+  });
+
+  it("creates a new account when the origin PDS is not set", async () => {
+    mockFetch.mockImplementation(async (input) => {
+      const url = new URL(input.toString());
+      if (url.pathname.endsWith("com.atproto.identity.resolveHandle")) {
+        return jsonResponse(200, { message: "Unable to resolve handle" });
+      }
+      if (url.pathname.endsWith("com.atproto.server.createAccount")) {
+        return jsonResponse(200, {
+          accessJwt: "account-access",
+          refreshJwt: "account-refresh",
+          did: "did:plc:new-account",
+          handle: "alice.northsky.social",
+        });
+      }
+      if (url.pathname.endsWith("com.atproto.server.createSession")) {
+        return CREATE_SESSION_OK();
+      }
+      throw new Error(`Unexpected fetch in test: ${input}`);
+    });
+
+    const data = new FormData();
+    data.set("password", "long-enough-password");
+    data.set("password-confirm", "long-enough-password");
+    data.set("handle", "alice");
+    data.set("submit", "true");
+
+    await expect(
+      createDestAccount(
+        {
+          pds_dest: "https://northsky.example",
+          email: "alice@example.com",
+        },
+        data,
+        "https://migrator.example",
+        true,
+      ),
+    ).resolves.toMatchObject({
+      handle_dest: "alice.northsky.social",
+      handle_not_available: false,
+      passwordTooShort: false,
+      passwordMismatch: false,
+      token_dest: "access",
+    });
+  });
+
+  it("rejects a migrated account when the origin PDS is not set", async () => {
+    const data = new FormData();
+
+    await expect(
+      createDestAccount(
+        {
+          did: "did:plc:existing-account",
+          pds_dest: "https://northsky.example",
+          email: "alice@example.com",
+        },
+        data,
+        "https://migrator.example",
+        false,
+      ),
+    ).rejects.toBeInstanceOf(CreateAccountError);
   });
 });
 

@@ -360,10 +360,6 @@ export async function createDestAccount(
 ) {
   const log = logger.withDid(did);
 
-  if (pds_origin === undefined) {
-    log.error("pds_origin is undefined");
-    throw new CreateAccountError("Invalid origin PDS");
-  }
   if (pds_dest === undefined) {
     log.error("pds_dest is undefined");
     throw new CreateAccountError("Invalid destination PDS");
@@ -512,6 +508,11 @@ export async function createDestAccount(
     };
   } else {
     /* This is a migrated account */
+
+    if (pds_origin === undefined) {
+      log.error("pds_origin is undefined");
+      throw new CreateAccountError("Invalid origin PDS");
+    }
 
     const serviceEndpoint: string = pds_origin;
 
