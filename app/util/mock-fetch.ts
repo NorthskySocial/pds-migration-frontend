@@ -82,6 +82,10 @@ const f: (input: URL | string, init?: RequestInit) => Promise<Response> = async 
       case "migrator.northsky.social":
       case "localhost:9090": {
         switch (new URL(input).pathname) {
+          case "/check-handle":
+            return new Response(JSON.stringify({ available: true }), {
+              headers: { "Content-Type": "application/json" },
+            });
           case "/service-auth": {
             return new Response("{}", {
               headers: { "Content-Type": "application/json" },

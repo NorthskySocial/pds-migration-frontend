@@ -242,7 +242,7 @@ export const processState = async (
         const is_creation_flow = state.do_journey === "create";
 
         const {
-          handle_not_available,
+          handle_availability_message,
           token_dest,
           handle_dest,
           passwordTooShort,
@@ -250,7 +250,7 @@ export const processState = async (
           atp_dest_session,
         } = await createDestAccount(state, data, migratorBackend, is_creation_flow);
 
-        session.set("handle_not_available", handle_not_available);
+        session.set("handle_availability_message", handle_availability_message);
         session.set("handle_dest", handle_dest);
         session.set("token_dest", token_dest);
         session.set("password_too_short", passwordTooShort);
