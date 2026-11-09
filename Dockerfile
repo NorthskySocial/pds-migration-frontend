@@ -1,7 +1,9 @@
 FROM node:26-alpine AS development-dependencies-env
 COPY ./package.json package-lock.json /app/
 WORKDIR /app
-RUN --mount=type=secret,id=npmrc,target=/root/.npmrc npm ci
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    apk add --no-cache python3 make g++ \
+    && npm ci
 
 FROM node:26-alpine AS production-dependencies-env
 COPY ./package.json package-lock.json /app/
