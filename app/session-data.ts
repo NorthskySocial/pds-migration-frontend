@@ -39,7 +39,7 @@ export type SessionData = {
   last_export_check?: number;
   last_export_repo_check?: number;
   last_import_check?: number;
-  handle_not_available?: boolean | null;
+  handle_availability_message?: string | null;
   password_mismatch?: boolean | null;
   password_too_short?: boolean | null;
 
@@ -92,7 +92,7 @@ export const INITIAL_SESSION_DATA = {
   last_export_check: undefined,
   last_export_repo_check: undefined,
   last_import_check: undefined,
-  handle_not_available: undefined,
+  handle_availability_message: undefined,
   password_mismatch: undefined,
   password_too_short: undefined,
   hasBackup: false,

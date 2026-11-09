@@ -60,14 +60,16 @@ export default function NewAccountScreen({ state }: ScreenProps) {
         <br />
         <Field
           label="New handle"
-          invalid={state.handle_not_available === true && (state.handle_dest?.length ?? 0) > 0}
+          invalid={
+            Boolean(state.handle_availability_message) && (state.handle_dest?.length ?? 0) > 0
+          }
           errorText={
-            state.handle_not_available === true &&
+            Boolean(state.handle_availability_message) &&
             (state.handle_dest?.length ?? 0) > 0 &&
-            `Uh oh! ${state.handle_dest?.toLowerCase()} is not available!`
+            state.handle_availability_message
           }
           helperText={
-            (state.handle_not_available === false &&
+            (state.handle_availability_message === null &&
               (state.handle_dest?.length ?? 0) > 0 &&
               `Congrats! 🎉 ${state.handle_dest?.toLowerCase()} is available!`) ||
             (state.do_journey === "migrate" &&
@@ -100,7 +102,9 @@ export default function NewAccountScreen({ state }: ScreenProps) {
               placeholder={state.do_journey === "create" ? "username" : "username or custom domain"}
             />
           </InputGroup>
-          <div>{fetcher.state !== "idle" ? <Spinner /> : fetcher.data?.handle_message}</div>
+          <div>
+            {fetcher.state !== "idle" ? <Spinner /> : fetcher.data?.handle_availability_message}
+          </div>
         </Field>
         <br />
 

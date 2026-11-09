@@ -396,29 +396,42 @@ export async function createDestAccount(
   }
 
   // Check handle availability
-  let handleIsAvailable: boolean | null = null;
+  let handleMessage: string | null = null;
   if (handle_dest.length) {
     log.info("Checking handle " + handle_dest);
-    handleIsAvailable = await f(
-      `${pds_dest}/xrpc/com.atproto.identity.resolveHandle?handle=${handle_dest}`,
-    )
-      .then<{ message: string; error: string } & { did: string }>((r) => r.json())
-      .then((d) => d.message === "Unable to resolve handle" || d.did === did)
-      .catch((e) => {
-        log.error(e);
-        return e.message === "Unable to resolve handle" || e.did === did;
+    try {
+      const response = await f(`${MIGRATOR_BACKEND}/check-handle`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle: handle_dest, pds_host: pds_dest, did }),
       });
+      const result = (await response.json()) as { available?: boolean; message?: string };
+      if (!response.ok) {
+        throw new Error(result.message ?? response.statusText);
+      }
+      handleMessage = result.message ?? (result.available ? null : "Handle is not available");
+    } catch (error) {
+      log.error(error);
+      handleMessage =
+        error instanceof Error ? error.message : "Unable to check handle availability";
+    }
 
-    log.info(`Handle ${handle_dest} available? ` + handleIsAvailable);
+    log.info(`Handle ${handle_dest} available? ` + (handleMessage === null));
   }
 
   // Return early if the user hasn't clicked submit
   // Or if password/handle validation fails
   // This is to handle user feedback for e.g. password length/check and handle availability
-  if (!submitted || !handleIsAvailable || passwordTooShort || passwordMismatch) {
+  if (
+    !submitted ||
+    !handle_dest ||
+    handleMessage !== null ||
+    passwordTooShort ||
+    passwordMismatch
+  ) {
     log.info("Early return from createDestAccount to handle user feedback");
     return {
-      handle_not_available: !handleIsAvailable,
+      handle_availability_message: handleMessage,
       handle_dest: handle_dest,
       passwordTooShort: passwordTooShort,
       passwordMismatch: passwordMismatch,
@@ -500,7 +513,7 @@ export async function createDestAccount(
     return {
       token_dest: data.accessJwt,
       handle_dest: handle_dest,
-      handle_not_available: !handleIsAvailable,
+      handle_availability_message: handleMessage,
       passwordTooShort: passwordTooShort,
       passwordMismatch: passwordMismatch,
       //Not 100% sure if we do need to save the session since it's a new account. Not sure if theres more actions needed
@@ -619,7 +632,7 @@ export async function createDestAccount(
     return {
       token_dest: nsToken,
       handle_dest: handle_dest,
-      handle_not_available: !handleIsAvailable,
+      handle_availability_message: handleMessage,
       passwordTooShort: passwordTooShort,
       passwordMismatch: passwordMismatch,
       atp_dest_session: agent_dest.session,

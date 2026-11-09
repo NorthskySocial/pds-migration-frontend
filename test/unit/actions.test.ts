@@ -172,8 +172,8 @@ describe("createDestAccount", () => {
   it("creates a new account when the origin PDS is not set", async () => {
     mockFetch.mockImplementation(async (input) => {
       const url = new URL(input.toString());
-      if (url.pathname.endsWith("com.atproto.identity.resolveHandle")) {
-        return jsonResponse(200, { message: "Unable to resolve handle" });
+      if (url.pathname === "/check-handle") {
+        return jsonResponse(200, { available: true });
       }
       if (url.pathname.endsWith("com.atproto.server.createAccount")) {
         return jsonResponse(200, {
@@ -207,7 +207,7 @@ describe("createDestAccount", () => {
       ),
     ).resolves.toMatchObject({
       handle_dest: "alice.northsky.social",
-      handle_not_available: false,
+      handle_availability_message: null,
       passwordTooShort: false,
       passwordMismatch: false,
       token_dest: "access",
@@ -229,6 +229,26 @@ describe("createDestAccount", () => {
         false,
       ),
     ).rejects.toBeInstanceOf(CreateAccountError);
+  });
+
+  it("preserves the backend handle-check error message", async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(500, { code: "UPSTREAM_ERROR", message: "PDS lookup failed" }),
+    );
+
+    const data = new FormData();
+    data.set("handle", "alice");
+
+    const result = await createDestAccount(
+      { pds_dest: "https://northsky.example", email: "alice@example.com" },
+      data,
+      "https://migrator.example",
+      true,
+    );
+
+    expect(result).toMatchObject({
+      handle_availability_message: "PDS lookup failed",
+    });
   });
 });
 
